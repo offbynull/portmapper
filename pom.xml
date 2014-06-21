@@ -28,6 +28,7 @@
     
     <scm>
         <connection>scm:git:https://github.com/offbynull/portmapper.git</connection>
+        <developerConnection>scm:git:https://github.com/offbynull/portmapper.git</developerConnection>
         <url>https://github.com/offbynull/portmapper</url>
     </scm>
     
