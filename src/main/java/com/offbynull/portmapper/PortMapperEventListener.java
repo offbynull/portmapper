@@ -24,7 +24,7 @@ public interface PortMapperEventListener {
     /**
      * Indicates that one or more port mappings may have been lost or changed. If this occurs, the mapper should be closed and the
      * recreated. If the mapper isn't recreated, it may or may not continue to operate. The behaviour is undefined.
-     * <p/>
+     * <p>
      * <b>WARNING:</b> Do not block in this method. Do not make any changes to the {@link PortMapper} that triggered this event in this
      * method.
      * @param details details of the problem that caused this invocation

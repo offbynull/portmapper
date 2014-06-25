@@ -34,7 +34,7 @@ import org.apache.commons.lang3.Validate;
  * {@link NatPmpController#requestExternalAddress(int) } periodically to determine if the external IP address changed or the device rebooted
  * -- it's result has a 'seconds since last epoch' property {@link ExternalAddressNatPmpResponse#getSecondsSinceStartOfEpoch() } which you
  * can track to determine if the device rebooted.
- * <p/>
+ * <p>
  * For more information see section 3.2.1 of http://tools.ietf.org/html/rfc6886.
  *
  * @author Kasra Faghihi
