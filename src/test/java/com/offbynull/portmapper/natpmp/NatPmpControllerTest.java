@@ -31,6 +31,7 @@ public class NatPmpControllerTest {
     @After
     public void tearDown() throws Throwable {
         helper.close();
+        Thread.sleep(1000L); // give OS time to clean up
     }
 
     @Test
