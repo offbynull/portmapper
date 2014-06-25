@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     
     <name>Port Mapper</name>
     <description>Router port mapping using UPnP-IGD, NAT-PMP, and PCP</description>
