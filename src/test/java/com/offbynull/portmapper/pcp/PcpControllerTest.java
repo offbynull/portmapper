@@ -37,6 +37,7 @@ public final class PcpControllerTest {
     @After
     public void tearDown() throws Throwable {
         IOUtils.closeQuietly(helper);
+        Thread.sleep(1000L); // give OS time to clean up
     }
 
     @Test
