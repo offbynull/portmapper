@@ -1,7 +1,7 @@
 portmapper
 ==========
 
-A Java library that provides facilities to open up ports on home routers. Supported protocols are UPnP-IGD, NAT-PMP, and PCP.
+A Java library that provides facilities to open up ports on home routers. Supported protocols are UPnP-IGD (Universal Plug-and-Play Internet Gateway Device), NAT-PMP (NAT Port Mapping Protocol), and PCP (Port Control Protocol).
 
 ## Quick-start guide
 
@@ -24,8 +24,8 @@ The following example attempts to discover a router with at least one of the sup
 PortMapperEventListener listener = x -> System.err.println(
         "Port mappings may have been lost or expired! >> " + x);
 
-// Try to automatically detect the Gateway Device (router) as well as the
-// protocol to use for port mapping
+// Try to auto-discover router's IP as well as the protocol supported
+// by the router for port mapping
 try (PortMapper portMapper = PortMapperFactory.create(listener)) {
 
     // Map port 12345 to a random external port
@@ -52,9 +52,13 @@ try (PortMapper portMapper = PortMapperFactory.create(listener)) {
     portMapper.unmapPort(mappedPort);
 ```
 
-If you wish to talk directly to your router rather than using PortMapperFactory, you can use the Controller classes: UpnpIgdController, NatPmpController, and PcpController.
+If you want to use a specific port mapping protocol, you can instantiate and use PortMapper implementations directly: UpnpIgdPortMapper, NatPmpPortMapper, and PcpPortMapper.
 
-## Desired improvements
+If you want to more control over how a port mapping protocol is used, you can instantiate and use a Controller implementations directly: UpnpIgdController, NatPmpController, and PcpController.
 
-* IPv6 support -- Do you have a router that uses IPv6? Please get in touch.
-* Further testing -- Everything here has been tested with miniupnpd and Apple's Airport router. If you have access to a router that uses something other than miniupnpd, please get get in touch.
+## Missing Features / Desired Improvements
+
+* IPv6 support -- IPv6 support is still missing for UPnP-IGD and PCP. If you have a router that uses IPv6 internally or externally, please send me a message.
+* Device discovery -- NAT-PMP and PCP require a better device-discovery mechanism.
+* Further testing -- Everything here has been tested with miniupnpd and Apple's Airport router. If you have access to a router that uses an implementation other than miniupnpd, please send me a message.
+* Remove Guava as a dependency.
