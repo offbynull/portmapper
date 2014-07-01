@@ -1,7 +1,7 @@
 portmapper
 ==========
 
-A Java library that provides facilities to open up ports on routers / Gateway Devices. Supported protocols include UPnP-IGD, NAT-PMP, and PCP.
+A Java library that provides facilities to open up ports on home routers. Supported protocols are UPnP-IGD, NAT-PMP, and PCP.
 
 ## Quick-start guide
 
