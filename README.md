@@ -54,7 +54,7 @@ try (PortMapper portMapper = PortMapperFactory.create(listener)) {
 
 If you want to use a specific port mapping protocol, you can instantiate and use PortMapper implementations directly: UpnpIgdPortMapper, NatPmpPortMapper, and PcpPortMapper.
 
-If you want to more control over how a port mapping protocol is used, you can instantiate and use a Controller implementations directly: UpnpIgdController, NatPmpController, and PcpController.
+If you want to more control over how a port mapping protocol is used, you can instantiate and use Controller implementations directly: UpnpIgdController, NatPmpController, and PcpController.
 
 ## Missing Features / Desired Improvements
 
