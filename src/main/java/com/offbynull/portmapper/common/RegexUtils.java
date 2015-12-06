@@ -28,10 +28,20 @@ import org.apache.commons.lang3.Validate;
  */
 public final class RegexUtils {
     /**
-     * IPV4 Regex. Taken from http://stackoverflow.com/questions/106179/regular-expression-to-match-hostname-or-ip-address.
+     * Semi-IPV4 Regex. Groups 1 to 4 are the individual address components. Further checking needs to be done to
+     * ensure that each component is between 0 to 255 and that there are no trailing zeros.
+     * 
+     * This isn't being done in the regex due to complexity.
      */
     private static final Pattern IPV4_PATTERN = Pattern.compile(
-            "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9‌​]{2}|2[0-4][0-9]|25[0-5])");
+            "([0-9]{1,3})\\."
+            + "([0-9]{1,3})\\."
+            + "([0-9]{1,3})\\."
+            + "([0-9]{1,3})");
+    
+    private static final int IPV4_COMPONENT_COUNT = 4;
+    
+    private static final int IPV4_COMPONENT_MAX = 255;
     
     private RegexUtils() {
         // do nothing
@@ -49,7 +59,24 @@ public final class RegexUtils {
         List<String> ret = new LinkedList<>();
         
         Matcher matcher = IPV4_PATTERN.matcher(text);
+        top:
         while (matcher.find()) {
+            for (int i = 1; i <= IPV4_COMPONENT_COUNT; i++) {
+                String componentStr = matcher.group(i);
+                int component = Integer.parseInt(componentStr);
+                
+                // Fail if component has trailing zeros
+                if (!String.valueOf(component).equals(componentStr)) {
+                    continue top;
+                }
+                
+                // Fail if component is greater than 255. The regex ensures that it's never below 0.
+                if (component > IPV4_COMPONENT_MAX) {
+                    continue top;
+                }
+            }
+
+            // IP is valid, add it to the return list
             ret.add(matcher.group(0));
         }
         
