@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp;
 
+import com.offbynull.portmapper.natpmp.messages.NatPmpResponse;
 import com.offbynull.portmapper.common.CommunicationType;
 
 /**

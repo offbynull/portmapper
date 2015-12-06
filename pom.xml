@@ -1,18 +1,12 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-    </parent>
-    
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     
-    <name>Port Mapper</name>
-    <description>Router port mapping using UPnP-IGD, NAT-PMP, and PCP</description>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Java library that maps ports on NAT-enabled routers (supported protocols: UPnP-IGD/NAT-PMP/PCP)</description>
     <url>https://github.com/offbynull/portmapper</url>
     
     <licenses>
@@ -46,13 +40,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.3.2</version>
+            <version>3.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -64,13 +58,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.9.5</version>
+            <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>17.0</version>
+            <version>18.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -78,7 +72,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12.1</version>
+                <version>2.16</version>
                 <executions>
                     <execution>
                         <phase>process-sources</phase>
@@ -96,7 +90,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.5</version>
                 <executions>
                     <execution>
                         <phase>process-sources</phase>
@@ -107,16 +101,19 @@
                 </executions>
                 <configuration>
                     <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>ruleset.xml</ruleset>
+                    </rulesets>
                 </configuration>
             </plugin>
-            <!--            <plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.5.4</version>
+                <version>3.0.1</version>
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Default</threshold>
-                    <failOnError>false</failOnError>   Because there isn't an easy way to turn off checks in source 
+                    <failOnError>false</failOnError>  <!-- Because there isn't an easy way to turn off checks in source -->
                 </configuration>
                 <executions>
                     <execution>
@@ -125,7 +122,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
         </plugins>
     </build>
     <profiles>

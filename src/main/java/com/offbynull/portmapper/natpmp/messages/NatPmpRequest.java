@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp;
+package com.offbynull.portmapper.natpmp.messages;
 
 import java.nio.BufferOverflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.nio.ByteBuffer;

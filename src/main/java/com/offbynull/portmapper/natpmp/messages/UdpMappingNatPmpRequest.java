@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp;
+package com.offbynull.portmapper.natpmp.messages;
 
 import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a NAT-PMP TCP mapping request. From the RFC:
+ * Represents a NAT-PMP UDP mapping request. From the RFC:
  * <pre>
  * 3.3.  Requesting a Mapping
  * 
@@ -123,21 +123,21 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class TcpMappingNatPmpRequest extends NatPmpRequest {
+public final class UdpMappingNatPmpRequest extends NatPmpRequest {
     private int internalPort;
     private int suggestedExternalPort;
     private long lifetime;
     
     /**
-     * Construct a {@link TcpMappingNatPmpRequest} object.
+     * Construct a {@link UdpMappingNatPmpRequest} object.
      * @param internalPort internal port
      * @param suggestedExternalPort suggested external port ({@code 0} for no preference)
      * @param lifetime desired lifetime of mapping ({@code 0} to destroy mapping)
      * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code suggestedExternalPort < 0 || > 65535}, or if
      * {@code lifetime < 0 || > 0xFFFFFFFFL}
      */
-    public TcpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
-        super(2);
+    public UdpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
+        super(1);
         
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(0, 65535, suggestedExternalPort);
@@ -155,7 +155,7 @@ public final class TcpMappingNatPmpRequest extends NatPmpRequest {
         dst.putShort((short) suggestedExternalPort);
         dst.putInt((int) lifetime);
     }
-    
+
     /**
      * Get internal port.
      * @return internal port
@@ -179,4 +179,5 @@ public final class TcpMappingNatPmpRequest extends NatPmpRequest {
     public long getLifetime() {
         return lifetime;
     }
+    
 }

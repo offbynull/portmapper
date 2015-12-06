@@ -16,6 +16,14 @@
  */
 package com.offbynull.portmapper.natpmp;
 
+import com.offbynull.portmapper.natpmp.messages.TcpMappingNatPmpResponse;
+import com.offbynull.portmapper.natpmp.messages.UdpMappingNatPmpResponse;
+import com.offbynull.portmapper.natpmp.messages.NatPmpRequest;
+import com.offbynull.portmapper.natpmp.messages.TcpMappingNatPmpRequest;
+import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpRequest;
+import com.offbynull.portmapper.natpmp.messages.NatPmpResponse;
+import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
+import com.offbynull.portmapper.natpmp.messages.UdpMappingNatPmpRequest;
 import com.offbynull.portmapper.common.CommunicationType;
 import com.offbynull.portmapper.common.NetworkUtils;
 import com.offbynull.portmapper.common.ResponseException;

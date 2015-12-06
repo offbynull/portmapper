@@ -14,20 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
-
-import com.offbynull.portmapper.pcp.messages.PcpResponse;
-import com.offbynull.portmapper.common.CommunicationType;
 
 /**
- * PCP controller listener.
- * @author Kasra Faghihi
+ * NAT-PMP messages.
  */
-public interface PcpControllerListener {
-    /**
-     * Called when a PCP response comes in.
-     * @param type packet type
-     * @param response response contents
-     */
-    void incomingResponse(CommunicationType type, PcpResponse response);
-}
+package com.offbynull.portmapper.natpmp.messages;

@@ -14,32 +14,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.pcp.messages;
 
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.nio.ByteBuffer;
-import org.apache.commons.lang3.Validate;
 
 /**
- * Represents an ANNOUNCE PCP response. This response has no op-code specific payload.
+ * A {@link PcpOption} that doesn't map to any of the known PCP option values presented in the RFC. From the RFC:
+ * <pre>
+ *    Because the PCP client cannot reject a response containing an Option,
+ *    PCP clients MUST ignore Options that they do not understand that
+ *    appear in responses, including Options in the mandatory-to-process
+ *    range.  Naturally, if a client explicitly requests an Option where
+ *    correct execution of that Option requires processing the Option data
+ *    in the response, that client SHOULD implement code to do that.
+ * </pre>
  * @author Kasra Faghihi
  */
-public final class AnnouncePcpResponse extends PcpResponse {
-
+public final class UnknownPcpOption extends PcpOption {
+ 
     /**
-     * Constructs a {@link AnnouncePcpResponse} object by parsing a buffer.
-     * @param buffer buffer containing PCP response data
+     * Constructs a {@link UnknownPcpOption} object.
+     * @param buffer buffer containing PCP option data
      * @throws NullPointerException if any argument is {@code null}
      * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if there's not enough or too much data remaining in the buffer, or if the version doesn't match the
-     * expected version (must always be {@code 2}), or if the r-flag isn't set, or if there's an unsuccessful/unrecognized result code,
-     * or if the op code doesn't match the ANNOUNCE opcode, or if there were problems parsing options
      */
-    public AnnouncePcpResponse(ByteBuffer buffer) {
+    public UnknownPcpOption(ByteBuffer buffer) {
         super(buffer);
-        
-        Validate.isTrue(super.getOp() == 0);
-        
-        parseOptions(buffer);
     }
 }

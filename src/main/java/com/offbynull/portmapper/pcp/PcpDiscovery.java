@@ -16,6 +16,8 @@
  */
 package com.offbynull.portmapper.pcp;
 
+import com.offbynull.portmapper.pcp.messages.MapPcpRequest;
+import com.offbynull.portmapper.pcp.messages.PcpResultCode;
 import com.offbynull.portmapper.common.NetworkUtils;
 import com.offbynull.portmapper.common.UdpCommunicator;
 import com.offbynull.portmapper.common.UdpCommunicatorListener;

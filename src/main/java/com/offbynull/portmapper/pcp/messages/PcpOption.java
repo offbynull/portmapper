@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.pcp.messages;
 
 import java.nio.BufferOverflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
@@ -138,7 +138,7 @@ public abstract class PcpOption {
      * @throws BufferOverflowException if {@code dst} doesn't have enough space to write this option
      * @throws ReadOnlyBufferException if {@code dst} is read-only
      */
-    final void dump(ByteBuffer dst) {
+    public final void dump(ByteBuffer dst) {
         Validate.notNull(data);
         
         dst.put((byte) code);

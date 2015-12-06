@@ -14,20 +14,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.pcp.messages;
 
-import com.offbynull.portmapper.pcp.messages.PcpResponse;
-import com.offbynull.portmapper.common.CommunicationType;
+import java.nio.ByteBuffer;
 
 /**
- * PCP controller listener.
+ * Represents an ANNOUNCE PCP request. This request has no op-code specific payload.
  * @author Kasra Faghihi
  */
-public interface PcpControllerListener {
+public final class AnnouncePcpRequest extends PcpRequest {
+
     /**
-     * Called when a PCP response comes in.
-     * @param type packet type
-     * @param response response contents
+     * Constructs a {@link AnnouncePcpRequest} object.
+     * @param options PCP options to use
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
      */
-    void incomingResponse(CommunicationType type, PcpResponse response);
+    public AnnouncePcpRequest(PcpOption ... options) {
+        super(0, 0L, options);
+    }
+
+    @Override
+    protected void dumpOpCodeSpecificInformation(ByteBuffer dst) {
+        // no opcode specific data
+    }
+    
 }

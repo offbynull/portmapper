@@ -53,6 +53,7 @@
         <module name="JavadocMethod">
             <property name="scope" value="protected" />
             <property name="allowUndeclaredRTE" value="true" />
+            <property name="suppressLoadErrors" value="true" />
         </module>
         <module name="JavadocType">
             <property name="scope" value="protected" />
@@ -148,7 +149,6 @@
         <!-- This is disabled because of parameter validation checks. Will add too much clutter to add constants for every check. -->
         <!--<module name="MagicNumber"/>-->
         <module name="MissingSwitchDefault"/>
-        <module name="RedundantThrows"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
 

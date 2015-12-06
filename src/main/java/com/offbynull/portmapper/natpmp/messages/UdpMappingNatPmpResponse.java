@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp;
+package com.offbynull.portmapper.natpmp.messages;
 
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a NAT-PMP TCP mapping response. From the RFC:
+ * Represents a NAT-PMP UDP mapping response. From the RFC:
  * <pre>
  *    The NAT gateway responds with the following packet format:
  * 
@@ -128,29 +128,29 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class TcpMappingNatPmpResponse extends NatPmpResponse {
+public final class UdpMappingNatPmpResponse extends NatPmpResponse {
     private int internalPort;
     private int externalPort;
     private long lifetime;
 
     /**
-     * Constructs a {@link TcpMappingNatPmpResponse} object by parsing a buffer.
+     * Constructs a {@link UdpMappingNatPmpResponse} object by parsing a buffer.
      * @param buffer buffer containing PCP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws BufferUnderflowException if not enough data is available in {@code buffer}
      * @throws IllegalArgumentException if the version doesn't match the expected version (must always be {@code 0}), or if the op
      * {@code != 129}, or if external port in the buffer is {@code < 1 || > 65535}, or if there's an unsuccessful/unrecognized result code
      */
-    public TcpMappingNatPmpResponse(ByteBuffer buffer) {
+    public UdpMappingNatPmpResponse(ByteBuffer buffer) {
         super(buffer);
         
-        Validate.isTrue(getOp() == 130);
+        Validate.isTrue(getOp() == 129);
         
         internalPort = buffer.getShort() & 0xFFFF;
         externalPort = buffer.getShort() & 0xFFFF;
         lifetime = buffer.getInt() & 0xFFFFFFFFL;
         
-        Validate.inclusiveBetween(0, 65535, externalPort);
+        Validate.inclusiveBetween(0, 65535, externalPort); // 0 valid for deletion
     }
 
     /**

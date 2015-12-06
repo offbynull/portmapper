@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.pcp.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;

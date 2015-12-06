@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.pcp.messages;
 
 import org.apache.commons.lang3.Validate;
 
@@ -100,7 +100,7 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-enum PcpResultCode {
+public enum PcpResultCode {
     /**
      * See Javadoc header.
      */

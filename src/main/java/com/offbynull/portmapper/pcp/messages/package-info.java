@@ -14,28 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.pcp;
-
-import java.nio.ByteBuffer;
 
 /**
- * Represents an ANNOUNCE PCP request. This request has no op-code specific payload.
- * @author Kasra Faghihi
+ * PCP messages.
  */
-public final class AnnouncePcpRequest extends PcpRequest {
-
-    /**
-     * Constructs a {@link AnnouncePcpRequest} object.
-     * @param options PCP options to use
-     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     */
-    public AnnouncePcpRequest(PcpOption ... options) {
-        super(0, 0L, options);
-    }
-
-    @Override
-    protected void dumpOpCodeSpecificInformation(ByteBuffer dst) {
-        // no opcode specific data
-    }
-    
-}
+package com.offbynull.portmapper.pcp.messages;
