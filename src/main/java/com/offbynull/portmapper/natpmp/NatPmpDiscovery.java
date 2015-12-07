@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp;
 
+import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpRequest;
 import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
 import com.offbynull.portmapper.common.NetworkUtils;
@@ -109,7 +110,8 @@ public final class NatPmpDiscovery {
 
                 @Override
                 public void incomingPacket(InetSocketAddress sourceAddress, DatagramChannel channel, ByteBuffer packet) {
-                    new ExternalAddressNatPmpResponse(packet); // should error out if not valid
+                    byte[] packetData = ByteBufferUtils.copyContentsToArray(packet, true);
+                    new ExternalAddressNatPmpResponse(packetData); // should error out if not valid
                     
                     InetAddress localAddress = bindMap.get(channel);
                     if (localAddress == null) {
@@ -119,9 +121,9 @@ public final class NatPmpDiscovery {
                 }
             });
 
-            ByteBuffer outBuf = ByteBuffer.allocate(16);
             ExternalAddressNatPmpRequest eanpr = new ExternalAddressNatPmpRequest();
-            eanpr.dump(outBuf);
+            byte[] eanprData = eanpr.dump();
+            ByteBuffer outBuf = ByteBuffer.wrap(eanprData);
             
             outBuf.flip();
 
@@ -164,15 +166,16 @@ public final class NatPmpDiscovery {
 
                 @Override
                 public void incomingPacket(InetSocketAddress sourceAddress, DatagramChannel channel, ByteBuffer packet) {
-                    new ExternalAddressNatPmpResponse(packet); // should error out if not valid
+                    byte[] packetData = ByteBufferUtils.copyContentsToArray(packet, true);
+                    new ExternalAddressNatPmpResponse(packetData); // should error out if not valid
                     
                     foundGateways.add(sourceAddress.getAddress());
                 }
             });
 
-            ByteBuffer outBuf = ByteBuffer.allocate(16);
             ExternalAddressNatPmpRequest eanpr = new ExternalAddressNatPmpRequest();
-            eanpr.dump(outBuf);
+            byte[] eanprData = eanpr.dump();
+            ByteBuffer outBuf = ByteBuffer.wrap(eanprData);
             
             outBuf.flip();
 

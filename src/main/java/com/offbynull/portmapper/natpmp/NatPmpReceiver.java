@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp;
 
+import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -132,7 +133,8 @@ public final class NatPmpReceiver {
                         continue; // data doesn't have a successful result, ignore
                 }
                 
-                listener.publicAddressUpdated(new ExternalAddressNatPmpResponse(buffer));
+                byte[] bufferData = ByteBufferUtils.copyContentsToArray(buffer, true);
+                listener.publicAddressUpdated(new ExternalAddressNatPmpResponse(bufferData));
             }
 
         } catch (IOException ioe) {

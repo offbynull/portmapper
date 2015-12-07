@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,8 +18,7 @@ package com.offbynull.portmapper.natpmp.messages;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -51,30 +50,52 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
+public final class ExternalAddressNatPmpResponse implements NatPmpResponse {
+    private static final int LENGTH = 12;
+    private static final int OP = 128;
+
+    private ResponseHeader header;
     private InetAddress address;
 
     /**
      * Constructs a {@link ExternalAddressNatPmpResponse} object by parsing a buffer.
-     * @param buffer buffer containing PCP response data
+     * @param data buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if the version doesn't match the expected version (must always be {@code 0}), or if the op
-     * {@code != 128}, or if there's an unsuccessful/unrecognized result code
+     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
+     * version (must always be {@code 0}), or if the op {@code != 128}, or if there's an unsuccessful/unrecognized result code
      */
-    public ExternalAddressNatPmpResponse(ByteBuffer buffer) {
-        super(buffer);
+    public ExternalAddressNatPmpResponse(byte[] data) {
+        Validate.notNull(data);
+        Validate.isTrue(data.length == LENGTH, "Bad length");
+
+        header = InternalUtils.parseNatPmpResponseHeader(data);
+        int op = header.getOp();
+
+        Validate.isTrue(op == OP, "Bad OP code: %d", op);
         
-        Validate.isTrue(getOp() == 128);
-        
-        byte[] addr = new byte[4];
-        buffer.get(addr);
-        
+        byte[] addr = Arrays.copyOfRange(data, 8, 12);
         try {
             address = InetAddress.getByAddress(addr);
         } catch (UnknownHostException uhe) {
             throw new IllegalStateException(uhe); // should never happen, will always be 4 bytes
         }
+    }
+
+    @Override
+    public byte[] dump() {
+        byte[] data = new byte[LENGTH];
+
+        data[0] = 0;
+        data[1] = (byte) OP;
+        InternalUtils.shortToBytes(data, 2, (short) header.getResultCode());
+        InternalUtils.intToBytes(data, 4, (int) header.getSecondsSinceStartOfEpoch());
+        byte[] addressBytes = address.getAddress();
+        data[8] = addressBytes[0];
+        data[9] = addressBytes[1];
+        data[10] = addressBytes[2];
+        data[11] = addressBytes[3];
+
+        return data;
     }
 
     /**
@@ -84,5 +105,14 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
     public InetAddress getAddress() {
         return address;
     }
-    
+
+    @Override
+    public int getResultCode() {
+        return header.getResultCode();
+    }
+
+    @Override
+    public long getSecondsSinceStartOfEpoch() {
+        return header.getSecondsSinceStartOfEpoch();
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,6 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -128,29 +126,80 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class TcpMappingNatPmpResponse extends NatPmpResponse {
+public final class TcpMappingNatPmpResponse implements NatPmpResponse {
+    private static final int LENGTH = 16;
+    private static final int OP = 130;
+
+    private ResponseHeader header;
     private int internalPort;
     private int externalPort;
     private long lifetime;
 
     /**
      * Constructs a {@link TcpMappingNatPmpResponse} object by parsing a buffer.
-     * @param buffer buffer containing PCP response data
+     * @param data buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if the version doesn't match the expected version (must always be {@code 0}), or if the op
-     * {@code != 129}, or if external port in the buffer is {@code < 1 || > 65535}, or if there's an unsuccessful/unrecognized result code
+     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
+     * version (must always be {@code 0}), or if the op {@code != 130}, or if internal port is {@code 0}, or if lifetime is {@code 0} but
+     * external port is not {@code 0} (if both are 0, this means mapping has been deleted)
      */
-    public TcpMappingNatPmpResponse(ByteBuffer buffer) {
-        super(buffer);
+    public TcpMappingNatPmpResponse(byte[] data) {
+        Validate.notNull(data);
+        Validate.isTrue(data.length == LENGTH, "Bad length");
+
+        header = InternalUtils.parseNatPmpResponseHeader(data);
+        int op = header.getOp();
+
+        Validate.isTrue(op == OP, "Bad OP code: %d", op);
+
+        internalPort = InternalUtils.bytesToShort(data, 8) & 0xFFFF;  // buffer.getShort() & 0xFFFF;
+        externalPort = InternalUtils.bytesToShort(data, 10) & 0xFFFF;
+        lifetime = InternalUtils.bytesToInt(data, 12) & 0xFFFFFFFFL;
         
-        Validate.isTrue(getOp() == 130);
+        validateState();
+    }
+
+    /**
+     * Construct a {@link TcpMappingNatPmpResponse} object.
+     * @param internalPort internal port
+     * @param externalPort external port
+     * @param lifetime desired lifetime of mapping ({@code 0} to destroy mapping)
+     * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code externalPort < 1 || > 65535}, or if
+     * {@code lifetime < 0 || > 0xFFFFFFFFL}, or if {@code externalPort < 0 || > 65535}, or if lifetime is {@code 0} but external port is
+     * not {@code 0} (if both are 0, this means mapping has been deleted)
+     * 
+     */
+    public TcpMappingNatPmpResponse(int internalPort, int externalPort, long lifetime) {
+        this.internalPort = internalPort;
+        this.externalPort = externalPort;
+        this.lifetime = lifetime;
         
-        internalPort = buffer.getShort() & 0xFFFF;
-        externalPort = buffer.getShort() & 0xFFFF;
-        lifetime = buffer.getInt() & 0xFFFFFFFFL;
-        
-        Validate.inclusiveBetween(0, 65535, externalPort);
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.inclusiveBetween(1, 65535, internalPort);
+        // NOTE: Be aware a lifetime of 0 indicates that the mapping has been deleted. When this happens, external external port will always
+        // be set to 0.
+        if (lifetime != 0L) {
+            Validate.inclusiveBetween(1, 65535, externalPort);
+        }
+    }
+
+    @Override
+    public byte[] dump() {
+        byte[] data = new byte[LENGTH];
+
+        data[0] = 0;
+        data[1] = (byte) OP;
+        InternalUtils.shortToBytes(data, 2, (short) header.getResultCode());
+        InternalUtils.intToBytes(data, 4, (int) header.getSecondsSinceStartOfEpoch());
+        InternalUtils.shortToBytes(data, 8, (short) internalPort);
+        InternalUtils.shortToBytes(data, 10, (short) externalPort);
+        InternalUtils.intToBytes(data, 12, (int) lifetime);
+
+        return data;
     }
 
     /**
@@ -175,5 +224,15 @@ public final class TcpMappingNatPmpResponse extends NatPmpResponse {
      */
     public long getLifetime() {
         return lifetime;
+    }
+
+    @Override
+    public int getResultCode() {
+        return header.getResultCode();
+    }
+
+    @Override
+    public long getSecondsSinceStartOfEpoch() {
+        return header.getSecondsSinceStartOfEpoch();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
-import java.nio.ByteBuffer;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Represents a NAT-PMP external address request. From the RFC:
@@ -35,16 +35,36 @@ import java.nio.ByteBuffer;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
+public final class ExternalAddressNatPmpRequest implements NatPmpRequest {
+
+    private static final int LENGTH = 2;
+    private static final int OP = 0;
+
+    /**
+     * Construct a {@link ExternalAddressNatPmpRequest} object.
+     * @param data buffer containing NAT-PMP request data
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
+     * version (must always be {@code 0}), or if the op {@code != 0}
+     */
+    public ExternalAddressNatPmpRequest(byte[] data) {
+        Validate.notNull(data);
+        Validate.isTrue(data.length == LENGTH, "Bad length");
+
+        RequestHeader header = InternalUtils.parseNatPmpRequestHeader(data);
+        int op = header.getOp();
+
+        Validate.isTrue(op == OP, "Bad OP code: %d", op);
+    }
+
     /**
      * Construct a {@link ExternalAddressNatPmpRequest} object.
      */
     public ExternalAddressNatPmpRequest() {
-        super(0);
     }
 
     @Override
-    protected void dumpOpCodeSpecificInformation(ByteBuffer dst) {
-        // do nothing
+    public byte[] dump() {
+        return new byte[] {0, OP};
     }
 }

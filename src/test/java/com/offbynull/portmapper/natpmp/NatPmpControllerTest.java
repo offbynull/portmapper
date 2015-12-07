@@ -50,14 +50,15 @@ public class NatPmpControllerTest {
         Assert.assertEquals(InetAddress.getLoopbackAddress(), address);
     }
 
-    @Test(expected = ResponseException.class)
+    @Test
     public void failedExposedAddressTest() throws Throwable {
         helper.addMapping(ByteBuffer.wrap(new byte[] {0, 0}),
                 ByteBuffer.wrap(new byte[] {0, (byte) 128, 0, 1, 0, 0, 0, 0, 127, 0, 0, 1}));
         
         NatPmpController controller = new NatPmpController(InetAddress.getByName("127.0.0.1"), null);
         
-        controller.requestExternalAddress(4);
+        ExternalAddressNatPmpResponse res = controller.requestExternalAddress(4);
+        Assert.assertEquals(1, res.getResultCode());
     }
 
     
@@ -127,24 +128,26 @@ public class NatPmpControllerTest {
         Assert.assertEquals(10, res.getLifetime());
     }
 
-    @Test(expected = ResponseException.class)
+    @Test
     public void failedOpenUdpPortTest() throws Throwable {
         helper.addMapping(ByteBuffer.wrap(new byte[] {0, 1, 0, 0, 0, 1, 0, 2, 0, 0, 0, 9}),
                 ByteBuffer.wrap(new byte[] {0, (byte) 128 + 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 3, 0, 0, 0, 10}));
         
         NatPmpController controller = new NatPmpController(InetAddress.getByName("127.0.0.1"), null);
         
-        controller.requestUdpMappingOperation(4, 1, 2, 9);
+        UdpMappingNatPmpResponse res = controller.requestUdpMappingOperation(4, 1, 2, 9);
+        Assert.assertEquals(1, res.getResultCode());
     }
 
-    @Test(expected = ResponseException.class)
+    @Test
     public void failedOpenTcpPortTest() throws Throwable {
         helper.addMapping(ByteBuffer.wrap(new byte[] {0, 2, 0, 0, 0, 1, 0, 2, 0, 0, 0, 9}),
                 ByteBuffer.wrap(new byte[] {0, (byte) 128 + 2, 0, 1, 0, 0, 0, 0, 0, 1, 0, 3, 0, 0, 0, 10}));
         
         NatPmpController controller = new NatPmpController(InetAddress.getByName("127.0.0.1"), null);
         
-        controller.requestTcpMappingOperation(4, 1, 2, 9);
+        TcpMappingNatPmpResponse res = controller.requestTcpMappingOperation(4, 1, 2, 9);
+        Assert.assertEquals(1, res.getResultCode());
     }
 
     

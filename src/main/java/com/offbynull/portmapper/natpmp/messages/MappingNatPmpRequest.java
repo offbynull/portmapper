@@ -16,8 +16,10 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import org.apache.commons.lang3.Validate;
+
 /**
- * Represents a NAT-PMP UDP mapping request. From the RFC:
+ * Abstract NAT-PMP mapping request. From the RFC:
  * <pre>
  * 3.3.  Requesting a Mapping
  * 
@@ -120,18 +122,37 @@ package com.offbynull.portmapper.natpmp.messages;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
-    private static final int OP = 1;
+public abstract class MappingNatPmpRequest implements NatPmpRequest {
+    private static final int LENGTH = 12;
+
+    private final int expectedOp;
+    private final int internalPort;
+    private final int suggestedExternalPort;
+    private final long lifetime;
     
     /**
      * Construct a {@link UdpMappingNatPmpRequest} object.
      * @param data buffer containing NAT-PMP request data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 1}), or if the op {@code != 0}
+     * version (must always be {@code 1}), or if the op {@code != expectedOp}
      */
-    public UdpMappingNatPmpRequest(byte[] data) {
-        super(OP, data);
+    MappingNatPmpRequest(int expectedOp, byte[] data) {
+        this.expectedOp = expectedOp;
+
+        Validate.notNull(data);
+        Validate.isTrue(data.length == LENGTH, "Bad length");
+
+        RequestHeader header = InternalUtils.parseNatPmpRequestHeader(data);
+        int op = header.getOp();
+
+        Validate.isTrue(op == expectedOp, "Bad OP code: %d", op);
+
+        this.internalPort = InternalUtils.bytesToShort(data, 4) & 0xFFFF;
+        this.suggestedExternalPort = InternalUtils.bytesToShort(data, 6) & 0xFFFF;
+        this.lifetime = InternalUtils.bytesToInt(data, 8) & 0xFFFFFFFFL;
+
+        validateState();
     }
 
     /**
@@ -142,7 +163,57 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
      * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code suggestedExternalPort < 0 || > 65535}, or if
      * {@code lifetime < 0 || > 0xFFFFFFFFL}
      */
-    public UdpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
-        super(OP, internalPort, suggestedExternalPort, lifetime);
+    MappingNatPmpRequest(int expectedOp, int internalPort, int suggestedExternalPort, long lifetime) {
+        this.expectedOp = expectedOp;
+        this.internalPort = internalPort;
+        this.suggestedExternalPort = suggestedExternalPort;
+        this.lifetime = lifetime;
+        
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.inclusiveBetween(1, 65535, internalPort);
+        Validate.inclusiveBetween(0, 65535, suggestedExternalPort);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+    }
+
+    @Override
+    public final byte[] dump() {
+        byte[] data = new byte[LENGTH];
+
+        data[0] = 0;
+        data[1] = (byte) expectedOp;
+        data[2] = 0;
+        data[3] = 0;
+        InternalUtils.shortToBytes(data, 4, (short) internalPort);
+        InternalUtils.shortToBytes(data, 6, (short) suggestedExternalPort);
+        InternalUtils.intToBytes(data, 8, (int) lifetime);
+
+        return data;
+    }
+
+    /**
+     * Get internal port.
+     * @return internal port
+     */
+    public final int getInternalPort() {
+        return internalPort;
+    }
+
+    /**
+     * Get suggested external port.
+     * @return suggested external port
+     */
+    public final int getSuggestedExternalPort() {
+        return suggestedExternalPort;
+    }
+
+    /**
+     * Get lifetime.
+     * @return lifetime
+     */
+    public final long getLifetime() {
+        return lifetime;
     }
 }

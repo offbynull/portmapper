@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp;
 
+import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.natpmp.messages.TcpMappingNatPmpResponse;
 import com.offbynull.portmapper.natpmp.messages.UdpMappingNatPmpResponse;
 import com.offbynull.portmapper.natpmp.messages.NatPmpRequest;
@@ -119,56 +120,44 @@ public final class NatPmpController implements Closeable {
                         return; // unknown, do nothing
                     }
                     
+                    byte[] packetData = ByteBufferUtils.copyContentsToArray(packet, false);
                     try {
-                        packet.mark();
-                        listener.incomingResponse(type, new ExternalAddressNatPmpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
+                        listener.incomingResponse(type, new ExternalAddressNatPmpResponse(packetData));
+                    } catch (IllegalArgumentException e) {
                         // ignore
-                    } finally {
-                        packet.reset();
                     }
 
                     try {
-                        packet.mark();
-                        listener.incomingResponse(type, new UdpMappingNatPmpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
+                        listener.incomingResponse(type, new UdpMappingNatPmpResponse(packetData));
+                    } catch (IllegalArgumentException e) {
                         // ignore
-                    } finally {
-                        packet.reset();
                     }
 
                     try {
-                        packet.mark();
-                        listener.incomingResponse(type, new TcpMappingNatPmpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
+                        listener.incomingResponse(type, new TcpMappingNatPmpResponse(packetData));
+                    } catch (IllegalArgumentException e) {
                         // ignore
-                    } finally {
-                        packet.reset();
                     }
                 }
             });
         }
     }
     
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send an external address request to the gateway.
      * @param sendAttempts number of times to try to submit each request
      * @return external address response
-     * @throws BufferUnderflowException if the message is too big to be written in to the buffer
      * @throws ResponseException no response available
      * @throws InterruptedException if thread was interrupted while waiting
      * @throws IllegalArgumentException if {@code sendAttempts < 1 || > 9}
      */
     public ExternalAddressNatPmpResponse requestExternalAddress(int sendAttempts) throws InterruptedException {
-        // CHECKSTYLE:ON
         ExternalAddressNatPmpRequest req = new ExternalAddressNatPmpRequest();
         
         ExternalAddressNatPmpResponseCreator creator = new ExternalAddressNatPmpResponseCreator();
         return performRequest(sendAttempts, req, creator);
     }
 
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send a UDP map request to the gateway.
      * @param sendAttempts number of times to try to submit each request
@@ -177,7 +166,6 @@ public final class NatPmpController implements Closeable {
      * @param lifetime requested lifetime in seconds
      * @return MAP response
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws BufferUnderflowException if the message is too big to be written in to the buffer
      * @throws IllegalArgumentException if any numeric argument is negative, or if {@code internalPort < 1 || > 65535}, or if
      * {@code suggestedExternalPort > 65535}, or if {@code sendAttempts < 1 || > 9}
      * @throws ResponseException the expected response never came in
@@ -192,7 +180,6 @@ public final class NatPmpController implements Closeable {
         return performRequest(sendAttempts, req, creator);
     }
 
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send a TCP map request to the gateway.
      * @param sendAttempts number of times to try to submit each request
@@ -209,7 +196,6 @@ public final class NatPmpController implements Closeable {
      */
     public TcpMappingNatPmpResponse requestTcpMappingOperation(int sendAttempts, int internalPort, int suggestedExternalPort,
             long lifetime) throws InterruptedException {
-        // CHECKSTYLE:ON
         TcpMappingNatPmpRequest req = new TcpMappingNatPmpRequest(internalPort, suggestedExternalPort, lifetime);
 
         RequestTcpMappingNatPmpResponseCreator creator = new RequestTcpMappingNatPmpResponseCreator(req);
@@ -219,11 +205,9 @@ public final class NatPmpController implements Closeable {
     private <T extends NatPmpResponse> T performRequest(int sendAttempts, NatPmpRequest request, Creator<T> creator)
             throws InterruptedException {
         Validate.inclusiveBetween(1, 9, sendAttempts);
-        
-        ByteBuffer sendBuffer = ByteBuffer.allocate(12);
             
-        request.dump(sendBuffer);
-        sendBuffer.flip();
+        byte[] sendBufferData = request.dump();
+        ByteBuffer sendBuffer = ByteBuffer.wrap(sendBufferData);
         
         for (int i = 1; i <= sendAttempts; i++) {
             T response = attemptRequest(sendBuffer, i, creator);
@@ -310,7 +294,8 @@ public final class NatPmpController implements Closeable {
         public ExternalAddressNatPmpResponse create(ByteBuffer recvBuffer) {
             ExternalAddressNatPmpResponse response;
             try {
-                response = new ExternalAddressNatPmpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new ExternalAddressNatPmpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
                 //throw new BadResponseException(e);
                 return null;
@@ -332,7 +317,8 @@ public final class NatPmpController implements Closeable {
         public UdpMappingNatPmpResponse create(ByteBuffer recvBuffer) {
             UdpMappingNatPmpResponse response;
             try {
-                response = new UdpMappingNatPmpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new UdpMappingNatPmpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
                 //throw new BadResponseException(e);
                 return null;
@@ -358,7 +344,8 @@ public final class NatPmpController implements Closeable {
         public TcpMappingNatPmpResponse create(ByteBuffer recvBuffer) {
             TcpMappingNatPmpResponse response;
             try {
-                response = new TcpMappingNatPmpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new TcpMappingNatPmpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
                 //throw new BadResponseException(e);
                 return null;
