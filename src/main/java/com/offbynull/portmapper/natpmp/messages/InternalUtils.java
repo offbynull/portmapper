@@ -81,12 +81,22 @@ final class InternalUtils {
         int op = data[1] & 0xFF;
         Validate.isTrue(op >= 128, "Op must be >= 128: %d", op);
 
+        // 3.5.  Result Codes
+        //
+        //   Currently defined result codes:
+        //
+        // 0 - Success
+        // 1 - Unsupported Version
+        // 2 - Not Authorized/Refused
+        //     (e.g., box supports mapping, but user has turned feature off)
+        // 3 - Network Failure
+        //     (e.g., NAT box itself has not obtained a DHCP lease)
+        // 4 - Out of resources
+        //     (NAT box cannot create any more mappings at this time)
+        // 5 - Unsupported opcode
         int resultCode = bytesToShort(data, 2) & 0xFFFF;
-//        NatPmpResultCode[] resultCodes = NatPmpResultCode.values();
-//        
-//        Validate.isTrue(resultCodeNum < resultCodes.length, "Unknown result code encountered: %d", resultCodeNum);
-//        Validate.isTrue(resultCodeNum == NatPmpResultCode.SUCCESS.ordinal(), "Unsuccessful result code: %s [%s]",
-//                resultCodes[resultCodeNum].toString(), resultCodes[resultCodeNum].getMessage());
+        // Why comment out this check? The result codes listed in the RFC are "currently defined", meaning that they're subject to change.
+        // Validate.isTrue(op <= 5, "Unrecognized result code: %d", 5);
         
         long secondsSinceStartOfEpoch = bytesToInt(data, 4) & 0xFFFFFFFFL;
 
