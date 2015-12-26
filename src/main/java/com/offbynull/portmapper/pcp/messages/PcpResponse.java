@@ -113,7 +113,7 @@ public abstract class PcpResponse implements PcpMessage {
      * @param op PCP opcode
      * @param lifetime lifetime in seconds
      * @param epochTime server's epoch time in seconds
-     * @param resultCode result code (0 means success)
+     * @param resultCode result code
      * @param opcodeSpecificDataLength length of the opcode specific data
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
@@ -121,13 +121,9 @@ public abstract class PcpResponse implements PcpMessage {
      * {@code 0 > resultCode > 255}, or if {@code 0L > lifetime > 0xFFFFFFFFL}
      */
     public PcpResponse(int op, int resultCode, long lifetime, long epochTime, int opcodeSpecificDataLength, PcpOption ... options) {
-        Validate.inclusiveBetween(0, 127, op);
-        Validate.inclusiveBetween(0, 255, resultCode);
-        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
-        Validate.isTrue(opcodeSpecificDataLength >= 0);
         Validate.noNullElements(options);
 
-        this.op = op & 0x80; // set topmost bit to 1, to indicate that this is a rsponse
+        this.op = op;
         this.resultCode = resultCode;
         this.lifetime = lifetime;
         this.options = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(options)));
@@ -139,6 +135,8 @@ public abstract class PcpResponse implements PcpMessage {
         for (PcpOption option : options) {
             optionsLength += option.getDataLength();
         }
+        
+        validateState();
     }
 
     /**
@@ -185,6 +183,16 @@ public abstract class PcpResponse implements PcpMessage {
         for (PcpOption option : options) {
             optionsLength += option.getDataLength();
         }
+    }
+
+    private void validateState() {
+        Validate.inclusiveBetween(0, 127, op);
+        Validate.inclusiveBetween(0, 255, resultCode);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, epochTime);
+        Validate.isTrue(dataLength >= 0);
+        Validate.isTrue(optionsLength >= 0);
+        Validate.noNullElements(options);
     }
 
     /**

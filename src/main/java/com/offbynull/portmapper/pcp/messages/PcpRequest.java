@@ -113,9 +113,6 @@ public abstract class PcpRequest implements PcpMessage {
      */
     public PcpRequest(int op, long lifetime, InetAddress internalIp, int opcodeSpecificDataLength, PcpOption ... options) {
         Validate.notNull(internalIp);
-        Validate.inclusiveBetween(0, 127, op);
-        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
-        Validate.isTrue(opcodeSpecificDataLength >= 0);
         Validate.noNullElements(options);
 
         this.op = op;
@@ -128,6 +125,8 @@ public abstract class PcpRequest implements PcpMessage {
         for (PcpOption option : options) {
             optionsLength += option.getDataLength();
         }
+        
+        validateState();
     }
 
     /**
@@ -178,6 +177,17 @@ public abstract class PcpRequest implements PcpMessage {
         for (PcpOption option : options) {
             optionsLength += option.getDataLength();
         }
+        
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.notNull(internalIp);
+        Validate.inclusiveBetween(0, 127, op);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.isTrue(dataLength >= 0);
+        Validate.isTrue(optionsLength >= 0);
+        Validate.noNullElements(options);
     }
 
     /**

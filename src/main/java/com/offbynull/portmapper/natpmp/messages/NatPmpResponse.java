@@ -31,12 +31,11 @@ public abstract class NatPmpResponse implements NatPmpMessage {
     private long secondsSinceStartOfEpoch;
 
     NatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch) {
-        Validate.inclusiveBetween(128, 255, op);
-        Validate.inclusiveBetween(0, 5, resultCode);
-        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, secondsSinceStartOfEpoch);
         this.op = op;
         this.resultCode = resultCode;
         this.secondsSinceStartOfEpoch = secondsSinceStartOfEpoch;
+        
+        validateState();
     }
 
     NatPmpResponse(byte[] buffer) {
@@ -57,6 +56,14 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         
         secondsSinceStartOfEpoch = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
         offset += 4;
+        
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.inclusiveBetween(128, 255, op);
+        Validate.inclusiveBetween(0, 65535, resultCode);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, secondsSinceStartOfEpoch);
     }
 
     @Override

@@ -112,8 +112,8 @@ public final class MapPcpRequest extends PcpRequest {
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
      * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, or if
-     * {@code protocol > 255}, or if {@code internalPort > 65535}, or if {@code suggestedExternalPort > 65535}, or if {@code mappingNonce}
-     * does not have {@code 12} bytes remaining, or if {@code protocol == 0} but {@code internalPort != 0}, or if {@code internalPort == 0}
+     * {@code 0 > protocol > 255}, or if {@code 0 > internalPort > 65535}, or if {@code 0 > suggestedExternalPort > 65535}, or if
+     * {@code mappingNonce.length != 12}, or if {@code protocol == 0} but {@code internalPort != 0}, or if {@code internalPort == 0}
      * but {@code lifetime != 0}
      */
     public MapPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
@@ -121,19 +121,7 @@ public final class MapPcpRequest extends PcpRequest {
         super(OPCODE, lifetime, internalIp, DATA_LENGTH, options);
         
         Validate.notNull(mappingNonce);
-        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
-        Validate.inclusiveBetween(0, 255, protocol);
-        Validate.inclusiveBetween(0, 65535, internalPort);
-        Validate.inclusiveBetween(0, 65535, suggestedExternalPort);
         Validate.notNull(suggestedExternalIpAddress);
-        
-        if (protocol == 0) {
-            Validate.isTrue(internalPort == 0);
-        }
-        
-        if (internalPort == 0) {
-            Validate.isTrue(super.getLifetime() == 0L);
-        }
 
         this.mappingNonce = Arrays.copyOf(mappingNonce, mappingNonce.length);
         this.protocol = protocol;
@@ -183,10 +171,24 @@ public final class MapPcpRequest extends PcpRequest {
         }
         offset += ipv6Bytes.length;
         
-        // nothing to validate
-//        Validate.inclusiveBetween(0, 255, protocol); // should never happen
-//        Validate.inclusiveBetween(0, 65535, internalPort); // can be 0 if referencing all
-//        Validate.inclusiveBetween(0, 65535, suggestedExternalPort); // can be 0 if removing
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.notNull(mappingNonce);
+        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
+        Validate.inclusiveBetween(0, 255, protocol);
+        Validate.inclusiveBetween(0, 65535, internalPort);
+        Validate.inclusiveBetween(0, 65535, suggestedExternalPort);
+        Validate.notNull(suggestedExternalIpAddress);
+        
+        if (protocol == 0) {
+            Validate.isTrue(internalPort == 0);
+        }
+        
+        if (internalPort == 0) {
+            Validate.isTrue(super.getLifetime() == 0L);
+        }
     }
 
     @Override

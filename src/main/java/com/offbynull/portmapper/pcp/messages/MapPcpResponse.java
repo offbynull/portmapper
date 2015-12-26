@@ -20,6 +20,7 @@ import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
+import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -88,6 +89,38 @@ public final class MapPcpResponse extends PcpResponse {
     private InetAddress assignedExternalIpAddress;
 
     /**
+     * Constructs a {@link MapPcpResponse} object.
+     * @param mappingNonce random value used to map requests to responses
+     * @param protocol IANA protocol number
+     * @param internalPort internal port
+     * @param assignedExternalPort assigned external port
+     * @param assignedExternalIpAddress assigned external IP address
+     * @param lifetime lifetime in seconds
+     * @param epochTime server's epoch time in seconds
+     * @param resultCode result code
+     * @param options PCP options to use
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
+     * {@code 0 > protocol > 255}, or if {@code 0 > internalPort > 65535}, or if {@code 1 > assignedExternalPort > 65535}, or if
+     * {@code mappingNonce.length != 12}
+     */
+    public MapPcpResponse(byte[] mappingNonce, int protocol, int internalPort, int assignedExternalPort,
+            InetAddress assignedExternalIpAddress, int resultCode, long lifetime, long epochTime, PcpOption ... options) {
+        super(OPCODE, resultCode, lifetime, epochTime, DATA_LENGTH, options);
+        
+        Validate.notNull(mappingNonce);
+        Validate.notNull(assignedExternalIpAddress);
+
+        this.mappingNonce = Arrays.copyOf(mappingNonce, mappingNonce.length);
+        this.protocol = protocol;
+        this.internalPort = internalPort;
+        this.assignedExternalPort = assignedExternalPort;
+        this.assignedExternalIpAddress = assignedExternalIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
+        
+        validateState();
+    }
+
+    /**
      * Constructs a {@link MapPcpResponse} object by parsing a buffer.
      * @param buffer buffer containing PCP response data
      * @throws NullPointerException if any argument is {@code null}
@@ -128,12 +161,23 @@ public final class MapPcpResponse extends PcpResponse {
         }
         offset += ipv6Bytes.length;
         
-        // nothing to validate
-//        Validate.inclusiveBetween(0, 255, protocol); // should never happen
-//        Validate.inclusiveBetween(0, 65535, internalPort); // can be 0 if referencing all
-//        Validate.inclusiveBetween(0, 65535, assignedExternalPort); // can be 0 if removing
+        validateState();
     }
+    
+    private void validateState() {
+        Validate.notNull(mappingNonce);
+        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
+        Validate.inclusiveBetween(0, 255, protocol); // copied from the request, see javadoc for request to see what 0 means
+        Validate.inclusiveBetween(0, 65535, internalPort); // copied from the request, see javadoc for request to see what 0 means...
+                                                           // 0 is valid in certain cases, but those cases can't be checked here.
+        if (getResultCode() == 0) {
+            Validate.inclusiveBetween(1, 65535, assignedExternalPort); // on success, this is the assigned external port for the mapping
+        } else {
+            Validate.inclusiveBetween(0, 65535, assignedExternalPort); // on error, 'suggested external port' copied from request (can be 0)
+        }
 
+        Validate.notNull(assignedExternalIpAddress);
+    }
 
     @Override
     public byte[] getData() {

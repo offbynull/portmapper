@@ -145,8 +145,8 @@ public final class PeerPcpRequest extends PcpRequest {
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
      * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
-     * {@code protocol < 1 or > 255}, or if {@code internalPort < 1 or > 65535}, or if {@code suggestedExternalPort > 65535}, or if
-     * {@code mappingNonce.length != 12}, or if {@code remotePort < 1 or > 65535}
+     * {@code 1 > protocol > 255}, or if {@code 1 > internalPort > 65535}, or if {@code 0 > suggestedExternalPort > 65535}, or if
+     * {@code mappingNonce.length != 12}, or if {@code 1 > remotePeerPort > 65535}
      */
     public PeerPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
             InetAddress suggestedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, long lifetime,
@@ -154,12 +154,7 @@ public final class PeerPcpRequest extends PcpRequest {
         super(OPCODE, lifetime, internalIp, DATA_LENGTH, options);
         
         Validate.notNull(mappingNonce);
-        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
-        Validate.inclusiveBetween(1, 255, protocol);
-        Validate.inclusiveBetween(1, 65535, internalPort); // must not be 0
-        Validate.inclusiveBetween(0, 65535, suggestedExternalPort); // 0 = no preference
         Validate.notNull(suggestedExternalIpAddress);
-        Validate.inclusiveBetween(1, 65535, remotePeerPort); // cannot be 0
         Validate.notNull(remotePeerIpAddress);
 
         this.mappingNonce = Arrays.copyOf(mappingNonce, mappingNonce.length);
@@ -169,6 +164,8 @@ public final class PeerPcpRequest extends PcpRequest {
         this.suggestedExternalIpAddress = suggestedExternalIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
         this.remotePeerPort = remotePeerPort;
         this.remotePeerIpAddress = remotePeerIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
+        
+        validateState();
     }
     
     /**
@@ -227,12 +224,20 @@ public final class PeerPcpRequest extends PcpRequest {
         offset += ipv6Bytes.length;
         
         
-        Validate.inclusiveBetween(1, 255, protocol); // can't be 0
-        Validate.inclusiveBetween(1, 65535, internalPort); // can't be 0
-//        Validate.inclusiveBetween(0, 65535, suggestedExternalPort); // 0 = no preference (no point in validating this)
-        Validate.inclusiveBetween(1, 65535, remotePeerPort); // can't be 0
+        validateState();
     }
     
+    private void validateState() {
+        Validate.notNull(mappingNonce);
+        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
+        Validate.inclusiveBetween(1, 255, protocol);
+        Validate.inclusiveBetween(1, 65535, internalPort); // must not be 0
+        Validate.inclusiveBetween(0, 65535, suggestedExternalPort); // 0 = no preference
+        Validate.notNull(suggestedExternalIpAddress);
+        Validate.inclusiveBetween(1, 65535, remotePeerPort); // cannot be 0
+        Validate.notNull(remotePeerIpAddress);
+    }
+
     @Override
     public byte[] getData() {
         byte[] data = new byte[DATA_LENGTH];

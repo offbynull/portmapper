@@ -84,6 +84,7 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
         byte[] addr = Arrays.copyOfRange(buffer, 8, 12);
         try {
             inetAddress = InetAddress.getByAddress(addr);
+            Validate.validState(inetAddress instanceof Inet4Address); // should never happen -- sanity check
         } catch (UnknownHostException uhe) {
             throw new IllegalStateException(uhe); // should never happen, will always be 4 bytes
         }

@@ -30,8 +30,9 @@ public abstract class NatPmpRequest implements NatPmpMessage {
 
     NatPmpRequest(int op) {
         // Checks are redundant, but keep anyways to be safe.
-        Validate.inclusiveBetween(0, 127, op);
         this.op = op;
+        
+        validateState();
     }
 
     NatPmpRequest(byte[] buffer) {
@@ -46,6 +47,12 @@ public abstract class NatPmpRequest implements NatPmpMessage {
         
         op = buffer[offset] & 0xFF;
         offset++;
+        
+        validateState();
+    }
+    
+    private void validateState() {
+        Validate.inclusiveBetween(0, 127, op);
     }
 
     @Override
