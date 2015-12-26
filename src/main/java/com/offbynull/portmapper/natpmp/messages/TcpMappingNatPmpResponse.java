@@ -16,8 +16,6 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
-import org.apache.commons.lang3.Validate;
-
 /**
  * Represents a NAT-PMP TCP mapping response. From the RFC:
  * <pre>

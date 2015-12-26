@@ -7,10 +7,12 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class ExternalAddressNatPmpResponseTest {
-    private static final InetAddress TEST_ADDRESS;
+    private static final InetAddress IPV4_TEST_ADDRESS;
+    private static final InetAddress IPV6_TEST_ADDRESS;
     static {
         try {
-            TEST_ADDRESS = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
+            IPV4_TEST_ADDRESS = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
+            IPV6_TEST_ADDRESS = InetAddress.getByAddress(new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
         } catch (UnknownHostException uhe) {
             throw new IllegalStateException(uhe);
         }
@@ -18,17 +20,22 @@ public class ExternalAddressNatPmpResponseTest {
     
     @Test
     public void mustProperlyCreatePacket() throws Exception {
-        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
+        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, IPV4_TEST_ADDRESS);
         
         assertEquals(128, resp.getOp());
         assertEquals(1, resp.getResultCode());
         assertEquals(0xFFFFFFFFL, resp.getSecondsSinceStartOfEpoch());
-        assertEquals(TEST_ADDRESS, resp.getAddress());
+        assertEquals(IPV4_TEST_ADDRESS, resp.getAddress());
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void mustFailToCreatePacketWithIpv6Address() throws Exception {
+        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, IPV6_TEST_ADDRESS);
     }
     
     @Test
     public void mustParseCreatedPacket() throws Exception {
-        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
+        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, IPV4_TEST_ADDRESS);
         byte[] buffer = resp.dump();
         
         ExternalAddressNatPmpResponse parsedResp = new ExternalAddressNatPmpResponse(buffer);
@@ -36,12 +43,12 @@ public class ExternalAddressNatPmpResponseTest {
         assertEquals(128, parsedResp.getOp());
         assertEquals(1, parsedResp.getResultCode());
         assertEquals(0xFFFFFFFFL, parsedResp.getSecondsSinceStartOfEpoch());
-        assertEquals(TEST_ADDRESS, parsedResp.getAddress());
+        assertEquals(IPV4_TEST_ADDRESS, parsedResp.getAddress());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToParsePacketThatsTooShort() throws Exception {
-        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
+        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, IPV4_TEST_ADDRESS);
         byte[] buffer = origResp.dump();
 
         buffer = Arrays.copyOf(buffer, buffer.length - 1);
@@ -51,7 +58,7 @@ public class ExternalAddressNatPmpResponseTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToParsePacketThatsTooLong() throws Exception {
-        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
+        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, IPV4_TEST_ADDRESS);
         byte[] buffer = origResp.dump();
 
         buffer = Arrays.copyOf(buffer, buffer.length + 1);

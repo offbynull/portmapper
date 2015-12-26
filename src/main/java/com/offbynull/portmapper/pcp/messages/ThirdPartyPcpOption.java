@@ -123,7 +123,7 @@ public final class ThirdPartyPcpOption extends PcpOption {
         // write ip
         byte[] ipv6AsBytes = NetworkUtils.convertToIpv6Array(internalIpAddress);
         Validate.validState(ipv6AsBytes.length == 16); // sanity check, should never throw exception
-        System.arraycopy(ipv6AsBytes, 0, data, 4, ipv6AsBytes.length);
+        System.arraycopy(ipv6AsBytes, 0, data, 0, ipv6AsBytes.length);
         
         return data;
     }

@@ -95,7 +95,7 @@ public final class NetworkUtils {
                 throw new IllegalStateException();
         }
     }
-    
+
     /**
      * Get IP addresses for all interfaces on this machine that are IPv4.
      * @return IPv4 addresses assigned to this machine

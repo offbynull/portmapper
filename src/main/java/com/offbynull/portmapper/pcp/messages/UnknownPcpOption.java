@@ -44,6 +44,9 @@ public final class UnknownPcpOption extends PcpOption {
      */
     public UnknownPcpOption(byte[] buffer, int offset) {
         super(buffer, offset);
+        int dataStartOffset = offset + HEADER_LENGTH;
+        int dataStopOffset = dataStartOffset + getDataLength();
+        this.data = Arrays.copyOfRange(buffer, dataStartOffset, dataStopOffset);
     }
 
     /**
