@@ -138,7 +138,7 @@ public abstract class MappingNatPmpRequest extends NatPmpRequest {
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
      * version (must always be {@code 1}), or if the op {@code != expectedOp}
      */
-    public MappingNatPmpRequest(int expectedOp, byte[] buffer) {
+    MappingNatPmpRequest(int expectedOp, byte[] buffer) {
         super(expectedOp);
 
         Validate.notNull(buffer);
@@ -162,7 +162,7 @@ public abstract class MappingNatPmpRequest extends NatPmpRequest {
      * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code suggestedExternalPort < 0 || > 65535}, or if
      * {@code lifetime < 0 || > 0xFFFFFFFFL}
      */
-    public MappingNatPmpRequest(int op, int internalPort, int suggestedExternalPort, long lifetime) {
+    MappingNatPmpRequest(int op, int internalPort, int suggestedExternalPort, long lifetime) {
         super(op);
         this.internalPort = internalPort;
         this.suggestedExternalPort = suggestedExternalPort;

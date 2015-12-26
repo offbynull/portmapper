@@ -30,7 +30,7 @@ public abstract class NatPmpResponse implements NatPmpMessage {
     private int resultCode;
     private long secondsSinceStartOfEpoch;
 
-    public NatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch) {
+    NatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch) {
         Validate.inclusiveBetween(128, 255, op);
         Validate.inclusiveBetween(0, 5, resultCode);
         Validate.inclusiveBetween(0L, 0xFFFFFFFFL, secondsSinceStartOfEpoch);
@@ -39,7 +39,7 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         this.secondsSinceStartOfEpoch = secondsSinceStartOfEpoch;
     }
 
-    public NatPmpResponse(byte[] buffer) {
+    NatPmpResponse(byte[] buffer) {
         Validate.notNull(buffer);
         Validate.isTrue(buffer.length >= HEADER_LENGTH);
         

@@ -139,10 +139,10 @@ public abstract class MappingNatPmpResponse extends NatPmpResponse {
      * @param buffer buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 0}), or if the op {@code != 130}, or if internal port is {@code 0}, or if lifetime is {@code 0} but
-     * external port is not {@code 0} (if both are 0, this means mapping has been deleted)
+     * version (must always be {@code 0}), or if the op {@code != expectedOp}, or if internal port is {@code 0}, or if lifetime is {@code 0}
+     * but external port is not {@code 0} (if both are 0, this means mapping has been deleted)
      */
-    public MappingNatPmpResponse(int expectedOp, byte[] buffer) {
+    MappingNatPmpResponse(int expectedOp, byte[] buffer) {
         super(buffer);
         
         Validate.notNull(buffer);
@@ -170,7 +170,7 @@ public abstract class MappingNatPmpResponse extends NatPmpResponse {
      * not {@code 0} (if both are 0, this means mapping has been deleted)
      * 
      */
-    public MappingNatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
+    MappingNatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(op, resultCode, secondsSinceStartOfEpoch);
         this.internalPort = internalPort;
         this.externalPort = externalPort;

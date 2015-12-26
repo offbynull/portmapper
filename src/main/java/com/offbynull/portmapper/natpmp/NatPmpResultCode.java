@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp.messages;
+package com.offbynull.portmapper.natpmp;
 
 import org.apache.commons.lang3.Validate;
 
@@ -90,7 +90,7 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-enum NatPmpResultCode {
+public enum NatPmpResultCode {
     /**
      * See Javadoc header.
      */
@@ -135,5 +135,4 @@ enum NatPmpResultCode {
     public String getMessage() {
         return message;
     }
-    
 }

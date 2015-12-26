@@ -16,8 +16,6 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
-import org.apache.commons.lang3.Validate;
-
 final class InternalUtils {
     final static int NAT_PMP_VERSION = 0;
     

@@ -28,13 +28,13 @@ public abstract class NatPmpRequest implements NatPmpMessage {
     
     private final int op;
 
-    public NatPmpRequest(int op) {
+    NatPmpRequest(int op) {
         // Checks are redundant, but keep anyways to be safe.
         Validate.inclusiveBetween(0, 127, op);
         this.op = op;
     }
 
-    public NatPmpRequest(byte[] buffer) {
+    NatPmpRequest(byte[] buffer) {
         Validate.notNull(buffer);
         Validate.isTrue(buffer.length >= HEADER_LENGTH);
         
