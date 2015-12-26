@@ -76,7 +76,7 @@ public final class PcpControllerTest {
         }
     }
 
-    @Test(expected = ResponseException.class)
+    @Test
     public void failedAnnounceTest() throws Throwable {
         helper.addMapping(ByteBuffer.wrap(new byte[] {
             2, // version
@@ -97,7 +97,9 @@ public final class PcpControllerTest {
         PcpController controller = null;
         try {
             controller = new PcpController(Mockito.mock(Random.class), InetAddress.getByName("127.0.0.1"), InetAddress.getByName("127.0.0.1"), null);
-            controller.requestAnnounceOperation(4);
+            AnnouncePcpResponse response = controller.requestAnnounceOperation(4);
+            
+            Assert.assertNotEquals(0, response.getResultCode());
         } finally {
             IOUtils.closeQuietly(controller);
         }

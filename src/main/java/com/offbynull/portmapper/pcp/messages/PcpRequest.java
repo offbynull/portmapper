@@ -252,7 +252,7 @@ public abstract class PcpRequest implements PcpMessage {
         
         
         // combine dumps and return
-        Validate.isTrue(payloadLength > InternalUtils.MAX_UDP_PAYLOAD);
+        Validate.isTrue(payloadLength <= InternalUtils.MAX_UDP_PAYLOAD);
         byte[] data = new byte[payloadLength];
 
         data[0] = 2;

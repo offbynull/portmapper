@@ -24,7 +24,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class NatPmpResponse implements NatPmpMessage {
-    private static final int HEADER_LENGTH = 4;
+    private static final int HEADER_LENGTH = 8;
     
     private int op;
     private int resultCode;

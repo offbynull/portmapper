@@ -80,10 +80,10 @@ final class InternalUtils {
     static List<PcpOption> parseOptions(byte[] buffer, int offset) {
         Validate.notNull(buffer);
         Validate.isTrue(offset >= 0);
-        Validate.isTrue(offset < buffer.length);
+        Validate.isTrue(offset <= buffer.length);
         
         List<PcpOption> pcpOptionsList = new ArrayList<>();
-        while (buffer.length < offset) {
+        while (offset < buffer.length) {
             PcpOption option;
 
             try {
