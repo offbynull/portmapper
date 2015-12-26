@@ -24,7 +24,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class NatPmpRequest implements NatPmpMessage {
-    private static final int HEADER_LENGTH = 4;
+    private static final int HEADER_LENGTH = 2;
     
     private final int op;
 
@@ -46,8 +46,6 @@ public abstract class NatPmpRequest implements NatPmpMessage {
         
         op = buffer[offset] & 0xFF;
         offset++;
-
-        offset += 2; // skip reserved
     }
 
     @Override
