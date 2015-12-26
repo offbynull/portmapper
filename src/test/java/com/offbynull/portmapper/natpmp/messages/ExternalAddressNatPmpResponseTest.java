@@ -1,29 +1,34 @@
 package com.offbynull.portmapper.natpmp.messages;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class ExternalAddressNatPmpResponseTest {
+    private static final InetAddress TEST_ADDRESS;
+    static {
+        try {
+            TEST_ADDRESS = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
+        } catch (UnknownHostException uhe) {
+            throw new IllegalStateException(uhe);
+        }
+    }
     
     @Test
     public void mustProperlyCreatePacket() throws Exception {
-        InetAddress addr = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
-        
-        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, addr);
+        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
         
         assertEquals(128, resp.getOp());
         assertEquals(1, resp.getResultCode());
         assertEquals(0xFFFFFFFFL, resp.getSecondsSinceStartOfEpoch());
-        assertEquals(addr, resp.getAddress());
+        assertEquals(TEST_ADDRESS, resp.getAddress());
     }
     
     @Test
     public void mustParseCreatedPacket() throws Exception {
-        InetAddress addr = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
-        
-        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, addr);
+        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
         byte[] buffer = resp.dump();
         
         ExternalAddressNatPmpResponse parsedResp = new ExternalAddressNatPmpResponse(buffer);
@@ -31,14 +36,12 @@ public class ExternalAddressNatPmpResponseTest {
         assertEquals(128, parsedResp.getOp());
         assertEquals(1, parsedResp.getResultCode());
         assertEquals(0xFFFFFFFFL, parsedResp.getSecondsSinceStartOfEpoch());
-        assertEquals(addr, parsedResp.getAddress());
+        assertEquals(TEST_ADDRESS, parsedResp.getAddress());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToParsePacketThatsTooShort() throws Exception {
-        InetAddress addr = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
-        
-        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, addr);
+        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
         byte[] buffer = origResp.dump();
 
         buffer = Arrays.copyOf(buffer, buffer.length - 1);
@@ -48,9 +51,7 @@ public class ExternalAddressNatPmpResponseTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToParsePacketThatsTooLong() throws Exception {
-        InetAddress addr = InetAddress.getByAddress(new byte[] {1, 2, 3, 4});
-        
-        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, addr);
+        ExternalAddressNatPmpResponse origResp = new ExternalAddressNatPmpResponse(1, 0xFFFFFFFFL, TEST_ADDRESS);
         byte[] buffer = origResp.dump();
 
         buffer = Arrays.copyOf(buffer, buffer.length + 1);

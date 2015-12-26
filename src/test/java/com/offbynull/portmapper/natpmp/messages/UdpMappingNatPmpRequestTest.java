@@ -9,7 +9,7 @@ public class UdpMappingNatPmpRequestTest {
     @Test
     public void mustProperlyCreatePacket() {
         UdpMappingNatPmpRequest req = new UdpMappingNatPmpRequest(0xF1F2, 0, 0xFFFFFFFFL);
-        assertEquals(2, req.getOp());
+        assertEquals(1, req.getOp());
         assertEquals(0xF1F2, req.getInternalPort());
         assertEquals(0, req.getSuggestedExternalPort());
         assertEquals(0xFFFFFFFFL, req.getLifetime());
@@ -18,7 +18,7 @@ public class UdpMappingNatPmpRequestTest {
     @Test
     public void mustProperlyCreatePacketWithNonZeroPorts() {
         UdpMappingNatPmpRequest req = new UdpMappingNatPmpRequest(0xF1F2, 0xF3F4, 0xFFFFFFFFL);
-        assertEquals(2, req.getOp());
+        assertEquals(1, req.getOp());
         assertEquals(0xF1F2, req.getInternalPort());
         assertEquals(0xF3F4, req.getSuggestedExternalPort());
         assertEquals(0xFFFFFFFFL, req.getLifetime());
@@ -30,7 +30,7 @@ public class UdpMappingNatPmpRequestTest {
         byte[] buffer = origReq.dump();
         
         UdpMappingNatPmpRequest parsedReq = new UdpMappingNatPmpRequest(buffer);
-        assertEquals(2, parsedReq.getOp());
+        assertEquals(1, parsedReq.getOp());
         assertEquals(0xF1F2, parsedReq.getInternalPort());
         assertEquals(0xF3F4, parsedReq.getSuggestedExternalPort());
         assertEquals(0xFFFFFFFFL, parsedReq.getLifetime());
