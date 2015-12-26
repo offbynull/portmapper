@@ -14,12 +14,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp.messages;
+package com.offbynull.portmapper.pcp.messages;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 final class InternalUtils {
-    final static int NAT_PMP_VERSION = 0;
+    final static int PCP_VERSION = 2;
+    final static int MAX_UDP_PAYLOAD = 1100;
     
     private InternalUtils() {
         // do nothing
@@ -71,5 +74,50 @@ final class InternalUtils {
     static void shortToBytes(byte[] data, int offset, short value) {
         data[offset] = (byte) ((value >> 8) & 0xFF);
         data[offset + 1] = (byte) (value & 0xFF);
+    }
+    
+    
+    static List<PcpOption> parseOptions(byte[] buffer, int offset) {
+        Validate.notNull(buffer);
+        Validate.isTrue(offset >= 0);
+        Validate.isTrue(offset < buffer.length);
+        
+        List<PcpOption> pcpOptionsList = new ArrayList<>();
+        while (buffer.length < offset) {
+            PcpOption option;
+
+            try {
+                option = new FilterPcpOption(buffer, offset);
+                offset += option.getBufferLength();
+                pcpOptionsList.add(option);
+                continue;
+            } catch (IllegalArgumentException iae) {
+                // do nothing
+            }
+            
+            try {
+                option = new PreferFailurePcpOption(buffer, offset);
+                offset += option.getBufferLength();
+                pcpOptionsList.add(option);
+                continue;
+            } catch (IllegalArgumentException iae) {
+                // do nothing
+            }
+            
+            try {
+                option = new ThirdPartyPcpOption(buffer, offset);
+                offset += option.getBufferLength();
+                pcpOptionsList.add(option);
+                continue;
+            } catch (IllegalArgumentException iae) {
+                // do nothing
+            }
+            
+            option = new UnknownPcpOption(buffer, offset);
+            offset += option.getBufferLength();
+            pcpOptionsList.add(option);
+        }
+        
+        return pcpOptionsList;
     }
 }

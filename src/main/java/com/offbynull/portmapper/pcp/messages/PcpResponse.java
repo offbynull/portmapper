@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,9 +16,9 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
+import static com.offbynull.portmapper.pcp.messages.InternalUtils.PCP_VERSION;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
@@ -96,53 +96,95 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public abstract class PcpResponse {
+public abstract class PcpResponse implements PcpMessage {
+    protected static final int HEADER_LENGTH = 24;
+    
     private int op;
+    private int resultCode;
     private long lifetime;
     private long epochTime;
     private List<PcpOption> options;
     
+    private int dataLength;
+    private int optionsLength;
+    
+    /**
+     * Constructs a {@link PcpResponse} object.
+     * @param op PCP opcode
+     * @param lifetime lifetime in seconds
+     * @param epochTime server's epoch time in seconds
+     * @param resultCode result code (0 means success)
+     * @param opcodeSpecificDataLength length of the opcode specific data
+     * @param options PCP options
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0 > op > 127}, or if
+     * {@code 0 > resultCode > 255}, or if {@code 0L > lifetime > 0xFFFFFFFFL}
+     */
+    public PcpResponse(int op, int resultCode, long lifetime, long epochTime, int opcodeSpecificDataLength, PcpOption ... options) {
+        Validate.inclusiveBetween(0, 127, op);
+        Validate.inclusiveBetween(0, 255, resultCode);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.isTrue(opcodeSpecificDataLength >= 0);
+        Validate.noNullElements(options);
+
+        this.op = op & 0x80; // set topmost bit to 1, to indicate that this is a rsponse
+        this.resultCode = resultCode;
+        this.lifetime = lifetime;
+        this.options = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(options)));
+        
+        this.dataLength = opcodeSpecificDataLength;
+
+        this.dataLength = opcodeSpecificDataLength;
+        
+        for (PcpOption option : options) {
+            optionsLength += option.getDataLength();
+        }
+    }
+
     /**
      * Constructs a {@link PcpResponse} object by parsing a buffer.
-     * @param buffer buffer containing PCP response data
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if the version doesn't match the expected version (must always be {@code 2}), or if the r-flag isn't
-     * set, or if there's an unsuccessful/unrecognized result code
+     * @param buffer buffer containing PCP request data
+     * @param opcodeSpecificDataLength length of the opcode specific data
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / data exceeds 1100 bytes / r-flag isn't 1)
      */
-    PcpResponse(ByteBuffer buffer) {
+    public PcpResponse(byte[] buffer, int opcodeSpecificDataLength) {
         Validate.notNull(buffer);
+        Validate.isTrue(opcodeSpecificDataLength >= 0);
+        Validate.isTrue(buffer.length >= HEADER_LENGTH);
         
-        if (buffer.remaining() < 4 || buffer.remaining() > 1100 || buffer.remaining() % 4 != 0) {
-            throw new IllegalArgumentException("Bad packet size: " + buffer.remaining());
-        }
+        int offset = 0;
         
-        int version = buffer.get() & 0xFF;
-        Validate.isTrue(version == 2, "Unknown version: %d", version);
+        int version = buffer[offset] & 0xFF;
+        Validate.isTrue(version == PCP_VERSION); // check pcp version
+        offset++;
         
-        int temp = buffer.get() & 0xFF;
-        Validate.isTrue((temp & 128) == 128, "Bad R-flag: %d", temp);
+        int temp = buffer[offset] & 0xFF;
+        Validate.isTrue((temp & 128) == 128); // check top bit (r-flag) is 1
         op = temp & 0x7F; // discard first bit, it was used for rflag
+        offset++;
         
-        buffer.get(); // skip reserved field
+        offset++; // skip reserved field
         
-        int resultCodeNum = buffer.get() & 0xFF;
-        PcpResultCode[] resultCodes = PcpResultCode.values();
+        resultCode = buffer[offset] & 0xFF; // don't bother checking if resultcode is a success
+        offset++;
         
-        Validate.isTrue(resultCodeNum < resultCodes.length, "Unknown result code encountered: %d", resultCodeNum);
-        Validate.isTrue(resultCodeNum == PcpResultCode.SUCCESS.ordinal(), "Unsuccessful result code: %s [%s]",
-                resultCodes[resultCodeNum].toString(), resultCodes[resultCodeNum].getMessage());
+        lifetime = InternalUtils.bytesToInt(buffer, offset);
+        offset += 4;
         
-        lifetime = buffer.getInt() & 0xFFFFFFFFL;
+        epochTime = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
+        offset += 4;
         
-        epochTime = buffer.getInt() & 0xFFFFFFFFL;
+        offset += 12; // skip over reserved space
         
-        for (int i = 0; i < 12; i++) {
-            buffer.get();
-            //Validate.isTrue(buffer.get() == 0, "Reserved space indicates unsuccessful response");
+        // skip over data block -- data block should be parsed by child class
+        this.dataLength = opcodeSpecificDataLength;
+        offset += opcodeSpecificDataLength;
+        
+        options = InternalUtils.parseOptions(buffer, offset);
+        for (PcpOption option : options) {
+            optionsLength += option.getDataLength();
         }
-        
-        options = Collections.emptyList();
     }
 
     /**
@@ -151,6 +193,14 @@ public abstract class PcpResponse {
      */
     public final int getOp() {
         return op;
+    }
+
+    /**
+     * Get the result code. 0 means success.
+     * @return result code
+     */
+    public int getResultCode() {
+        return resultCode;
     }
 
     /**
@@ -176,51 +226,71 @@ public abstract class PcpResponse {
     public final List<PcpOption> getOptions() {
         return options;
     }
+
+    /**
+     * Get PCP opcode-specific data length. Equivalent to {@code getData().length}.
+     * @return PCP opcode-specific data length
+     */
+    public final int getDataLength() {
+        return dataLength;
+    }
+
+    /**
+     * Get PCP opcode-specific data.
+     * @return PCP opcode-specific data
+     */
+    public abstract byte[] getData();
     
     /**
-     * MUST be called by child class constructor so that PCP options can be parsed.
-     * @param buffer buffer containing PCP response data, with the pointer at the point which PCP options begin
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
+     * Get the number of bytes this PCP option takes up when dumped out (length of buffer returned by {@link #dump() }).
+     * @return length of buffer containing PCP option
      */
-    protected final void parseOptions(ByteBuffer buffer) {
-        Validate.notNull(buffer);
-        
-        List<PcpOption> pcpOptionsList = new ArrayList<>();
-        while (buffer.hasRemaining()) {
-            PcpOption option;
+    public final int getBufferLength() {
+        int length = HEADER_LENGTH + dataLength + optionsLength;
+        return length;
+    }
 
-            try {
-                buffer.mark();
-                option = new FilterPcpOption(buffer);
-                pcpOptionsList.add(option);
-                continue;
-            } catch (BufferUnderflowException | IllegalArgumentException e) {
-                buffer.reset();
-            }
-            
-            try {
-                buffer.mark();
-                option = new PreferFailurePcpOption(buffer);
-                pcpOptionsList.add(option);
-                continue;
-            } catch (BufferUnderflowException | IllegalArgumentException e) {
-                buffer.reset();
-            }
-            
-            try {
-                buffer.mark();
-                option = new ThirdPartyPcpOption(buffer);
-                pcpOptionsList.add(option);
-                continue;
-            } catch (BufferUnderflowException | IllegalArgumentException e) {
-                buffer.reset();
-            }
-            
-            option = new UnknownPcpOption(buffer);
-            pcpOptionsList.add(option);
+    @Override
+    public final byte[] dump() {
+        // first pass calculates required size + gets dumps
+        int payloadLength = HEADER_LENGTH;
+        
+        byte[] opcodeSpecificData = getData();
+        payloadLength += opcodeSpecificData.length;
+        
+        List<byte[]> optionsData = new ArrayList<>(options.size());
+        for (PcpOption option : options) {
+            byte[] optionData = option.dump();
+            payloadLength += optionData.length;
+            optionsData.add(optionData);
         }
         
-        options = Collections.unmodifiableList(pcpOptionsList);
-    } 
+        
+        // combine dumps and return
+        Validate.isTrue(payloadLength > InternalUtils.MAX_UDP_PAYLOAD);
+        byte[] data = new byte[payloadLength];
+
+        data[0] = 2;
+        data[1] = (byte) (op & 0x80); // topmost bit should be 1
+        data[2] = 0;
+        data[3] = (byte) resultCode;
+        InternalUtils.intToBytes(data, 4, (int) lifetime);
+        InternalUtils.intToBytes(data, 8, (int) epochTime);
+
+        int offset = 24; // skip over reserved
+        
+        // write opcode-specific data
+        System.arraycopy(opcodeSpecificData, 0, data, offset, opcodeSpecificData.length);
+        offset += opcodeSpecificData.length;
+
+        // write options data
+        for (byte[] optionData : optionsData) {
+            System.arraycopy(optionData, 0, data, offset, optionData.length);
+            offset += optionData.length;
+        }
+        
+        
+        // return data
+        return data;
+    }
 }

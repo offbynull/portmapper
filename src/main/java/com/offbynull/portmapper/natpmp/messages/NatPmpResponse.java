@@ -16,20 +16,67 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import static com.offbynull.portmapper.natpmp.messages.InternalUtils.NAT_PMP_VERSION;
+import org.apache.commons.lang3.Validate;
+
 /**
  * Represents a NAT-PMP response.
  * @author Kasra Faghihi
  */
-public interface NatPmpResponse extends NatPmpMessage {
+public abstract class NatPmpResponse implements NatPmpMessage {
+    private static final int HEADER_LENGTH = 4;
+    
+    private int op;
+    private int resultCode;
+    private long secondsSinceStartOfEpoch;
+
+    public NatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch) {
+        Validate.inclusiveBetween(128, 255, op);
+        Validate.inclusiveBetween(0, 5, resultCode);
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, secondsSinceStartOfEpoch);
+        this.op = op;
+        this.resultCode = resultCode;
+        this.secondsSinceStartOfEpoch = secondsSinceStartOfEpoch;
+    }
+
+    public NatPmpResponse(byte[] buffer) {
+        Validate.notNull(buffer);
+        Validate.isTrue(buffer.length >= HEADER_LENGTH);
+        
+        int offset = 0;
+
+        int version = buffer[offset] & 0xFF;
+        Validate.isTrue(version == NAT_PMP_VERSION); // check pcp version
+        offset++;
+        
+        op = buffer[offset] & 0xFF;
+        offset++;
+
+        resultCode = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+        
+        secondsSinceStartOfEpoch = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
+        offset += 4;
+    }
+
+    @Override
+    public final int getOp() {
+        return op;
+    }
+        
     /**
-     * Get the result code for the request this message is a response to.
+     * Get result code. 0 means success.
      * @return result code
      */
-    int getResultCode();
-    
+    public final int getResultCode() {
+        return resultCode;
+    }
+
     /**
-     * Get the number of seconds since the device's port mapping table was initialized on startup, or reset for any other reason.
-     * @return number of seconds the device's port mapping table has been up (up to {@code 0xFFFFFFFF))
+     * Get the number of seconds since the device's port mapping table was initialized/reset.
+     * @return number of seconds the device's port mapping table has been up (up to {@code 0xFFFFFFFFL})
      */
-    long getSecondsSinceStartOfEpoch();
+    public final long getSecondsSinceStartOfEpoch() {
+        return secondsSinceStartOfEpoch;
+    }
 }

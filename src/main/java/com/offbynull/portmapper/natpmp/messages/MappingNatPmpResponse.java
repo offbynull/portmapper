@@ -16,8 +16,10 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import org.apache.commons.lang3.Validate;
+
 /**
- * Represents a NAT-PMP UDP mapping response. From the RFC:
+ * Abstract NAT-PMP mapping response. From the RFC:
  * <pre>
  *    The NAT gateway responds with the following packet format:
  * 
@@ -124,32 +126,105 @@ package com.offbynull.portmapper.natpmp.messages;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class UdpMappingNatPmpResponse extends MappingNatPmpResponse {
-    private static final int OP = 129;
+public abstract class MappingNatPmpResponse extends NatPmpResponse {
+    private static final int LENGTH = 16;
+
+    private int internalPort;
+    private int externalPort;
+    private long lifetime;
 
     /**
-     * Constructs a {@link UdpMappingNatPmpResponse} object by parsing a buffer.
+     * Constructs a {@link MappingNatPmpResponse} object by parsing a buffer.
+     * @param expectedOp expected op code
      * @param buffer buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 0}), or if the op {@code != 129}, or if internal port is {@code 0}, or if lifetime is {@code 0} but
+     * version (must always be {@code 0}), or if the op {@code != 130}, or if internal port is {@code 0}, or if lifetime is {@code 0} but
      * external port is not {@code 0} (if both are 0, this means mapping has been deleted)
      */
-    public UdpMappingNatPmpResponse(byte[] buffer) {
-        super(OP, buffer);
+    public MappingNatPmpResponse(int expectedOp, byte[] buffer) {
+        super(buffer);
+        
+        Validate.notNull(buffer);
+        Validate.isTrue(buffer.length == LENGTH);
+
+        Validate.isTrue(this.getOp() == expectedOp);
+
+        internalPort = InternalUtils.bytesToShort(buffer, 8) & 0xFFFF;  // buffer.getShort() & 0xFFFF;
+        externalPort = InternalUtils.bytesToShort(buffer, 10) & 0xFFFF;
+        lifetime = InternalUtils.bytesToInt(buffer, 12) & 0xFFFFFFFFL;
+        
+        validateState();
     }
 
-
     /**
-     * Construct a {@link UdpMappingNatPmpResponse} object.
+     * Construct a {@link MappingNatPmpResponse} object.
+     * @param op op code
      * @param internalPort internal port
+     * @param resultCode result code (0 = success)
+     * @param secondsSinceStartOfEpoch seconds since start of epoch
      * @param externalPort external port
      * @param lifetime desired lifetime of mapping ({@code 0} to destroy mapping)
      * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code externalPort < 1 || > 65535}, or if
      * {@code lifetime < 0 || > 0xFFFFFFFFL}, or if {@code externalPort < 0 || > 65535}, or if lifetime is {@code 0} but external port is
      * not {@code 0} (if both are 0, this means mapping has been deleted)
+     * 
      */
-    public UdpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
-        super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
+    public MappingNatPmpResponse(int op, int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
+        super(op, resultCode, secondsSinceStartOfEpoch);
+        this.internalPort = internalPort;
+        this.externalPort = externalPort;
+        this.lifetime = lifetime;
+        
+        validateState();
+    }
+
+    private void validateState() {
+        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.inclusiveBetween(1, 65535, internalPort);
+        // NOTE: Be aware a lifetime of 0 indicates that the mapping has been deleted. When this happens, external external port will always
+        // be set to 0.
+        if (lifetime != 0L) {
+            Validate.inclusiveBetween(1, 65535, externalPort);
+        }
+    }
+
+    @Override
+    public final byte[] dump() {
+        byte[] data = new byte[LENGTH];
+
+        data[0] = 0;
+        data[1] = (byte) getOp();
+        InternalUtils.shortToBytes(data, 2, (short) getResultCode());
+        InternalUtils.intToBytes(data, 4, (int) getSecondsSinceStartOfEpoch());
+        InternalUtils.shortToBytes(data, 8, (short) internalPort);
+        InternalUtils.shortToBytes(data, 10, (short) externalPort);
+        InternalUtils.intToBytes(data, 12, (int) lifetime);
+
+        return data;
+    }
+
+    /**
+     * Get the internal port number.
+     * @return internal port number
+     */
+    public final int getInternalPort() {
+        return internalPort;
+    }
+
+    /**
+     * Get the external port number.
+     * @return external port number
+     */
+    public final int getExternalPort() {
+        return externalPort;
+    }
+
+    /**
+     * Get the lifetime for this mapping.
+     * @return lifetime for this mapping
+     */
+    public final long getLifetime() {
+        return lifetime;
     }
 }

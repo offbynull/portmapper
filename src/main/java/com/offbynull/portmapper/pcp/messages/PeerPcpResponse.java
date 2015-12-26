@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,11 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -87,7 +88,11 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class PeerPcpResponse extends PcpResponse {
-    private ByteBuffer mappingNonce;
+    private static final int OPCODE = 2;
+    private static final int DATA_LENGTH = 56;
+    private static final int NONCE_LENGTH = 12;
+
+    private byte[] mappingNonce;
     private int protocol;
     private int internalPort;
     private int assignedExternalPort;
@@ -96,67 +101,151 @@ public final class PeerPcpResponse extends PcpResponse {
     private InetAddress remotePeerIpAddress;
 
     /**
+     * Constructs a {@link PeerPcpResponse} object.
+     * @param mappingNonce random value used to map requests to responses
+     * @param protocol IANA protocol number
+     * @param internalPort internal port
+     * @param assignedExternalPort assigned external port
+     * @param assignedExternalIpAddress assigned external IP address
+     * @param remotePeerPort remote port
+     * @param remotePeerIpAddress remote IP address
+     * @param lifetime lifetime in seconds
+     * @param epochTime server's epoch time in seconds
+     * @param resultCode result code (0 means success)
+     * @param options PCP options to use
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
+     * {@code protocol < 1 or > 255}, or if {@code internalPort < 1 or > 65535}, or if {@code suggestedExternalPort > 65535}, or if
+     * {@code mappingNonce.length != 12}, or if {@code remotePort < 1 or > 65535}
+     */
+    public PeerPcpResponse(byte[] mappingNonce, int protocol, int internalPort, int assignedExternalPort,
+            InetAddress assignedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, int resultCode, long lifetime,
+            long epochTime, PcpOption ... options) {
+        super(OPCODE, resultCode, lifetime, epochTime, DATA_LENGTH, options);
+        
+        Validate.notNull(mappingNonce);
+        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
+        Validate.inclusiveBetween(1, 255, protocol); // can't be 0
+        Validate.inclusiveBetween(1, 65535, internalPort); // can't be 0
+        Validate.inclusiveBetween(1, 65535, assignedExternalPort); // can't be 0
+        Validate.notNull(assignedExternalIpAddress);
+        Validate.inclusiveBetween(1, 65535, remotePeerPort); // can't be 0
+        Validate.notNull(remotePeerIpAddress);
+
+        this.mappingNonce = Arrays.copyOf(mappingNonce, mappingNonce.length);
+        this.protocol = protocol;
+        this.internalPort = internalPort;
+        this.assignedExternalPort = assignedExternalPort;
+        this.assignedExternalIpAddress = assignedExternalIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
+        this.remotePeerPort = remotePeerPort;
+        this.remotePeerIpAddress = remotePeerIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
+    }
+
+    /**
      * Constructs a {@link PeerPcpResponse} object by parsing a buffer.
      * @param buffer buffer containing PCP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if there's not enough or too much data remaining in the buffer, or if the version doesn't match the
-     * expected version (must always be {@code 2}), or if the r-flag isn't set, or if there's an unsuccessful/unrecognized result code,
-     * or if the op code doesn't match the PEER opcode, or if the response has a {@code 0} for its {@code internalPort} or
-     * {@code assignedExternalPort} or {@code remotePeerPort} or {@code protocol} field, or if there were problems parsing options
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / data exceeds 1100 bytes / protocol is 0 / internal port is 0 / assigned external port is 0 / remote port is 0)
      */
-    public PeerPcpResponse(ByteBuffer buffer) {
-        super(buffer);
+    public PeerPcpResponse(byte[] buffer) {
+        super(buffer, DATA_LENGTH);
         
-        Validate.isTrue(super.getOp() == 2);
+        Validate.isTrue(super.getOp() == OPCODE);
+        
+        int remainingLength = buffer.length - HEADER_LENGTH;
+        Validate.isTrue(remainingLength >= DATA_LENGTH); // FYI: remaining length = data block len + options len
+        
+        int offset = HEADER_LENGTH;
+        
+        mappingNonce = new byte[NONCE_LENGTH];
+        System.arraycopy(buffer, offset, mappingNonce, 0, mappingNonce.length);
+        offset += mappingNonce.length;
+        
+        protocol = buffer[offset] & 0xFF;
+        offset++;
+        
+        offset += 3; // 3 reserved bytes
+        
+        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+        
+        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
 
-        mappingNonce = ByteBuffer.allocate(12);
-        buffer.get(mappingNonce.array());
-        mappingNonce = mappingNonce.asReadOnlyBuffer();
-        this.protocol = buffer.get() & 0xFF;
-        
-        for (int i = 0; i < 3; i++) { // reserved block
-            buffer.get();
-        }
-        
-        this.internalPort = buffer.getShort() & 0xFFFF;
-        this.assignedExternalPort = buffer.getShort() & 0xFFFF;
-        byte[] addrArr = new byte[16];
-        buffer.get(addrArr);
+        byte[] ipv6Bytes = new byte[16];
+        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
         try {
-            this.assignedExternalIpAddress = InetAddress.getByAddress(addrArr); // should automatically shift down to ipv4 if ipv4-to-ipv6
-                                                                                // mapped address
+            assignedExternalIpAddress = InetAddress.getByAddress(ipv6Bytes);
         } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe); // should never happen, will always be 16 bytes
+            throw new IllegalStateException(uhe); // should never happen
         }
-        this.remotePeerPort = buffer.getShort() & 0xFFFF;
+        offset += ipv6Bytes.length;
+
+        remotePeerPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
         
-        for (int i = 0; i < 2; i++) { // reserved block
-            buffer.get();
-        }
+        offset += 2; // reserved
         
-        buffer.get(addrArr);
+        ipv6Bytes = new byte[16];
+        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
         try {
-            this.remotePeerIpAddress = InetAddress.getByAddress(addrArr); // should automatically shift down to ipv4 if ipv4-to-ipv6
-                                                                          // mapped address
+            remotePeerIpAddress = InetAddress.getByAddress(ipv6Bytes);
         } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe); // should never happen, will always be 16 bytes
+            throw new IllegalStateException(uhe); // should never happen
         }
+        offset += ipv6Bytes.length;
         
-        Validate.inclusiveBetween(1, 255, protocol);
-        Validate.inclusiveBetween(1, 65535, internalPort);
-        Validate.inclusiveBetween(1, 65535, assignedExternalPort);
-        Validate.inclusiveBetween(1, 65535, remotePeerPort);
+        Validate.inclusiveBetween(1, 255, protocol); // can't be 0
+        Validate.inclusiveBetween(1, 65535, internalPort); // can't be 0
+        Validate.inclusiveBetween(1, 65535, assignedExternalPort); // can't be 0
+        Validate.inclusiveBetween(1, 65535, remotePeerPort); // can't be 0
+    }
+
+    
+    @Override
+    public byte[] getData() {
+        byte[] data = new byte[DATA_LENGTH];
         
-        parseOptions(buffer);
+        int offset = 0;
+        
+        System.arraycopy(mappingNonce, 0, data, offset, mappingNonce.length);
+        offset += mappingNonce.length;
+        
+        data[offset] = (byte) protocol;
+        offset++;
+        
+        offset += 3; // 3 reserved bytes
+        
+        InternalUtils.shortToBytes(data, offset, (short) internalPort);
+        offset += 2;
+        
+        InternalUtils.shortToBytes(data, offset, (short) assignedExternalPort);
+        offset += 2;
+        
+        byte[] ipv6Array = NetworkUtils.convertToIpv6Array(assignedExternalIpAddress);
+        System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
+        offset += ipv6Array.length;
+
+        InternalUtils.shortToBytes(data, offset, (short) remotePeerPort);
+        offset += 2;
+        
+        offset += 2; // 2 reserved bytes
+
+        ipv6Array = NetworkUtils.convertToIpv6Array(remotePeerIpAddress);
+        System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
+        offset += ipv6Array.length;
+        
+        return data;
     }
 
     /**
      * Get nonce.
-     * @return nonce (read-only buffer)
+     * @return nonce
      */
-    public ByteBuffer getMappingNonce() {
-        return mappingNonce.asReadOnlyBuffer();
+    public byte[] getMappingNonce() {
+        return Arrays.copyOf(mappingNonce, mappingNonce.length);
     }
 
     /**

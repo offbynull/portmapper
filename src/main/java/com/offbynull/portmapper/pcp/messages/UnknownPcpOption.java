@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,7 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * A {@link PcpOption} that doesn't map to any of the known PCP option values presented in the RFC. From the RFC:
@@ -32,14 +31,35 @@ import java.nio.ByteBuffer;
  * @author Kasra Faghihi
  */
 public final class UnknownPcpOption extends PcpOption {
- 
+
+    private byte[] data;
+
     /**
-     * Constructs a {@link UnknownPcpOption} object.
+     * Constructs a {@link UnknownPcpOption} object by parsing a buffer.
      * @param buffer buffer containing PCP option data
+     * @param offset offset in {@code buffer} where the PCP option starts
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / length is not a multiple of 4 (not enough padding) / length exceeds 65535 / data doesn't contain enough bytes)
      */
-    public UnknownPcpOption(ByteBuffer buffer) {
-        super(buffer);
+    public UnknownPcpOption(byte[] buffer, int offset) {
+        super(buffer, offset);
+    }
+
+    /**
+     * Constructs a {@link PcpOption} object.
+     * @param code option code
+     * @param data option data (do not include padding)
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code code < 0 || code > 255}, or if {@code data.length > 65535}
+     */
+    public UnknownPcpOption(int code, byte[] data) {
+        super(code, data.length);
+        this.data = Arrays.copyOf(data, data.length);
+    }
+
+    @Override
+    public byte[] getData() {
+        return Arrays.copyOf(data, data.length);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,10 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
+import static com.offbynull.portmapper.pcp.messages.InternalUtils.PCP_VERSION;
 import java.net.InetAddress;
-import java.nio.BufferOverflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
-import java.nio.ReadOnlyBufferException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,27 +89,95 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public abstract class PcpRequest {
+public abstract class PcpRequest implements PcpMessage {
+    protected static final int HEADER_LENGTH = 24;
+    
     private int op;
     private long lifetime;
+    private InetAddress internalIp;
     private List<PcpOption> options;
+    
+    private int dataLength;
+    private int optionsLength;
 
     /**
      * Constructs a {@link PcpRequest} object.
      * @param op PCP opcode
      * @param lifetime requested lifetime in seconds
+     * @param internalIp IP address on the interface used to access the PCP server
+     * @param opcodeSpecificDataLength length of the opcode specific data
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code op > 127}, or if {@code lifetime > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0 > op > 127}, or if
+     * {@code 0L > lifetime > 0xFFFFFFFFL}
      */
-    PcpRequest(int op, long lifetime, PcpOption ... options) {
+    public PcpRequest(int op, long lifetime, InetAddress internalIp, int opcodeSpecificDataLength, PcpOption ... options) {
+        Validate.notNull(internalIp);
         Validate.inclusiveBetween(0, 127, op);
         Validate.inclusiveBetween(0L, 0xFFFFFFFFL, lifetime);
+        Validate.isTrue(opcodeSpecificDataLength >= 0);
         Validate.noNullElements(options);
 
         this.op = op;
         this.lifetime = lifetime;
+        this.internalIp = internalIp;
         this.options = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(options)));
+
+        this.dataLength = opcodeSpecificDataLength;
+        
+        for (PcpOption option : options) {
+            optionsLength += option.getDataLength();
+        }
+    }
+
+    /**
+     * Constructs a {@link PcpRequest} object by parsing a buffer.
+     * @param buffer buffer containing PCP request data
+     * @param opcodeSpecificDataLength length of the opcode specific data
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / data exceeds 1100 bytes / r-flag isn't 0)
+     */
+    public PcpRequest(byte[] buffer, int opcodeSpecificDataLength) {
+        Validate.notNull(buffer);
+        Validate.isTrue(opcodeSpecificDataLength >= 0);
+        Validate.isTrue(buffer.length >= HEADER_LENGTH);
+        
+        int offset = 0;
+
+        int version = buffer[offset] & 0xFF;
+        Validate.isTrue(version == PCP_VERSION); // check pcp version
+        offset++;
+        
+        int temp = buffer[offset] & 0xFF;
+        Validate.isTrue((temp & 128) == 0); // check top bit (r-flag) is 0
+        op = temp;
+        offset++;
+        
+        // int reserved = InternalUtils.bytesToShort(buffer, offset); // RFC says to ignore on reception
+        offset += 2;
+        
+        lifetime = InternalUtils.bytesToInt(buffer, offset);
+        offset += 4;
+
+        // at offset 8, write ipv6 address
+        byte[] ipv6Bytes = new byte[16];
+        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
+        try {
+            internalIp = InetAddress.getByAddress(ipv6Bytes);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalStateException(uhe); // should never happen
+        }
+        offset += ipv6Bytes.length;
+        
+        // skip over data block -- data block should be parsed by child class
+        this.dataLength = opcodeSpecificDataLength;
+        offset += opcodeSpecificDataLength;
+        
+        options = InternalUtils.parseOptions(buffer, offset);
+        for (PcpOption option : options) {
+            optionsLength += option.getDataLength();
+        }
     }
 
     /**
@@ -121,11 +189,19 @@ public abstract class PcpRequest {
     }
 
     /**
-     * Get lifetime.
-     * @return lifetime in seconds
+     * Get requested lifetime.
+     * @return requested lifetime in seconds
      */
     public final long getLifetime() {
         return lifetime;
+    }
+
+    /**
+     * Get internal IP address.
+     * @return internal IP address
+     */
+    public final InetAddress getInternalIp() {
+        return internalIp;
     }
 
     /**
@@ -137,58 +213,71 @@ public abstract class PcpRequest {
     }
 
     /**
-     * Dump this PCP request in to a byte buffer.
-     * @param dst byte buffer to dump to
-     * @param selfAddress IP address of this machine on the interface used to access the PCP server
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferOverflowException if {@code dst} doesn't have enough space to write this option
-     * @throws ReadOnlyBufferException if {@code dst} is read-only
+     * Get PCP opcode-specific data length. Equivalent to {@code getData().length}.
+     * @return PCP opcode-specific data length
      */
-    public final void dump(ByteBuffer dst, InetAddress selfAddress) {
-        Validate.notNull(dst);
-        Validate.notNull(selfAddress);
-        
-        dst.put((byte) 2);
-        dst.put((byte) op); // topmost bit should be 0, because op is between 0 to 127, which means r-flag = 0
-        dst.putShort((short) 0);
-        dst.putInt((int) lifetime);
-        
-        byte[] selfAddressArr = selfAddress.getAddress();
-        switch (selfAddressArr.length) {
-            case 4: {
-                // convert ipv4 address to ipv4-mapped ipv6 address
-                for (int i = 0; i < 10; i++) {
-                    dst.put((byte) 0);
-                }
-                
-                for (int i = 0; i < 2; i++) {
-                    dst.put((byte) 0xff);
-                }
-                
-                dst.put(selfAddressArr);
-                break;
-            }
-            case 16: {
-                dst.put(selfAddressArr);
-                break;
-            }
-            default:
-                throw new IllegalArgumentException(); // should never happen
-        }
-        
-        dumpOpCodeSpecificInformation(dst);
-
-        for (PcpOption option : options) {
-            option.dump(dst);
-        }
+    public final int getDataLength() {
+        return dataLength;
     }
+
+    /**
+     * Get PCP opcode-specific data.
+     * @return PCP opcode-specific data
+     */
+    public abstract byte[] getData();
     
     /**
-     * Called by {@link #dump(java.nio.ByteBuffer, java.net.InetAddress) } to write op-code specific data to the buffer.
-     * @param dst byte buffer to dump to
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferOverflowException if {@code dst} doesn't have enough space to write this option
-     * @throws ReadOnlyBufferException if {@code dst} is read-only
+     * Get the number of bytes this PCP option takes up when dumped out (length of buffer returned by {@link #dump() }).
+     * @return length of buffer containing PCP option
      */
-    protected abstract void dumpOpCodeSpecificInformation(ByteBuffer dst);
+    public final int getBufferLength() {
+        int length = HEADER_LENGTH + dataLength + optionsLength;
+        return length;
+    }
+
+    @Override
+    public final byte[] dump() {
+        // first pass calculates required size + gets dumps
+        int payloadLength = HEADER_LENGTH;
+        
+        byte[] opcodeSpecificData = getData();
+        payloadLength += opcodeSpecificData.length;
+        
+        List<byte[]> optionsData = new ArrayList<>(options.size());
+        for (PcpOption option : options) {
+            byte[] optionData = option.dump();
+            payloadLength += optionData.length;
+            optionsData.add(optionData);
+        }
+        
+        
+        // combine dumps and return
+        Validate.isTrue(payloadLength > InternalUtils.MAX_UDP_PAYLOAD);
+        byte[] data = new byte[payloadLength];
+
+        data[0] = 2;
+        data[1] = (byte) op; // topmost bit should be 0, because op is between 0 to 127, which means r-flag = 0
+        InternalUtils.shortToBytes(data, 2, (short) 0);
+        InternalUtils.intToBytes(data, 4, (int) lifetime);
+
+        // at offset 8, write ipv6 address
+        byte[] selfAddressArr = NetworkUtils.convertToIpv6Array(internalIp);
+        System.arraycopy(selfAddressArr, 0, data, 8, selfAddressArr.length);
+
+        int offset = 24;
+        
+        // write opcode-specific data
+        System.arraycopy(opcodeSpecificData, 0, data, offset, opcodeSpecificData.length);
+        offset += opcodeSpecificData.length;
+
+        // write options data
+        for (byte[] optionData : optionsData) {
+            System.arraycopy(optionData, 0, data, offset, optionData.length);
+            offset += optionData.length;
+        }
+        
+        
+        // return data
+        return data;
+    }
 }

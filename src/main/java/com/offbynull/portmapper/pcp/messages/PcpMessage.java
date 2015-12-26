@@ -14,22 +14,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.natpmp.messages;
+package com.offbynull.portmapper.pcp.messages;
 
-import org.apache.commons.lang3.Validate;
-
-final class RequestHeader {
-    
-    private final int op;
-
-    public RequestHeader(int op) {
-        // Checks are redundant, but keep anyways to be safe.
-        Validate.inclusiveBetween(0, 127, op);
-        this.op = op;
-    }
-
-    public int getOp() {
-        return op;
-    }
-    
+/**
+ * Represents a PCP message.
+ * @author Kasra Faghihi
+ */
+public interface PcpMessage {
+    /**
+     * Dump out the PCP message as a packet.
+     * @return PCP packet
+     * @throws IndexOutOfBoundsException if the generated packet is greater than 1100 bytes (section 7 of the RFC states: All PCP messages
+     * are sent over UDP, with a maximum UDP payload length of 1100 octets)
+     */
+    byte[] dump();
 }

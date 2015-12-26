@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,6 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
-import java.nio.BufferOverflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
-import java.nio.ReadOnlyBufferException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -58,53 +54,58 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class PcpOption {
+    protected static final int HEADER_LENGTH = 4;
+    protected static final int DATA_PADDING_LIMIT = 4;
+
     private int code;
-    private int length;
-    private ByteBuffer data;
+    private int dataLength;
 
     /**
      * Constructs a {@link PcpOption} object by parsing a buffer.
      * @param buffer buffer containing PCP option data
+     * @param offset offset in {@code buffer} where the PCP option starts
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / length is not a multiple of 4 (not enough padding) / data exceeds 65535 bytes)
      */
-    public PcpOption(ByteBuffer buffer) {
+    public PcpOption(byte[] buffer, int offset) {
         Validate.notNull(buffer);
+        Validate.isTrue(offset >= 0);
+        final int remainingLength = buffer.length - offset;
+        Validate.isTrue(remainingLength >= HEADER_LENGTH);
         
-        code = buffer.get() & 0xFF;
+        code = buffer[offset] & 0xFF;
+        offset++;
         
-        buffer.get(); // skip over reserved
+        offset++; // skip over reserved
         
-        length = buffer.getShort() & 0xFFFF;
+        // We check data length to see if its <= 65535 because that's the maximum the length field can be, but a PCP packet can only be
+        // 1100 bytes. We're only dealing with the option portion here so we don't care if it exceeds 1100 bytes.
+        int dataLength = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
+        Validate.isTrue(dataLength <= 65535);
+        this.dataLength = dataLength;
+        offset += 2;
+
+        int expectedPadding = dataLength % DATA_PADDING_LIMIT;
         
-        byte[] dataArr = new byte[length];
-        buffer.get(dataArr);
-        
-        data = ByteBuffer.wrap(dataArr).asReadOnlyBuffer();
-        
-        // skip over padding
-        int remainder = length % 4;
-        for (int i = 0; i < remainder; i++) {
-            buffer.get();
-        }
+        int expectedLength = HEADER_LENGTH + dataLength + expectedPadding;
+        Validate.isTrue(remainingLength >= expectedLength);
     }
 
     /**
      * Constructs a {@link PcpOption} object.
      * @param code option code
-     * @param data option data
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if {@code code} is {@code < 0 || > 255}, or if the amount of data remaining in {@code data} is
-     * {@code > 65535}
+     * @param dataLength length of option data (do not include padding)
+     * @throws IllegalArgumentException if {@code code < 0 || code > 255}, or if {@code dataLength > 65535}
      */
-    public PcpOption(int code, ByteBuffer data) {
+    public PcpOption(int code, int dataLength) {
         Validate.inclusiveBetween(0, 255, code);
-        Validate.inclusiveBetween(0, 65535, data.remaining());
-        Validate.notNull(data);
+        // We check data length to see if its <= 65535 because that's the maximum the length field can be, but a PCP packet can only be
+        // 1100 bytes. We're only dealing with the option portion here so we don't care if it exceeds 1100 bytes.
+        Validate.isTrue(dataLength <= 65535);
         
         this.code = code;
-        this.length = data.remaining();
-        this.data = ByteBuffer.allocate(length + (length % 4)).put(data).asReadOnlyBuffer(); // NOPMD
+        this.dataLength = dataLength;
     }
 
     /**
@@ -116,35 +117,44 @@ public abstract class PcpOption {
     }
 
     /**
-     * Get PCP data length.
-     * @return PCP data length
+     * Get PCP option data length. Equivalent to {@code getData().length}.
+     * @return PCP option data length
      */
-    public final int getLength() {
+    public final int getDataLength() {
+        return dataLength;
+    }
+
+    /**
+     * Get PCP option data.
+     * @return PCP option data
+     */
+    public abstract byte[] getData();
+
+    /**
+     * Get the number of bytes this PCP option takes up when dumped out (length of buffer returned by {@link #dump() }).
+     * @return length of buffer containing PCP option
+     */
+    public final int getBufferLength() {
+        int padding = dataLength % DATA_PADDING_LIMIT; // padding required on data to get the length to a multiple of 4
+        int length = HEADER_LENGTH + dataLength + padding;
         return length;
     }
-
-    /**
-     * Get PCP data.
-     * @return PCP data (read-only)
-     */
-    public final ByteBuffer getData() {
-        return data.asReadOnlyBuffer();
-    }
-
-    /**
-     * Dump this PCP option in to a byte buffer.
-     * @param dst byte buffer to dump to
-     * @throws NullPointerException if {@code dst} is {@code null}
-     * @throws BufferOverflowException if {@code dst} doesn't have enough space to write this option
-     * @throws ReadOnlyBufferException if {@code dst} is read-only
-     */
-    public final void dump(ByteBuffer dst) {
-        Validate.notNull(data);
-        
-        dst.put((byte) code);
-        dst.put((byte) 0); // reserved
-        dst.putShort((short) length);
-        dst.put(data.asReadOnlyBuffer());
-    }
     
+    /**
+     * Dump this PCP option in to a buffer.
+     * @return buffer containing PCP option
+     */
+    public final byte[] dump() {
+        byte[] data = getData();
+        
+        int bufferLength = getBufferLength();        
+        byte[] buffer = new byte[bufferLength];
+        
+        buffer[0] = (byte) code; // pcp code
+        buffer[1] = (byte) 0; // reserved
+        InternalUtils.shortToBytes(buffer, 2, (short) data.length); // length of pcp data
+        System.arraycopy(data, 0, buffer, 4, data.length); // pcp data
+
+        return buffer;
+    }
 }

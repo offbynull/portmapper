@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,10 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -77,7 +77,11 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class MapPcpResponse extends PcpResponse {
-    private ByteBuffer mappingNonce;
+    private static final int OPCODE = 1;
+    private static final int DATA_LENGTH = 36;
+    private static final int NONCE_LENGTH = 12;
+
+    private byte[] mappingNonce;
     private int protocol;
     private int internalPort;
     private int assignedExternalPort;
@@ -93,44 +97,77 @@ public final class MapPcpResponse extends PcpResponse {
      * or if the op code doesn't match the MAP opcode, or if the response has a {@code 0} for its {@code internalPort} or
      * {@code assignedExternalPort} field, or if there were problems parsing options
      */
-    public MapPcpResponse(ByteBuffer buffer) {
-        super(buffer);
+    public MapPcpResponse(byte[] buffer) {
+        super(buffer, DATA_LENGTH);
         
-        Validate.isTrue(super.getOp() == 1);
+        Validate.isTrue(super.getOp() == OPCODE);
 
-        mappingNonce = ByteBuffer.allocate(12);
-        buffer.get(mappingNonce.array());
-        mappingNonce = mappingNonce.asReadOnlyBuffer();
-        this.protocol = buffer.get() & 0xFF;
+        int offset = HEADER_LENGTH;
         
-        for (int i = 0; i < 3; i++) { // reserved block
-            buffer.get();
-        }
+        mappingNonce = new byte[NONCE_LENGTH];
+        System.arraycopy(buffer, offset, mappingNonce, 0, mappingNonce.length);
+        offset += mappingNonce.length;
+
+        protocol = buffer[offset] & 0xFF;
+        offset++;
         
-        this.internalPort = buffer.getShort() & 0xFFFF;
-        this.assignedExternalPort = buffer.getShort() & 0xFFFF;
-        byte[] addrArr = new byte[16];
-        buffer.get(addrArr);
+        offset += 3; // 3 reserved bytes
+        
+        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+        
+        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+        
+        byte[] ipv6Bytes = new byte[16];
+        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
         try {
-            this.assignedExternalIpAddress = InetAddress.getByAddress(addrArr); // should automatically shift down to ipv4 if ipv4-to-ipv6
-                                                                                // mapped address
+            assignedExternalIpAddress = InetAddress.getByAddress(ipv6Bytes);
         } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe); // should never happen, will always be 16 bytes
+            throw new IllegalStateException(uhe); // should never happen
         }
+        offset += ipv6Bytes.length;
         
-        Validate.inclusiveBetween(0, 255, protocol); // should never happen
-        Validate.inclusiveBetween(0, 65535, internalPort); // can be 0 if referencing all
-        Validate.inclusiveBetween(0, 65535, assignedExternalPort); // can be 0 if removing
+        // nothing to validate
+//        Validate.inclusiveBetween(0, 255, protocol); // should never happen
+//        Validate.inclusiveBetween(0, 65535, internalPort); // can be 0 if referencing all
+//        Validate.inclusiveBetween(0, 65535, assignedExternalPort); // can be 0 if removing
+    }
+
+
+    @Override
+    public byte[] getData() {
+        byte[] data = new byte[DATA_LENGTH];
         
-        parseOptions(buffer);
+        int offset = 0;
+        
+        System.arraycopy(mappingNonce, 0, data, offset, mappingNonce.length);
+        offset += mappingNonce.length;
+        
+        data[offset] = (byte) protocol;
+        offset++;
+        
+        offset += 3; // 3 reserved bytes
+        
+        InternalUtils.shortToBytes(data, offset, (short) internalPort);
+        offset += 2;
+        
+        InternalUtils.shortToBytes(data, offset, (short) assignedExternalPort);
+        offset += 2;
+
+        byte[] ipv6Array = NetworkUtils.convertToIpv6Array(assignedExternalIpAddress);
+        System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
+        offset += ipv6Array.length;
+        
+        return data;
     }
 
     /**
      * Get nonce.
-     * @return nonce (read-only buffer)
+     * @return nonce
      */
-    public ByteBuffer getMappingNonce() {
-        return mappingNonce.asReadOnlyBuffer();
+    public byte[] getMappingNonce() {
+        return mappingNonce;
     }
 
     /**

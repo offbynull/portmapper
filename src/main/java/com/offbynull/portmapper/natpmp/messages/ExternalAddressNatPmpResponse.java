@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -50,32 +51,39 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class ExternalAddressNatPmpResponse implements NatPmpResponse {
+public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
     private static final int LENGTH = 12;
     private static final int OP = 128;
 
-    private ResponseHeader header;
-    private InetAddress address;
+    private InetAddress inetAddress;
+
+    public ExternalAddressNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, InetAddress inetAddress) {
+        super(OP, resultCode, secondsSinceStartOfEpoch);
+        
+        Validate.notNull(inetAddress);
+        Validate.isTrue(inetAddress instanceof Inet4Address);
+        
+        this.inetAddress = inetAddress;
+    }
 
     /**
      * Constructs a {@link ExternalAddressNatPmpResponse} object by parsing a buffer.
-     * @param data buffer containing NAT-PMP response data
+     * @param buffer buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
      * version (must always be {@code 0}), or if the op {@code != 128}, or if there's an unsuccessful/unrecognized result code
      */
-    public ExternalAddressNatPmpResponse(byte[] data) {
-        Validate.notNull(data);
-        Validate.isTrue(data.length == LENGTH, "Bad length");
+    public ExternalAddressNatPmpResponse(byte[] buffer) {
+        super(buffer);
 
-        header = InternalUtils.parseNatPmpResponseHeader(data);
-        int op = header.getOp();
+        Validate.notNull(buffer);
+        Validate.isTrue(buffer.length == LENGTH);
 
-        Validate.isTrue(op == OP, "Bad OP code: %d", op);
+        Validate.isTrue(getOp() == OP);
         
-        byte[] addr = Arrays.copyOfRange(data, 8, 12);
+        byte[] addr = Arrays.copyOfRange(buffer, 8, 12);
         try {
-            address = InetAddress.getByAddress(addr);
+            inetAddress = InetAddress.getByAddress(addr);
         } catch (UnknownHostException uhe) {
             throw new IllegalStateException(uhe); // should never happen, will always be 4 bytes
         }
@@ -87,9 +95,9 @@ public final class ExternalAddressNatPmpResponse implements NatPmpResponse {
 
         data[0] = 0;
         data[1] = (byte) OP;
-        InternalUtils.shortToBytes(data, 2, (short) header.getResultCode());
-        InternalUtils.intToBytes(data, 4, (int) header.getSecondsSinceStartOfEpoch());
-        byte[] addressBytes = address.getAddress();
+        InternalUtils.shortToBytes(data, 2, (short) getResultCode());
+        InternalUtils.intToBytes(data, 4, (int) getSecondsSinceStartOfEpoch());
+        byte[] addressBytes = inetAddress.getAddress();
         data[8] = addressBytes[0];
         data[9] = addressBytes[1];
         data[10] = addressBytes[2];
@@ -103,16 +111,6 @@ public final class ExternalAddressNatPmpResponse implements NatPmpResponse {
      * @return external IP address
      */
     public InetAddress getAddress() {
-        return address;
-    }
-
-    @Override
-    public int getResultCode() {
-        return header.getResultCode();
-    }
-
-    @Override
-    public long getSecondsSinceStartOfEpoch() {
-        return header.getSecondsSinceStartOfEpoch();
+        return inetAddress;
     }
 }

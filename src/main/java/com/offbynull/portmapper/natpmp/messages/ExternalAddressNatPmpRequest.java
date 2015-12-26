@@ -35,32 +35,32 @@ import org.apache.commons.lang3.Validate;
  * </pre>
  * @author Kasra Faghihi
  */
-public final class ExternalAddressNatPmpRequest implements NatPmpRequest {
+public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
 
     private static final int LENGTH = 2;
     private static final int OP = 0;
 
     /**
      * Construct a {@link ExternalAddressNatPmpRequest} object.
-     * @param data buffer containing NAT-PMP request data
+     * @param buffer buffer containing NAT-PMP request data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
      * version (must always be {@code 0}), or if the op {@code != 0}
      */
-    public ExternalAddressNatPmpRequest(byte[] data) {
-        Validate.notNull(data);
-        Validate.isTrue(data.length == LENGTH, "Bad length");
+    public ExternalAddressNatPmpRequest(byte[] buffer) {
+        super(buffer);
 
-        RequestHeader header = InternalUtils.parseNatPmpRequestHeader(data);
-        int op = header.getOp();
+        Validate.notNull(buffer);
+        Validate.isTrue(buffer.length == LENGTH);
 
-        Validate.isTrue(op == OP, "Bad OP code: %d", op);
+        Validate.isTrue(getOp() == OP);
     }
 
     /**
      * Construct a {@link ExternalAddressNatPmpRequest} object.
      */
     public ExternalAddressNatPmpRequest() {
+        super(OP);
     }
 
     @Override

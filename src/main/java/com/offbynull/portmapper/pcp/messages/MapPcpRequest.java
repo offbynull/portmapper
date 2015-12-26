@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,10 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
-import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -90,8 +90,11 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class MapPcpRequest extends PcpRequest {
+    private static final int OPCODE = 1;
+    private static final int DATA_LENGTH = 36;
+    private static final int NONCE_LENGTH = 12;
 
-    private ByteBuffer mappingNonce;
+    private byte[] mappingNonce;
     private int protocol;
     private int internalPort;
     private int suggestedExternalPort;
@@ -105,18 +108,20 @@ public final class MapPcpRequest extends PcpRequest {
      * @param suggestedExternalPort suggested external port ({@code 0} for no preference)
      * @param suggestedExternalIpAddress suggested external IP address ({@code ::} for no preference)
      * @param lifetime requested lifetime in seconds
+     * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code protocol > 255}, or if
-     * {@code internalPort > 65535}, or if {@code suggestedExternalPort > 65535}, or if {@code mappingNonce} does not have {@code 12} bytes
-     * remaining, or if {@code protocol == 0} but {@code internalPort != 0}, or if {@code internalPort == 0} but {@code lifetime != 0}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, or if
+     * {@code protocol > 255}, or if {@code internalPort > 65535}, or if {@code suggestedExternalPort > 65535}, or if {@code mappingNonce}
+     * does not have {@code 12} bytes remaining, or if {@code protocol == 0} but {@code internalPort != 0}, or if {@code internalPort == 0}
+     * but {@code lifetime != 0}
      */
-    public MapPcpRequest(ByteBuffer mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
-            InetAddress suggestedExternalIpAddress, long lifetime, PcpOption ... options) {
-        super(1, lifetime, options);
+    public MapPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
+            InetAddress suggestedExternalIpAddress, long lifetime, InetAddress internalIp, PcpOption ... options) {
+        super(OPCODE, lifetime, internalIp, DATA_LENGTH, options);
         
         Validate.notNull(mappingNonce);
-        Validate.isTrue(mappingNonce.remaining() == 12);
+        Validate.isTrue(mappingNonce.length == NONCE_LENGTH);
         Validate.inclusiveBetween(0, 255, protocol);
         Validate.inclusiveBetween(0, 65535, internalPort);
         Validate.inclusiveBetween(0, 65535, suggestedExternalPort);
@@ -130,33 +135,93 @@ public final class MapPcpRequest extends PcpRequest {
             Validate.isTrue(super.getLifetime() == 0L);
         }
 
-        this.mappingNonce = ByteBufferUtils.copyContents(mappingNonce).asReadOnlyBuffer();
+        this.mappingNonce = Arrays.copyOf(mappingNonce, mappingNonce.length);
         this.protocol = protocol;
         this.internalPort = internalPort;
         this.suggestedExternalPort = suggestedExternalPort;
         this.suggestedExternalIpAddress = suggestedExternalIpAddress; // for any ipv4 must be ::ffff:0:0, for any ipv6 must be ::
     }
-    
-    @Override
-    protected void dumpOpCodeSpecificInformation(ByteBuffer dst) {
-        dst.put(mappingNonce.asReadOnlyBuffer());
-        dst.put((byte) protocol);
+
+    /**
+     * Constructs a {@link MapPcpRequest} object by parsing a buffer.
+     * @param buffer buffer containing PCP request data
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / data exceeds 1100 bytes)
+     */
+    public MapPcpRequest(byte[] buffer) {
+        super(buffer, DATA_LENGTH);
         
-        for (int i = 0; i < 3; i++) { // reserved block
-            dst.put((byte) 0);
+        Validate.isTrue(super.getOp() == OPCODE);
+        
+        int remainingLength = buffer.length - HEADER_LENGTH;
+        Validate.isTrue(remainingLength >= DATA_LENGTH); // FYI: remaining length = data block len + options len
+        
+        int offset = HEADER_LENGTH;
+        
+        mappingNonce = new byte[NONCE_LENGTH];
+        System.arraycopy(buffer, offset, mappingNonce, 0, mappingNonce.length);
+        offset += mappingNonce.length;
+        
+        protocol = buffer[offset] & 0xFF;
+        offset++;
+        
+        offset += 3; // 3 reserved bytes
+        
+        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+        
+        suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        offset += 2;
+
+        byte[] ipv6Bytes = new byte[16];
+        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
+        try {
+            suggestedExternalIpAddress = InetAddress.getByAddress(ipv6Bytes);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalStateException(uhe); // should never happen
         }
+        offset += ipv6Bytes.length;
         
-        dst.putShort((short) internalPort);
-        dst.putShort((short) suggestedExternalPort);
-        dst.put(NetworkUtils.convertToIpv6Array(suggestedExternalIpAddress));
+        // nothing to validate
+//        Validate.inclusiveBetween(0, 255, protocol); // should never happen
+//        Validate.inclusiveBetween(0, 65535, internalPort); // can be 0 if referencing all
+//        Validate.inclusiveBetween(0, 65535, suggestedExternalPort); // can be 0 if removing
+    }
+
+    @Override
+    public byte[] getData() {
+        byte[] data = new byte[DATA_LENGTH];
+        
+        int offset = 0;
+        
+        System.arraycopy(mappingNonce, 0, data, offset, mappingNonce.length);
+        offset += mappingNonce.length;
+        
+        data[offset] = (byte) protocol;
+        offset++;
+        
+        offset += 3; // 3 reserved bytes
+        
+        InternalUtils.shortToBytes(data, offset, (short) internalPort);
+        offset += 2;
+        
+        InternalUtils.shortToBytes(data, offset, (short) suggestedExternalPort);
+        offset += 2;
+
+        byte[] ipv6Array = NetworkUtils.convertToIpv6Array(suggestedExternalIpAddress);
+        System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
+        offset += ipv6Array.length;
+        
+        return data;
     }
 
     /**
      * Get nonce.
-     * @return nonce (read-only buffer)
+     * @return nonce
      */
-    public ByteBuffer getMappingNonce() {
-        return mappingNonce.asReadOnlyBuffer();
+    public byte[] getMappingNonce() {
+        return Arrays.copyOf(mappingNonce, mappingNonce.length);
     }
 
     /**

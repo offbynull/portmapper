@@ -28,6 +28,7 @@ import com.offbynull.portmapper.pcp.messages.MapPcpResponse;
 import com.offbynull.portmapper.common.ResponseException;
 import com.offbynull.portmapper.common.CommunicationType;
 import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.common.NetworkUtils;
 import com.offbynull.portmapper.common.UdpCommunicator;
 import com.offbynull.portmapper.common.UdpCommunicatorListener;
@@ -42,6 +43,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -130,38 +132,30 @@ public final class PcpController implements Closeable {
                         return; // unknown, do nothing
                     }
                     
+                    byte[] packetData = ByteBufferUtils.copyContentsToArray(packet, false);
                     try {
-                        packet.mark();
-                        listener.incomingResponse(type, new AnnouncePcpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
+                        listener.incomingResponse(type, new AnnouncePcpResponse(packetData));
+                    } catch (BufferUnderflowException | IllegalArgumentException e) {
                         // ignore
-                    } finally {
-                        packet.reset();
+                    }
+                    
+                    try {
+                        listener.incomingResponse(type, new MapPcpResponse(packetData));
+                    } catch (BufferUnderflowException | IllegalArgumentException e) {
+                        // ignore
                     }
                     
                     try {
                         packet.mark();
-                        listener.incomingResponse(type, new MapPcpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
+                        listener.incomingResponse(type, new PeerPcpResponse(packetData));
+                    } catch (BufferUnderflowException | IllegalArgumentException e) {
                         // ignore
-                    } finally {
-                        packet.reset();
-                    }
-                    
-                    try {
-                        packet.mark();
-                        listener.incomingResponse(type, new PeerPcpResponse(packet));
-                    } catch (BufferUnderflowException | IllegalArgumentException e) { // NOPMD
-                        // ignore
-                    } finally {
-                        packet.reset();
                     }
                 }
             });
         }
     }
     
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send a ANNOUNCE request to the gateway.
      * @param sendAttempts number of times to try to submit each request
@@ -172,8 +166,7 @@ public final class PcpController implements Closeable {
      * @throws IllegalArgumentException if {@code sendAttempts < 1 || > 9}
      */
     public AnnouncePcpResponse requestAnnounceOperation(int sendAttempts) throws InterruptedException {
-        // CHECKSTYLE:ON
-        AnnouncePcpRequest req = new AnnouncePcpRequest();
+        AnnouncePcpRequest req = new AnnouncePcpRequest(selfAddress);
         
         AnnounceResponseCreator creator = new AnnounceResponseCreator();
         return performRequest(sendAttempts, req, creator);
@@ -191,7 +184,6 @@ public final class PcpController implements Closeable {
 //        return req;
 //    }
     
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send a request to the gateway to create an inbound mapping (open a port that you can listen on).
      * @param sendAttempts number of times to try to submit each request
@@ -213,12 +205,11 @@ public final class PcpController implements Closeable {
      */
     public MapPcpResponse requestMapOperation(int sendAttempts, PortType portType, int internalPort, int suggestedExternalPort,
             InetAddress suggestedExternalIpAddress, long lifetime, PcpOption ... options) throws InterruptedException {
-        // CHECKSTYLE:ON
         byte[] nonce = new byte[12];
         random.nextBytes(nonce);
         
-        MapPcpRequest req = new MapPcpRequest(ByteBuffer.wrap(nonce), portType.getProtocolNumber(), internalPort, suggestedExternalPort,
-                suggestedExternalIpAddress, lifetime, options);
+        MapPcpRequest req = new MapPcpRequest(nonce, portType.getProtocolNumber(), internalPort, suggestedExternalPort,
+                suggestedExternalIpAddress, lifetime, selfAddress, options);
 
         MapResponseCreator creator = new MapResponseCreator(req);
         return performRequest(sendAttempts, req, creator);
@@ -253,7 +244,6 @@ public final class PcpController implements Closeable {
 //        return req;
 //    }
 
-    // CHECKSTYLE:OFF custom exception in javadoc not being recognized
     /**
      * Send a request to the gateway to create an outbound mapping (open a port that you can connect from).
      * @param sendAttempts number of times to try to submit each request
@@ -276,12 +266,11 @@ public final class PcpController implements Closeable {
     public PeerPcpResponse requestPeerOperation(int sendAttempts, PortType portType, int internalPort, int suggestedExternalPort,
             InetAddress suggestedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, long lifetime,
             PcpOption ... options) throws InterruptedException {
-        // CHECKSTYLE:ON
         byte[] nonce = new byte[12];
         random.nextBytes(nonce);
         
-        PeerPcpRequest req = new PeerPcpRequest(ByteBuffer.wrap(nonce), portType.getProtocolNumber(), internalPort, suggestedExternalPort,
-                suggestedExternalIpAddress, remotePeerPort, remotePeerIpAddress, lifetime, options);
+        PeerPcpRequest req = new PeerPcpRequest(nonce, portType.getProtocolNumber(), internalPort, suggestedExternalPort,
+                suggestedExternalIpAddress, remotePeerPort, remotePeerIpAddress, lifetime, selfAddress, options);
 
         PeerResponseCreator creator = new PeerResponseCreator(req);
         return performRequest(sendAttempts, req, creator);
@@ -321,13 +310,10 @@ public final class PcpController implements Closeable {
     private <T extends PcpResponse> T performRequest(int sendAttempts, PcpRequest request, Creator<T> creator) throws InterruptedException {
         Validate.inclusiveBetween(1, 9, sendAttempts);
         
-        ByteBuffer sendBuffer = ByteBuffer.allocate(1100);
-            
-        request.dump(sendBuffer, selfAddress);
-        sendBuffer.flip();
+        byte[] buffer = request.dump();
         
         for (int i = 1; i <= sendAttempts; i++) {
-            T response = attemptRequest(sendBuffer, i, creator);
+            T response = attemptRequest(ByteBuffer.wrap(buffer), i, creator);
             if (response != null) {
                 return response;
             }
@@ -419,9 +405,9 @@ public final class PcpController implements Closeable {
         public AnnouncePcpResponse create(ByteBuffer recvBuffer) {
             AnnouncePcpResponse response;
             try {
-                response = new AnnouncePcpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new AnnouncePcpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
-                //throw new BadResponseException(e);
                 return null;
             }
 
@@ -441,13 +427,14 @@ public final class PcpController implements Closeable {
         public MapPcpResponse create(ByteBuffer recvBuffer) {
             MapPcpResponse response;
             try {
-                response = new MapPcpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new MapPcpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
                 //throw new BadResponseException(e);
                 return null;
             }
             
-            if (response.getMappingNonce().equals(request.getMappingNonce())
+            if (Arrays.equals(response.getMappingNonce(), request.getMappingNonce())
                     && response.getProtocol() == request.getProtocol()
                     && response.getInternalPort() == request.getInternalPort()) {
                 return response;
@@ -469,13 +456,14 @@ public final class PcpController implements Closeable {
         public PeerPcpResponse create(ByteBuffer recvBuffer) {
             PeerPcpResponse response;
             try {
-                response = new PeerPcpResponse(recvBuffer);
+                byte[] data = ByteBufferUtils.copyContentsToArray(recvBuffer, true);
+                response = new PeerPcpResponse(data);
             } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
                 //throw new BadResponseException(e);
                 return null;
             }
 
-            if (response.getMappingNonce().equals(request.getMappingNonce())
+            if (Arrays.equals(response.getMappingNonce(), request.getMappingNonce())
                     && response.getProtocol() == request.getProtocol()
                     && response.getRemotePeerPort() == request.getRemotePeerPort()
                     && response.getRemotePeerIpAddress().equals(request.getRemotePeerIpAddress())) {

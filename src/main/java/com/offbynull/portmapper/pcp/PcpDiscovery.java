@@ -17,7 +17,6 @@
 package com.offbynull.portmapper.pcp;
 
 import com.offbynull.portmapper.pcp.messages.MapPcpRequest;
-import com.offbynull.portmapper.pcp.messages.PcpResultCode;
 import com.offbynull.portmapper.common.NetworkUtils;
 import com.offbynull.portmapper.common.UdpCommunicator;
 import com.offbynull.portmapper.common.UdpCommunicatorListener;
@@ -110,7 +109,7 @@ public final class PcpDiscovery {
                 @Override
                 public void incomingPacket(InetSocketAddress sourceAddress, DatagramChannel channel, ByteBuffer packet) {
                     // make sure version is 2 and error isn't ADDRESS_MISMATCH and we're good to go
-                    if (packet.remaining() < 4 || packet.get(0) == 2 && packet.get(4) == PcpResultCode.ADDRESS_MISMATCH.ordinal()) {
+                    if (packet.remaining() < 4 || packet.get(0) == 2 && packet.get(4) == 12 /*PcpResultCode.ADDRESS_MISMATCH.ordinal()*/) {
                         return;
                     }
 
@@ -125,12 +124,10 @@ public final class PcpDiscovery {
 
             for (DatagramChannel channel : bindMap.keySet()) {
                 for (InetAddress gateway : gateways) {
-                    ByteBuffer outBuf = ByteBuffer.allocate(1100);
-                    MapPcpRequest mpr = new MapPcpRequest(ByteBuffer.allocate(12), 0, 0, 0, InetAddress.getByName("::"), 0L);
-                    mpr.dump(outBuf, bindMap.get(channel));
-                    outBuf.flip();
+                    MapPcpRequest mpr = new MapPcpRequest(new byte[12], 0, 0, 0, InetAddress.getByName("::"), 0L, bindMap.get(channel));
+                    byte[] outBuf = mpr.dump();
                     
-                    communicator.send(channel, new InetSocketAddress(gateway, 5351), outBuf.asReadOnlyBuffer());
+                    communicator.send(channel, new InetSocketAddress(gateway, 5351), ByteBuffer.wrap(outBuf));
                 }
             }
 
@@ -170,20 +167,18 @@ public final class PcpDiscovery {
                 }
             });
 
-            ByteBuffer outBuf = ByteBuffer.allocate(1100);
-            MapPcpRequest mpr = new MapPcpRequest(ByteBuffer.allocate(12), 0, 0, 0, InetAddress.getByName("::"), 0L);
-            mpr.dump(outBuf, InetAddress.getByAddress(new byte[4])); // should get back an error for this, but this
-                                                                       // should be fine because all we're looking for is a response, not
-                                                                       // nessecarily a correct response -- self address being sent is
-                                                                       // 0.0.0.0 (IPV4)
-                                                                       //
-                                                                       // also, we need to pass in MAP because Apple's garbage routers
-                                                                       // give back NATPMP responses when you pass in ANNOUNCE
-            
-            outBuf.flip();
+            MapPcpRequest mpr = new MapPcpRequest(new byte[12], 0, 0, 0, InetAddress.getByName("::"), 0L,
+                    InetAddress.getByAddress(new byte[4]));
+            byte[] outBuf = mpr.dump();   // should get back an error for this, but this
+                                          // should be fine because all we're looking for is a response, not
+                                          // nessecarily a correct response -- self address being sent is
+                                          // 0.0.0.0 (IPV4)
+                                          //
+                                          // also, we need to pass in MAP because Apple's garbage routers
+                                          // give back NATPMP responses when you pass in ANNOUNCE
 
             for (InetAddress potentialGateway : potentialGateways) {
-                communicator.send(unicastChannel, new InetSocketAddress(potentialGateway, 5351), outBuf.asReadOnlyBuffer());
+                communicator.send(unicastChannel, new InetSocketAddress(potentialGateway, 5351), ByteBuffer.wrap(outBuf));
             }
 
             Thread.sleep(5000L);

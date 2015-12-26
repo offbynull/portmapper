@@ -16,9 +16,42 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import static com.offbynull.portmapper.natpmp.messages.InternalUtils.NAT_PMP_VERSION;
+import org.apache.commons.lang3.Validate;
+
 /**
  * Represents a NAT-PMP request.
  * @author Kasra Faghihi
  */
-public interface NatPmpRequest extends NatPmpMessage {
+public abstract class NatPmpRequest implements NatPmpMessage {
+    private static final int HEADER_LENGTH = 4;
+    
+    private final int op;
+
+    public NatPmpRequest(int op) {
+        // Checks are redundant, but keep anyways to be safe.
+        Validate.inclusiveBetween(0, 127, op);
+        this.op = op;
+    }
+
+    public NatPmpRequest(byte[] buffer) {
+        Validate.notNull(buffer);
+        Validate.isTrue(buffer.length >= HEADER_LENGTH);
+        
+        int offset = 0;
+
+        int version = buffer[offset] & 0xFF;
+        Validate.isTrue(version == NAT_PMP_VERSION); // check pcp version
+        offset++;
+        
+        op = buffer[offset] & 0xFF;
+        offset++;
+
+        offset += 2; // skip reserved
+    }
+
+    @Override
+    public final int getOp() {
+        return op;
+    }
 }

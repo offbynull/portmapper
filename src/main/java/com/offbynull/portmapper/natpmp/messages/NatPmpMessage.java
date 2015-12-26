@@ -21,8 +21,15 @@ package com.offbynull.portmapper.natpmp.messages;
  * @author Kasra Faghihi
  */
 public interface NatPmpMessage {
+    
     /**
-     * Dump out the NAT-PMP message in to a byte array. Suitable for generating packets to be sent to NAT-PMP devices/routers.
+     * Get op code.
+     * @return op code
+     */
+    int getOp();
+    
+    /**
+     * Dump out the NAT-PMP message as a packet.
      * @return NAT-PMP packet
      */
     byte[] dump();

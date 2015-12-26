@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,8 +19,6 @@ package com.offbynull.portmapper.pcp.messages;
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -67,21 +65,29 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class ThirdPartyPcpOption extends PcpOption {
+    private static final int OP_CODE = 1;
+    private static final int DATA_LENGTH = 16;
 
     private InetAddress internalIpAddress;
 
     /**
      * Constructs a {@link ThirdPartyPcpOption} by parsing a buffer.
      * @param buffer buffer containing PCP option data
+     * @param offset offset in {@code buffer} where the PCP option starts
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if option code is not {@code 1}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / length is not a multiple of 4 (not enough padding) / length exceeds 65535 / data doesn't contain enough bytes / code is not 1)
      */
-    public ThirdPartyPcpOption(ByteBuffer buffer) {
-        super(buffer);
-        Validate.isTrue(super.getCode() == 1);
+    public ThirdPartyPcpOption(byte[] buffer, int offset) {
+        super(buffer, offset);
+        
+        Validate.isTrue(super.getCode() == OP_CODE);
+        Validate.isTrue(super.getDataLength() == DATA_LENGTH);
+
+        offset += HEADER_LENGTH;
+
         byte[] addrArr = new byte[16];
-        buffer.get(addrArr);
+        System.arraycopy(buffer, offset, addrArr, 0, addrArr.length);
         try {
             internalIpAddress = InetAddress.getByAddress(addrArr);
         } catch (UnknownHostException uhe) {
@@ -95,16 +101,11 @@ public final class ThirdPartyPcpOption extends PcpOption {
      * @throws NullPointerException if any argument is {@code null}
      */
     public ThirdPartyPcpOption(InetAddress internalIpAddress) {
-        super(1, toDataSection(internalIpAddress));
-        this.internalIpAddress = internalIpAddress;
-    }
-    
-    private static ByteBuffer toDataSection(InetAddress internalIpAddress) {
-        Validate.notNull(internalIpAddress);
-        ByteBuffer buffer = ByteBuffer.allocate(16);
-        buffer.put(NetworkUtils.convertToIpv6Array(internalIpAddress));
+        super(OP_CODE, DATA_LENGTH);
         
-        return buffer;
+        Validate.notNull(internalIpAddress);
+
+        this.internalIpAddress = internalIpAddress;
     }
 
     /**
@@ -113,5 +114,17 @@ public final class ThirdPartyPcpOption extends PcpOption {
      */
     public InetAddress getInternalIpAddress() {
         return internalIpAddress;
+    }
+
+    @Override
+    public byte[] getData() {
+        byte[] data = new byte[DATA_LENGTH];
+
+        // write ip
+        byte[] ipv6AsBytes = NetworkUtils.convertToIpv6Array(internalIpAddress);
+        Validate.validState(ipv6AsBytes.length == 16); // sanity check, should never throw exception
+        System.arraycopy(ipv6AsBytes, 0, data, 4, ipv6AsBytes.length);
+        
+        return data;
     }
 }

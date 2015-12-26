@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,6 @@
  */
 package com.offbynull.portmapper.pcp.messages;
 
-import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
-import java.nio.ByteBuffer;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -47,23 +45,33 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class PreferFailurePcpOption extends PcpOption {
-    
+    private static final int OP_CODE = 2;
+    private static final int DATA_LENGTH = 0;
+
     /**
      * Constructs a {@link PreferFailurePcpOption} by parsing a buffer.
      * @param buffer buffer containing PCP option data
+     * @param offset offset in {@code buffer} where the PCP option starts
      * @throws NullPointerException if any argument is {@code null}
-     * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if option code is not {@code 2}
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
+     * / length is not a multiple of 4 (not enough padding) / data doesn't contain enough bytes / code is not 2)
      */
-    public PreferFailurePcpOption(ByteBuffer buffer) {
-        super(buffer);
-        Validate.isTrue(super.getCode() == 2);
+    public PreferFailurePcpOption(byte[] buffer, int offset) {
+        super(buffer, offset);
+        
+        Validate.isTrue(super.getCode() == OP_CODE);
+        Validate.isTrue(super.getDataLength() == DATA_LENGTH);
     }
 
     /**
-     * Constructs a {@link PreferFailurePcpOption}.
+     * Constructs a {@link ThirdPartyPcpOption}.
      */
     public PreferFailurePcpOption() {
-        super(2, ByteBuffer.allocate(0));
+        super(OP_CODE, DATA_LENGTH);
+    }
+
+    @Override
+    public byte[] getData() {
+        return new byte[0];
     }
 }
