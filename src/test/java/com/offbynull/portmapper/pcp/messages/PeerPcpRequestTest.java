@@ -1,7 +1,7 @@
 package com.offbynull.portmapper.pcp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import static org.junit.Assert.assertArrayEquals;
@@ -9,18 +9,12 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class PeerPcpRequestTest {
-    private static final InetAddress IPV6_TEST_ADDRESS;
-    private static final InetAddress IPV4_TEST_ADDRESS;
-    private static final InetAddress IPV4_TEST_ADDRESS_2;
-    static {
-        try {
-            IPV6_TEST_ADDRESS = InetAddress.getByAddress(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
-            IPV4_TEST_ADDRESS = InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 });
-            IPV4_TEST_ADDRESS_2 = InetAddress.getByAddress(new byte[] { 5, 6, 7, 8 });
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe);
-        }
-    }
+    private static final InetAddress IPV4_TEST_ADDRESS
+            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4});
+    private static final InetAddress IPV4_TEST_ADDRESS_2
+            = NetworkUtils.convertArrayToIp(new byte[] {5, 6, 7, 8});
+    private static final InetAddress IPV6_TEST_ADDRESS
+            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     
     private static byte[] nonce = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // DONT CHANGE CONTENTS IN TEST, POTENTIAL THREADING
                                                                                         // ISSUE

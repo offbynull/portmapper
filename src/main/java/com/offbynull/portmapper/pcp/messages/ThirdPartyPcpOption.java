@@ -18,7 +18,6 @@ package com.offbynull.portmapper.pcp.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
@@ -87,13 +86,8 @@ public final class ThirdPartyPcpOption extends PcpOption {
 
         offset += HEADER_LENGTH;
 
-        byte[] addrArr = new byte[16];
-        System.arraycopy(buffer, offset, addrArr, 0, addrArr.length);
-        try {
-            internalIpAddress = InetAddress.getByAddress(addrArr);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen
-        }
+        internalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        offset += 16;
     }
 
     /**

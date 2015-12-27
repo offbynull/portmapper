@@ -18,7 +18,6 @@ package com.offbynull.portmapper.pcp.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.util.Arrays;
 import java.util.Objects;
@@ -177,28 +176,16 @@ public final class PeerPcpResponse extends PcpResponse {
         assignedExternalPort = InternalUtils.bytesToShort(buffer, offset);
         offset += 2;
 
-        byte[] ipv6Bytes = new byte[16];
-        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
-        try {
-            assignedExternalIpAddress = InetAddress.getByAddress(ipv6Bytes);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen
-        }
-        offset += ipv6Bytes.length;
+        assignedExternalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        offset += 16;
 
         remotePeerPort = InternalUtils.bytesToShort(buffer, offset);
         offset += 2;
         
         offset += 2; // reserved
         
-        ipv6Bytes = new byte[16];
-        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
-        try {
-            remotePeerIpAddress = InetAddress.getByAddress(ipv6Bytes);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen
-        }
-        offset += ipv6Bytes.length;
+        remotePeerIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        offset += 16;
         
         validateState();
     }

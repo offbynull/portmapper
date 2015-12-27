@@ -1,21 +1,15 @@
 package com.offbynull.portmapper.pcp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class AnnouncePcpResponseTest {
-    private static final InetAddress IPV4_TEST_ADDRESS;
-    static {
-        try {
-            IPV4_TEST_ADDRESS = InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 });
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe);
-        }
-    }
+    private static final InetAddress IPV4_TEST_ADDRESS
+            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4});
 
     @Test
     public void mustProperlyCreatePacket() throws Exception {

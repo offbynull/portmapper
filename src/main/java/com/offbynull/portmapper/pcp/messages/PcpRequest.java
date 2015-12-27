@@ -19,7 +19,6 @@ package com.offbynull.portmapper.pcp.messages;
 import com.offbynull.portmapper.common.NetworkUtils;
 import static com.offbynull.portmapper.pcp.messages.InternalUtils.PCP_VERSION;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -164,14 +163,8 @@ public abstract class PcpRequest implements PcpMessage {
         offset += 4;
 
         // at offset 8, write ipv6 address
-        byte[] ipv6Bytes = new byte[16];
-        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
-        try {
-            internalIp = InetAddress.getByAddress(ipv6Bytes);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen
-        }
-        offset += ipv6Bytes.length;
+        internalIp = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        offset += 16;
         
         // skip over data block -- data block should be parsed by child class
         this.dataLength = opcodeSpecificDataLength;

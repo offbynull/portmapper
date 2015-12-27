@@ -18,7 +18,6 @@ package com.offbynull.portmapper.pcp.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Objects;
 import org.apache.commons.lang3.Validate;
@@ -164,14 +163,8 @@ public final class MapPcpRequest extends PcpRequest {
         suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset);
         offset += 2;
 
-        byte[] ipv6Bytes = new byte[16];
-        System.arraycopy(buffer, offset, ipv6Bytes, 0, ipv6Bytes.length);
-        try {
-            suggestedExternalIpAddress = InetAddress.getByAddress(ipv6Bytes);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen
-        }
-        offset += ipv6Bytes.length;
+        suggestedExternalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        offset += 16;
         
         validateState();
     }

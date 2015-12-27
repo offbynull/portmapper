@@ -16,10 +16,9 @@
  */
 package com.offbynull.portmapper.natpmp.messages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
@@ -73,13 +72,8 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
 
         Validate.isTrue(getOp() == OP);
         
-        byte[] addr = Arrays.copyOfRange(buffer, 8, 12);
-        try {
-            inetAddress = InetAddress.getByAddress(addr);
-            Validate.validState(inetAddress instanceof Inet4Address); // should never happen -- sanity check
-        } catch (UnknownHostException uhe) {
-            throw new IllegalStateException(uhe); // should never happen, will always be 4 bytes
-        }
+        inetAddress = NetworkUtils.convertArrayToIp(buffer, 8, 4);
+        Validate.validState(inetAddress instanceof Inet4Address); // should never happen -- sanity check
     }
 
     /**

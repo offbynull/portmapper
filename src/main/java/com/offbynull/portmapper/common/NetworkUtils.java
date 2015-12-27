@@ -68,7 +68,7 @@ public final class NetworkUtils {
     }
     
     /**
-     * Convert a IP address to a IPv6 address and dump as a byte array. Essentially, if the input is IPv4 it'll be converted to an
+     * Convert a IP address to an IPv6 address and dump as a byte array. Essentially, if the input is IPv4 it'll be converted to an
      * IPv4-to-IPv6 address. Otherwise, the IPv6 address will be dumped as-is.
      * @param address address to convert to a ipv6 byte array
      * @return ipv6 byte array
@@ -93,6 +93,50 @@ public final class NetworkUtils {
             }
             default:
                 throw new IllegalStateException();
+        }
+    }
+    
+    /**
+     * Convert a byte array to an IP address. Equivalent to doing ...
+     * <pre>
+     * try {
+     *     return = InetAddress.getByAddress(buffer);
+     * } catch (UnknownHostException uhe) {
+     *     throw new IllegalStateException(uhe); // should never happen
+     * }
+     * </pre>
+     * @param buffer buffer to convert
+     * @return IP address
+     * @throws IllegalArgumentException if could not be converted to an IP address (almost always because {@code buffer.length} is not 4 or
+     * 16)
+     */
+    public static InetAddress convertArrayToIp(byte[] buffer) {
+        return convertArrayToIp(buffer, 0, buffer.length);
+    }
+
+    /**
+     * Convert a byte array to an IP address. Equivalent to doing ...
+     * <pre>
+     * byte[] addr = Arrays.copyOfRange(buffer, offset, offset + length);
+     * try {
+     *     return = InetAddress.getByAddress(addr);
+     * } catch (UnknownHostException uhe) {
+     *     throw new IllegalStateException(uhe); // should never happen
+     * }
+     * </pre>
+     * @param buffer buffer containing the IP to convert
+     * @param offset offset IP bytes start at
+     * @param length length of the IP bytes
+     * @return IP address
+     * @throws IllegalArgumentException if could not be converted to an IP address (almost always because {@code length} is not 4 or 16)
+     */
+    public static InetAddress convertArrayToIp(byte[] buffer, int offset, int length) {
+        byte[] addr = Arrays.copyOfRange(buffer, offset, offset + length);
+        try {
+            InetAddress ret = InetAddress.getByAddress(addr);
+            return ret;
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(uhe); // should never happen
         }
     }
 
