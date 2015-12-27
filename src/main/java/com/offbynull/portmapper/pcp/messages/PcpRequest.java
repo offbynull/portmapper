@@ -163,7 +163,7 @@ public abstract class PcpRequest implements PcpMessage {
         offset += 4;
 
         // at offset 8, write ipv6 address
-        internalIp = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        internalIp = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
         
         // skip over data block -- data block should be parsed by child class
@@ -268,7 +268,7 @@ public abstract class PcpRequest implements PcpMessage {
         InternalUtils.intToBytes(data, 4, (int) lifetime);
 
         // at offset 8, write ipv6 address
-        byte[] selfAddressArr = NetworkUtils.convertToIpv6Array(internalIp);
+        byte[] selfAddressArr = NetworkUtils.convertAddressToIpv6Bytes(internalIp);
         System.arraycopy(selfAddressArr, 0, data, 8, selfAddressArr.length);
 
         int offset = 24;

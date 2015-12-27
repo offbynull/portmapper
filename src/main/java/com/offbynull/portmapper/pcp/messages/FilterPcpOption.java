@@ -102,7 +102,7 @@ public final class FilterPcpOption extends PcpOption {
         offset += 2;
         Validate.inclusiveBetween(0, 65535, remotePeerPort); // 0 indicates 'all ports', should never trigger
         
-        remotePeerIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        remotePeerIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
     }
     
@@ -161,7 +161,7 @@ public final class FilterPcpOption extends PcpOption {
         // write port
         InternalUtils.shortToBytes(data, 2, (short) remotePeerPort);
         // write ip
-        byte[] ipv6AsBytes = NetworkUtils.convertToIpv6Array(remotePeerIpAddress);
+        byte[] ipv6AsBytes = NetworkUtils.convertAddressToIpv6Bytes(remotePeerIpAddress);
         Validate.validState(ipv6AsBytes.length == 16); // sanity check, should never throw exception
         System.arraycopy(ipv6AsBytes, 0, data, 4, ipv6AsBytes.length);
         

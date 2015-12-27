@@ -163,7 +163,7 @@ public final class MapPcpRequest extends PcpRequest {
         suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset);
         offset += 2;
 
-        suggestedExternalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        suggestedExternalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
         
         validateState();
@@ -206,7 +206,7 @@ public final class MapPcpRequest extends PcpRequest {
         InternalUtils.shortToBytes(data, offset, (short) suggestedExternalPort);
         offset += 2;
 
-        byte[] ipv6Array = NetworkUtils.convertToIpv6Array(suggestedExternalIpAddress);
+        byte[] ipv6Array = NetworkUtils.convertAddressToIpv6Bytes(suggestedExternalIpAddress);
         System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
         offset += ipv6Array.length;
         

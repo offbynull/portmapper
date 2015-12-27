@@ -9,7 +9,7 @@ import org.junit.Test;
 
 public class AnnouncePcpResponseTest {
     private static final InetAddress IPV4_TEST_ADDRESS
-            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4});
+            = NetworkUtils.convertBytesToAddress(new byte[] {1, 2, 3, 4});
 
     @Test
     public void mustProperlyCreatePacket() throws Exception {

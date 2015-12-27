@@ -8,9 +8,9 @@ import org.junit.Test;
 
 public class ThirdPartyPcpOptionTest {
     private static final InetAddress IPV4_TEST_ADDRESS
-            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4});
+            = NetworkUtils.convertBytesToAddress(new byte[] {1, 2, 3, 4});
     private static final InetAddress IPV6_TEST_ADDRESS
-            = NetworkUtils.convertArrayToIp(new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+            = NetworkUtils.convertBytesToAddress(new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
 
     @Test
     public void mustProperlyCreatePacket() throws Exception {

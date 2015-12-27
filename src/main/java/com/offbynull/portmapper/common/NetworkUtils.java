@@ -68,13 +68,13 @@ public final class NetworkUtils {
     }
     
     /**
-     * Convert a IP address to an IPv6 address and dump as a byte array. Essentially, if the input is IPv4 it'll be converted to an
-     * IPv4-to-IPv6 address. Otherwise, the IPv6 address will be dumped as-is.
+     * Convert a IP address to an IPv6 address and dump as a byte array. If the input is IPv4 it'll be converted to an IPv4-to-IPv6 address.
+     * Otherwise, the IPv6 address will be dumped as-is.
      * @param address address to convert to a ipv6 byte array
      * @return ipv6 byte array
      * @throws NullPointerException if any argument is {@code null}
      */
-    public static byte[] convertToIpv6Array(InetAddress address) {
+    public static byte[] convertAddressToIpv6Bytes(InetAddress address) {
         Validate.notNull(address);
         
         byte[] addrArr = address.getAddress();
@@ -92,7 +92,7 @@ public final class NetworkUtils {
                 return addrArr;
             }
             default:
-                throw new IllegalStateException();
+                throw new IllegalStateException(); // should never happen
         }
     }
     
@@ -110,8 +110,8 @@ public final class NetworkUtils {
      * @throws IllegalArgumentException if could not be converted to an IP address (almost always because {@code buffer.length} is not 4 or
      * 16)
      */
-    public static InetAddress convertArrayToIp(byte[] buffer) {
-        return convertArrayToIp(buffer, 0, buffer.length);
+    public static InetAddress convertBytesToAddress(byte[] buffer) {
+        return NetworkUtils.convertBytesToAddress(buffer, 0, buffer.length);
     }
 
     /**
@@ -130,7 +130,7 @@ public final class NetworkUtils {
      * @return IP address
      * @throws IllegalArgumentException if could not be converted to an IP address (almost always because {@code length} is not 4 or 16)
      */
-    public static InetAddress convertArrayToIp(byte[] buffer, int offset, int length) {
+    public static InetAddress convertBytesToAddress(byte[] buffer, int offset, int length) {
         byte[] addr = Arrays.copyOfRange(buffer, offset, offset + length);
         try {
             InetAddress ret = InetAddress.getByAddress(addr);

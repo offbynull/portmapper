@@ -72,7 +72,7 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
 
         Validate.isTrue(getOp() == OP);
         
-        inetAddress = NetworkUtils.convertArrayToIp(buffer, 8, 4);
+        inetAddress = NetworkUtils.convertBytesToAddress(buffer, 8, 4);
         Validate.validState(inetAddress instanceof Inet4Address); // should never happen -- sanity check
     }
 

@@ -201,7 +201,7 @@ public final class PeerPcpRequest extends PcpRequest {
         suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset);
         offset += 2;
 
-        suggestedExternalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        suggestedExternalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
 
         remotePeerPort = InternalUtils.bytesToShort(buffer, offset);
@@ -209,7 +209,7 @@ public final class PeerPcpRequest extends PcpRequest {
         
         offset += 2; // reserved
         
-        remotePeerIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        remotePeerIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
         
         
@@ -247,7 +247,7 @@ public final class PeerPcpRequest extends PcpRequest {
         InternalUtils.shortToBytes(data, offset, (short) suggestedExternalPort);
         offset += 2;
         
-        byte[] ipv6Array = NetworkUtils.convertToIpv6Array(suggestedExternalIpAddress);
+        byte[] ipv6Array = NetworkUtils.convertAddressToIpv6Bytes(suggestedExternalIpAddress);
         System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
         offset += ipv6Array.length;
 
@@ -256,7 +256,7 @@ public final class PeerPcpRequest extends PcpRequest {
         
         offset += 2; // 2 reserved bytes
 
-        ipv6Array = NetworkUtils.convertToIpv6Array(remotePeerIpAddress);
+        ipv6Array = NetworkUtils.convertAddressToIpv6Bytes(remotePeerIpAddress);
         System.arraycopy(ipv6Array, 0, data, offset, ipv6Array.length);
         offset += ipv6Array.length;
         

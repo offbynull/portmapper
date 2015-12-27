@@ -86,7 +86,7 @@ public final class ThirdPartyPcpOption extends PcpOption {
 
         offset += HEADER_LENGTH;
 
-        internalIpAddress = NetworkUtils.convertArrayToIp(buffer, offset, 16);
+        internalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
     }
 
@@ -116,7 +116,7 @@ public final class ThirdPartyPcpOption extends PcpOption {
         byte[] data = new byte[DATA_LENGTH];
 
         // write ip
-        byte[] ipv6AsBytes = NetworkUtils.convertToIpv6Array(internalIpAddress);
+        byte[] ipv6AsBytes = NetworkUtils.convertAddressToIpv6Bytes(internalIpAddress);
         Validate.validState(ipv6AsBytes.length == 16); // sanity check, should never throw exception
         System.arraycopy(ipv6AsBytes, 0, data, 0, ipv6AsBytes.length);
         
