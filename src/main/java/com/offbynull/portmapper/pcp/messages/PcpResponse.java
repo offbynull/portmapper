@@ -169,7 +169,7 @@ public abstract class PcpResponse implements PcpMessage {
         resultCode = buffer[offset] & 0xFF; // don't bother checking if resultcode is a success
         offset++;
         
-        lifetime = InternalUtils.bytesToInt(buffer, offset);
+        lifetime = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
         offset += 4;
         
         epochTime = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
