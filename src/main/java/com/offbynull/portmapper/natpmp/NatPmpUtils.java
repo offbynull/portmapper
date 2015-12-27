@@ -34,7 +34,7 @@ public final class NatPmpUtils {
      * @param response NAT-PMP response
      * @return {@code true} if response is successful, {@code false} otherwise
      */
-    public static final boolean isSuccess(NatPmpResponse response) {
+    public static boolean isSuccess(NatPmpResponse response) {
         return isSuccess(response.getResultCode());
     }
 
@@ -43,7 +43,7 @@ public final class NatPmpUtils {
      * @param resultCode result code
      * @return {@code true} if result code is successful, {@code false} otherwise
      */
-    public static final boolean isSuccess(int resultCode) {
+    public static boolean isSuccess(int resultCode) {
         return resultCode == SUCCESS.ordinal();
     }
 
@@ -52,7 +52,7 @@ public final class NatPmpUtils {
      * @param response NAT-PMP response
      * @throws IllegalArgumentException if response was not successful
      */
-    public static final void validateResultCode(NatPmpResponse response) {
+    public static void validateResultCode(NatPmpResponse response) {
         validateResultCode(response.getResultCode());
     }
 
@@ -61,7 +61,7 @@ public final class NatPmpUtils {
      * @param resultCode result code
      * @throws IllegalArgumentException if result code was not successful
      */
-    public static final void validateResultCode(int resultCode) {
+    public static void validateResultCode(int resultCode) {
         if (resultCode == SUCCESS.ordinal()) {
             return;
         }

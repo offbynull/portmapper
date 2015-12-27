@@ -60,6 +60,7 @@ public abstract class NatPmpRequest implements NatPmpMessage {
         return op;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 5;
@@ -84,4 +85,5 @@ public abstract class NatPmpRequest implements NatPmpMessage {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

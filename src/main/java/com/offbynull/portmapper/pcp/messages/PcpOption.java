@@ -54,7 +54,13 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class PcpOption {
+    /**
+     * PCP option header length.
+     */
     protected static final int HEADER_LENGTH = 4;
+    /**
+     * Maximum amount of padding on a PCP option block. Total size of PCP option block must be multiple of 4.
+     */
     protected static final int DATA_PADDING_LIMIT = 4;
 
     private int code;
@@ -158,6 +164,7 @@ public abstract class PcpOption {
         return buffer;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 7;
@@ -186,5 +193,5 @@ public abstract class PcpOption {
         }
         return true;
     }
-    
+    // CHECKSTYLE:ON:DesignForExtension
 }

@@ -87,6 +87,7 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         return secondsSinceStartOfEpoch;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 7;
@@ -119,4 +120,5 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

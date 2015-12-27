@@ -119,9 +119,11 @@ public final class PeerPcpResponse extends PcpResponse {
      * || 1 > internalPort > 65535 || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535)
      * || 1 > remotePeerPort > 65535}
      */
+    // CHECKSTYLE:OFF:ParameterNumber
     public PeerPcpResponse(byte[] mappingNonce, int protocol, int internalPort, int assignedExternalPort,
             InetAddress assignedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, int resultCode, long lifetime,
             long epochTime, PcpOption ... options) {
+    // CHECKSTYLE:ON:ParameterNumber
         super(OPCODE, resultCode, lifetime, epochTime, DATA_LENGTH, options);
         
         Validate.notNull(mappingNonce);

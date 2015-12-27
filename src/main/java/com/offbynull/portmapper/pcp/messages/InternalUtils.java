@@ -21,8 +21,8 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 final class InternalUtils {
-    final static int PCP_VERSION = 2;
-    final static int MAX_UDP_PAYLOAD = 1100;
+    static final int PCP_VERSION = 2;
+    static final int MAX_UDP_PAYLOAD = 1100;
     
     private InternalUtils() {
         // do nothing

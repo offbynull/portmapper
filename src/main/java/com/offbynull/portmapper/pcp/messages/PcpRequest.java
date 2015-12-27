@@ -91,6 +91,9 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class PcpRequest implements PcpMessage {
+    /**
+     * PCP request header length.
+     */
     protected static final int HEADER_LENGTH = 24;
     
     private int op;
@@ -292,6 +295,7 @@ public abstract class PcpRequest implements PcpMessage {
         return data;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 5;
@@ -336,4 +340,5 @@ public abstract class PcpRequest implements PcpMessage {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

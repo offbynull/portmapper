@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.natpmp.messages;
 
 final class InternalUtils {
-    final static int NAT_PMP_VERSION = 0;
+    static final int NAT_PMP_VERSION = 0;
     
     private InternalUtils() {
         // do nothing

@@ -98,6 +98,9 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class PcpResponse implements PcpMessage {
+    /**
+     * PCP response header length.
+     */
     protected static final int HEADER_LENGTH = 24;
     
     private int op;
@@ -209,7 +212,7 @@ public abstract class PcpResponse implements PcpMessage {
      * Get the result code. 0 means success.
      * @return result code
      */
-    public int getResultCode() {
+    public final int getResultCode() {
         return resultCode;
     }
 
@@ -304,6 +307,7 @@ public abstract class PcpResponse implements PcpMessage {
         return data;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 3;
@@ -352,4 +356,5 @@ public abstract class PcpResponse implements PcpMessage {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

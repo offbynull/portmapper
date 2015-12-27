@@ -216,6 +216,7 @@ public abstract class MappingNatPmpRequest extends NatPmpRequest {
         return lifetime;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = super.hashCode();
@@ -251,4 +252,5 @@ public abstract class MappingNatPmpRequest extends NatPmpRequest {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }
