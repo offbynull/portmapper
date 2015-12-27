@@ -126,6 +126,7 @@ public abstract class PcpResponse implements PcpMessage {
         this.op = op;
         this.resultCode = resultCode;
         this.lifetime = lifetime;
+        this.epochTime = epochTime;
         this.options = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(options)));
         
         this.dataLength = opcodeSpecificDataLength;
@@ -280,7 +281,7 @@ public abstract class PcpResponse implements PcpMessage {
         byte[] data = new byte[payloadLength];
 
         data[0] = 2;
-        data[1] = (byte) (op & 0x80); // topmost bit should be 1
+        data[1] = (byte) (op | 0x80); // topmost bit should be 1
         data[2] = 0;
         data[3] = (byte) resultCode;
         InternalUtils.intToBytes(data, 4, (int) lifetime);
