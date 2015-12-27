@@ -40,7 +40,7 @@ public class MapPcpResponseTest {
     }
 
     @Test
-    public void mustProperlyCreatePacketWithZeroInternalPortOnFailure() throws Exception {
+    public void mustProperlyCreatePacketWithZeroInternalPort() throws Exception {
         MapPcpResponse req = new MapPcpResponse(nonce, 1, 0, 3, IPV6_TEST_ADDRESS, 0, 0xFFFFFFFFL, 0xFFFFFFFEL);
         assertArrayEquals(nonce, req.getMappingNonce());
         assertEquals(1, req.getOp());

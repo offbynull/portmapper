@@ -112,7 +112,7 @@ public final class MapPcpRequest extends PcpRequest {
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
+     * @throws IllegalArgumentException if {@code 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
      * || 0 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || (protocol == 0 && internalPort != 0)
      * || (internalPort == 0 && lifetime != 0)}
      */

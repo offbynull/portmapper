@@ -145,7 +145,7 @@ public final class PeerPcpRequest extends PcpRequest {
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 1 > protocol > 255
+     * @throws IllegalArgumentException if {@code 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 1 > protocol > 255
      * || 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 1 > remotePeerPort > 65535}
      */
     public PeerPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,

@@ -35,7 +35,7 @@ public final class AnnouncePcpResponse extends PcpResponse {
      * @param resultCode result code
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if {0L > epochTime > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {@code 0L > epochTime > 0xFFFFFFFFL}
      */
     public AnnouncePcpResponse(int resultCode, long epochTime, PcpOption... options) {
         super(OPCODE, resultCode, LIFETIME, epochTime, OPCODE_SPECIFIC_DATA_LENGTH, options);
