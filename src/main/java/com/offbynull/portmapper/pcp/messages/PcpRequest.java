@@ -157,7 +157,7 @@ public abstract class PcpRequest implements PcpMessage {
         // int reserved = InternalUtils.bytesToShort(buffer, offset); // RFC says to ignore on reception
         offset += 2;
         
-        lifetime = InternalUtils.bytesToInt(buffer, offset);
+        lifetime = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
         offset += 4;
 
         // at offset 8, write ipv6 address
