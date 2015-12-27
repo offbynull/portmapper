@@ -53,4 +53,27 @@ public final class AnnouncePcpResponse extends PcpResponse {
     public byte[] getData() {
         return new byte[OPCODE_SPECIFIC_DATA_LENGTH];
     }
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AnnouncePcpResponse other = (AnnouncePcpResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
+    }
 }

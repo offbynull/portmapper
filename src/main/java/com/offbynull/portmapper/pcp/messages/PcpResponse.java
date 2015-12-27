@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -300,5 +301,54 @@ public abstract class PcpResponse implements PcpMessage {
         
         // return data
         return data;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 89 * hash + this.op;
+        hash = 89 * hash + this.resultCode;
+        hash = 89 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        hash = 89 * hash + (int) (this.epochTime ^ (this.epochTime >>> 32));
+        hash = 89 * hash + Objects.hashCode(this.options);
+        hash = 89 * hash + this.dataLength;
+        hash = 89 * hash + this.optionsLength;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PcpResponse other = (PcpResponse) obj;
+        if (this.op != other.op) {
+            return false;
+        }
+        if (this.resultCode != other.resultCode) {
+            return false;
+        }
+        if (this.lifetime != other.lifetime) {
+            return false;
+        }
+        if (this.epochTime != other.epochTime) {
+            return false;
+        }
+        if (this.dataLength != other.dataLength) {
+            return false;
+        }
+        if (this.optionsLength != other.optionsLength) {
+            return false;
+        }
+        if (!Objects.equals(this.options, other.options)) {
+            return false;
+        }
+        return true;
     }
 }

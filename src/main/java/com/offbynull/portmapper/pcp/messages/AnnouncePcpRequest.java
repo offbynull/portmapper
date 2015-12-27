@@ -58,4 +58,26 @@ public final class AnnouncePcpRequest extends PcpRequest {
         return new byte[OPCODE_SPECIFIC_DATA_LENGTH];
     }
     
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AnnouncePcpRequest other = (AnnouncePcpRequest) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
+    }
 }

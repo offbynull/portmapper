@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -289,5 +290,50 @@ public abstract class PcpRequest implements PcpMessage {
         
         // return data
         return data;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 19 * hash + this.op;
+        hash = 19 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        hash = 19 * hash + Objects.hashCode(this.internalIp);
+        hash = 19 * hash + Objects.hashCode(this.options);
+        hash = 19 * hash + this.dataLength;
+        hash = 19 * hash + this.optionsLength;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PcpRequest other = (PcpRequest) obj;
+        if (this.op != other.op) {
+            return false;
+        }
+        if (this.lifetime != other.lifetime) {
+            return false;
+        }
+        if (this.dataLength != other.dataLength) {
+            return false;
+        }
+        if (this.optionsLength != other.optionsLength) {
+            return false;
+        }
+        if (!Objects.equals(this.internalIp, other.internalIp)) {
+            return false;
+        }
+        if (!Objects.equals(this.options, other.options)) {
+            return false;
+        }
+        return true;
     }
 }

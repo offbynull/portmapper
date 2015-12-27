@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.util.Arrays;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -245,4 +246,49 @@ public final class MapPcpResponse extends PcpResponse {
     public InetAddress getAssignedExternalIpAddress() {
         return assignedExternalIpAddress;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 97 * hash + Arrays.hashCode(this.mappingNonce);
+        hash = 97 * hash + this.protocol;
+        hash = 97 * hash + this.internalPort;
+        hash = 97 * hash + this.assignedExternalPort;
+        hash = 97 * hash + Objects.hashCode(this.assignedExternalIpAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MapPcpResponse other = (MapPcpResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (this.protocol != other.protocol) {
+            return false;
+        }
+        if (this.internalPort != other.internalPort) {
+            return false;
+        }
+        if (this.assignedExternalPort != other.assignedExternalPort) {
+            return false;
+        }
+        if (!Arrays.equals(this.mappingNonce, other.mappingNonce)) {
+            return false;
+        }
+        if (!Objects.equals(this.assignedExternalIpAddress, other.assignedExternalIpAddress)) {
+            return false;
+        }
+        return true;
+    }
+    
 }
