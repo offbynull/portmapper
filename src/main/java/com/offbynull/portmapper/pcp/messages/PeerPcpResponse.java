@@ -115,9 +115,9 @@ public final class PeerPcpResponse extends PcpResponse {
      * @param resultCode result code
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
-     * {@code 1 > protocol > 255}, or if {@code 1 > internalPort > 65535}, or if {@code 1 > assignedExternalPort > 65535}, or if
-     * {@code 1 > remotePeerPort > 65535}, or if {@code mappingNonce.length != 12}
+     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 1 > protocol > 255
+     * || 1 > internalPort > 65535 || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535)
+     * || 1 > remotePeerPort > 65535}
      */
     public PeerPcpResponse(byte[] mappingNonce, int protocol, int internalPort, int assignedExternalPort,
             InetAddress assignedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, int resultCode, long lifetime,
@@ -144,8 +144,11 @@ public final class PeerPcpResponse extends PcpResponse {
      * @param buffer buffer containing PCP response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws BufferUnderflowException if not enough data is available in {@code buffer}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
-     * / data exceeds 1100 bytes / protocol is 0 / internal port is 0 / assigned external port is 0 / remote port is 0)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 1 || op == 2 || 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12
+     * || 1 > protocol > 255 || 1 > internalPort > 65535
+     * || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535) || 1 > remotePeerPort > 65535}) or
+     * contains an unparseable options region.
      */
     public PeerPcpResponse(byte[] buffer) {
         super(buffer, DATA_LENGTH);

@@ -112,10 +112,9 @@ public final class MapPcpRequest extends PcpRequest {
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, or if
-     * {@code 0 > protocol > 255}, or if {@code 0 > internalPort > 65535}, or if {@code 0 > suggestedExternalPort > 65535}, or if
-     * {@code mappingNonce.length != 12}, or if {@code protocol == 0} but {@code internalPort != 0}, or if {@code internalPort == 0}
-     * but {@code lifetime != 0}
+     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
+     * || 0 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || (protocol == 0 && internalPort != 0)
+     * || (internalPort == 0 && lifetime != 0)}
      */
     public MapPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
             InetAddress suggestedExternalIpAddress, long lifetime, InetAddress internalIp, PcpOption ... options) {
@@ -135,8 +134,10 @@ public final class MapPcpRequest extends PcpRequest {
      * Constructs a {@link MapPcpRequest} object by parsing a buffer.
      * @param buffer buffer containing PCP request data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
-     * / data exceeds 1100 bytes)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 0 || op != 1 || 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
+     * || 0 > internalPort > 65535 || 0 > suggestedExternalPort > 65535}|| (protocol == 0 && internalPort != 0)
+     * || (internalPort == 0 && lifetime != 0)) or contains an unparseable options region.
      */
     public MapPcpRequest(byte[] buffer) {
         super(buffer, DATA_LENGTH);

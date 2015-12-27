@@ -145,9 +145,8 @@ public final class PeerPcpRequest extends PcpRequest {
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
-     * {@code 1 > protocol > 255}, or if {@code 1 > internalPort > 65535}, or if {@code 0 > suggestedExternalPort > 65535}, or if
-     * {@code mappingNonce.length != 12}, or if {@code 1 > remotePeerPort > 65535}
+     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 1 > protocol > 255
+     * || 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 1 > remotePeerPort > 65535}
      */
     public PeerPcpRequest(byte[] mappingNonce, int protocol, int internalPort, int suggestedExternalPort,
             InetAddress suggestedExternalIpAddress, int remotePeerPort, InetAddress remotePeerIpAddress, long lifetime,
@@ -173,8 +172,10 @@ public final class PeerPcpRequest extends PcpRequest {
      * Constructs a {@link MapPcpRequest} object by parsing a buffer.
      * @param buffer buffer containing PCP request data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
-     * / data exceeds 1100 bytes / protocol is 0 / internal port is 0 / remote port is 0)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 0 || op == 2 || 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12
+     * || 1 > protocol > 255 || 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 1 > remotePeerPort > 65535}) or contains an
+     * unparseable options region.
      */
     public PeerPcpRequest(byte[] buffer) {
         super(buffer, DATA_LENGTH);

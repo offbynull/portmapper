@@ -21,32 +21,38 @@ package com.offbynull.portmapper.pcp.messages;
  * @author Kasra Faghihi
  */
 public final class AnnouncePcpResponse extends PcpResponse {
+    // FROM THE RFC:
+    // The PCP ANNOUNCE Opcode requests and responses have no Opcode-specific payload (that is, the length of the Opcode-specific data is
+    // zero).  The Requested Lifetime field of requests and Lifetime field of responses are both set to 0 on transmission and ignored on
+    // reception.
+    private static final int LIFETIME = 0;
     private static final int OPCODE = 0;
     private static final int OPCODE_SPECIFIC_DATA_LENGTH = 0;
 
     /**
      * Constructs a {@link AnnouncePcpResponse} object.
-     * @param lifetime requested lifetime in seconds
      * @param epochTime server's epoch time in seconds
      * @param resultCode result code
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0 > resultCode > 255}, or if
-     * {@code 0L > lifetime > 0xFFFFFFFFL}, or if {@code 0L > epochTime > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {0L > epochTime > 0xFFFFFFFFL}
      */
-    public AnnouncePcpResponse(int resultCode, long lifetime, long epochTime, PcpOption... options) {
-        super(OPCODE, resultCode, lifetime, epochTime, OPCODE_SPECIFIC_DATA_LENGTH, options);
+    public AnnouncePcpResponse(int resultCode, long epochTime, PcpOption... options) {
+        super(OPCODE, resultCode, LIFETIME, epochTime, OPCODE_SPECIFIC_DATA_LENGTH, options);
     }
 
     /**
      * Constructs a {@link AnnouncePcpResponse} object by parsing a buffer.
      * @param buffer buffer containing PCP response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough
-     * bytes)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 1 || op != 0}) or contains an unparseable options region.
      */
     public AnnouncePcpResponse(byte[] buffer) {
         super(buffer, OPCODE_SPECIFIC_DATA_LENGTH);
+        // Validate.isTrue(getLifetime() == LIFETIME); // should be 0, but RFC says to ignore on reception -- this provides no extra
+                                                       // information not does it doesn't corrupt/invalidate anything, so don't bother
+                                                       // verifying
     }
 
     @Override

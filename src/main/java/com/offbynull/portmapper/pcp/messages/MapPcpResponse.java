@@ -101,9 +101,8 @@ public final class MapPcpResponse extends PcpResponse {
      * @param resultCode result code
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}, if protocol is
-     * {@code 0 > protocol > 255}, or if {@code 0 > internalPort > 65535}, or if {@code 1 > assignedExternalPort > 65535}, or if
-     * {@code mappingNonce.length != 12}
+     * @throws IllegalArgumentException if {0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
+     * || 0 > internalPort > 65535 || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535)}
      */
     public MapPcpResponse(byte[] mappingNonce, int protocol, int internalPort, int assignedExternalPort,
             InetAddress assignedExternalIpAddress, int resultCode, long lifetime, long epochTime, PcpOption ... options) {
@@ -130,6 +129,10 @@ public final class MapPcpResponse extends PcpResponse {
      * expected version (must always be {@code 2}), or if the r-flag isn't set, or if there's an unsuccessful/unrecognized result code,
      * or if the op code doesn't match the MAP opcode, or if the response has a {@code 0} for its {@code internalPort} or
      * {@code assignedExternalPort} field, or if there were problems parsing options
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 1 || op != 1 || 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
+     * || 0 > internalPort > 65535  || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535)}) or contains
+     * an unparseable options region.
      */
     public MapPcpResponse(byte[] buffer) {
         super(buffer, DATA_LENGTH);

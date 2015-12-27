@@ -36,7 +36,6 @@ public final class AnnouncePcpRequest extends PcpRequest {
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0L > lifetime > 0xFFFFFFFFL}
      */
     public AnnouncePcpRequest(InetAddress internalIp, PcpOption... options) {
         super(OPCODE, LIFETIME, internalIp, OPCODE_SPECIFIC_DATA_LENGTH, options);
@@ -46,11 +45,14 @@ public final class AnnouncePcpRequest extends PcpRequest {
      * Constructs a {@link AnnouncePcpRequest} object by parsing a buffer.
      * @param buffer buffer containing PCP request data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough
-     * bytes)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 0 || op != 0}) or contains an unparseable options region.
      */
     public AnnouncePcpRequest(byte[] buffer) {
         super(buffer, OPCODE_SPECIFIC_DATA_LENGTH);
+        // Validate.isTrue(getLifetime() == LIFETIME); // should be 0, but RFC says to ignore on reception -- this provides no extra
+                                                       // information not does it doesn't corrupt/invalidate anything, so don't bother
+                                                       // verifying
     }
 
     @Override

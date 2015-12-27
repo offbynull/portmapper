@@ -118,8 +118,7 @@ public abstract class PcpResponse implements PcpMessage {
      * @param opcodeSpecificDataLength length of the opcode specific data
      * @param options PCP options
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code 0 > op > 127}, or if
-     * {@code 0 > resultCode > 255}, or if {@code 0L > lifetime > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {@code 0 > op > 127 || 0L > lifetime > 0xFFFFFFFFL || 0L > epochTime > 0xFFFFFFFFL}
      */
     public PcpResponse(int op, int resultCode, long lifetime, long epochTime, int opcodeSpecificDataLength, PcpOption ... options) {
         Validate.noNullElements(options);
@@ -144,8 +143,9 @@ public abstract class PcpResponse implements PcpMessage {
      * Constructs a {@link PcpResponse} object by parsing a buffer.
      * @param buffer buffer containing PCP request data
      * @param opcodeSpecificDataLength length of the opcode specific data
-     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} is malformed (doesn't contain enough bytes
-     * / data exceeds 1100 bytes / r-flag isn't 1)
+     * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
+     * or is malformed ({@code r-flag != 1 || 0 > op > 127 || 0L > lifetime > 0xFFFFFFFFL || 0L > epochTime > 0xFFFFFFFFL}) or contains an
+     * unparseable options region.
      */
     public PcpResponse(byte[] buffer, int opcodeSpecificDataLength) {
         Validate.notNull(buffer);
