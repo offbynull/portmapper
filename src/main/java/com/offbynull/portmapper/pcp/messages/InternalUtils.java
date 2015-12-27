@@ -21,7 +21,21 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 final class InternalUtils {
+    // RFC drafts 26 to 29 use version number 2. Prior drafts use version 1. The version number change was introduced to avoid communication
+    // issues between clients and servers that implemented draft-versions of the spec. The RFC draft changelog notes this change as ...
+    // "Bump version number from 1 to 2, to accommodate pre-RFC PCP client implementations without needing a heuristic."
+    //
+    // Prior to version 2, the RFC drafts are all over the place. The communication protocol (packet structures / constants / etc...) change
+    // non-trivially between drafts. For example, changes between draft 24 and 25 include the addition of nonces for MAP/PEER and a maximum
+    // UDP packet size of 1024 (as opposed to 1100 in the final RFC).
+    //
+    // As such, it would be impossible to support all variations of version 1. Chances are that home-grade routers that supported some draft
+    // version of PCP version 1 also supported other protocols capable of IPv6 support (such as UPNP-IGDv2) or have subsequently been
+    // updated to support PCP version 2 via a firmware update.
+    //
+    // Given all this, we're only going to support PCP_VERSION 2.
     static final int PCP_VERSION = 2;
+
     static final int MAX_UDP_PAYLOAD = 1100;
     
     private InternalUtils() {
