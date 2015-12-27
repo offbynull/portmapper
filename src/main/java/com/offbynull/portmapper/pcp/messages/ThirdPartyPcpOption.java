@@ -19,6 +19,7 @@ package com.offbynull.portmapper.pcp.messages;
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -126,5 +127,33 @@ public final class ThirdPartyPcpOption extends PcpOption {
         System.arraycopy(ipv6AsBytes, 0, data, 0, ipv6AsBytes.length);
         
         return data;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 37 * hash + Objects.hashCode(this.internalIpAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ThirdPartyPcpOption other = (ThirdPartyPcpOption) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Objects.equals(this.internalIpAddress, other.internalIpAddress)) {
+            return false;
+        }
+        return true;
     }
 }

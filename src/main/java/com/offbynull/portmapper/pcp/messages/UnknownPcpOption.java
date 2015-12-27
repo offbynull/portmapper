@@ -65,4 +65,34 @@ public final class UnknownPcpOption extends PcpOption {
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 79 * hash + Arrays.hashCode(this.data);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UnknownPcpOption other = (UnknownPcpOption) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Arrays.equals(this.data, other.data)) {
+            return false;
+        }
+        return true;
+    }
+
+    
 }
