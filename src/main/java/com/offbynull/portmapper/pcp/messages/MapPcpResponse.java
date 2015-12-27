@@ -208,7 +208,7 @@ public final class MapPcpResponse extends PcpResponse {
      * @return nonce
      */
     public byte[] getMappingNonce() {
-        return mappingNonce;
+        return Arrays.copyOf(mappingNonce, mappingNonce.length);
     }
 
     /**

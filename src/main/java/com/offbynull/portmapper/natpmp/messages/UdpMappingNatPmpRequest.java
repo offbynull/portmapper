@@ -162,7 +162,7 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final UdpMappingNatPmpRequest other = (UdpMappingNatPmpRequest) obj;
+        // final UdpMappingNatPmpRequest other = (UdpMappingNatPmpRequest) obj;
         if (!super.equals(obj)) {
             return false;
         }

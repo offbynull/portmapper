@@ -91,7 +91,7 @@ public final class PreferFailurePcpOption extends PcpOption {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final PreferFailurePcpOption other = (PreferFailurePcpOption) obj;
+        // final PreferFailurePcpOption other = (PreferFailurePcpOption) obj;
         if (!super.equals(obj)) {
             return false;
         }

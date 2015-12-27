@@ -76,7 +76,7 @@ public final class AnnouncePcpRequest extends PcpRequest {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final AnnouncePcpRequest other = (AnnouncePcpRequest) obj;
+        // final AnnouncePcpRequest other = (AnnouncePcpRequest) obj;
         if (!super.equals(obj)) {
             return false;
         }

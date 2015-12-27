@@ -171,7 +171,7 @@ public final class UdpMappingNatPmpResponse extends MappingNatPmpResponse {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final UdpMappingNatPmpResponse other = (UdpMappingNatPmpResponse) obj;
+        // final UdpMappingNatPmpResponse other = (UdpMappingNatPmpResponse) obj;
         if (!super.equals(obj)) {
             return false;
         }

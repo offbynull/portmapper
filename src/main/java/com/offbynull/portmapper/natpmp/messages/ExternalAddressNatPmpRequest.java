@@ -84,7 +84,7 @@ public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ExternalAddressNatPmpRequest other = (ExternalAddressNatPmpRequest) obj;
+        // final ExternalAddressNatPmpRequest other = (ExternalAddressNatPmpRequest) obj;
         if (!super.equals(obj)) {
             return false;
         }

@@ -76,7 +76,7 @@ public final class AnnouncePcpResponse extends PcpResponse {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final AnnouncePcpResponse other = (AnnouncePcpResponse) obj;
+        // final AnnouncePcpResponse other = (AnnouncePcpResponse) obj;
         if (!super.equals(obj)) {
             return false;
         }

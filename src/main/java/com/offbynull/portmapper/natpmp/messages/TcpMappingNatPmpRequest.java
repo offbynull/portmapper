@@ -62,7 +62,7 @@ public final class TcpMappingNatPmpRequest extends MappingNatPmpRequest {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final TcpMappingNatPmpRequest other = (TcpMappingNatPmpRequest) obj;
+        // final TcpMappingNatPmpRequest other = (TcpMappingNatPmpRequest) obj;
         if (!super.equals(obj)) {
             return false;
         }

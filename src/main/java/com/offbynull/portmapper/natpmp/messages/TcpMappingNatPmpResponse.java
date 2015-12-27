@@ -170,7 +170,7 @@ public final class TcpMappingNatPmpResponse extends MappingNatPmpResponse {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final TcpMappingNatPmpResponse other = (TcpMappingNatPmpResponse) obj;
+        // final TcpMappingNatPmpResponse other = (TcpMappingNatPmpResponse) obj;
         if (!super.equals(obj)) {
             return false;
         }
