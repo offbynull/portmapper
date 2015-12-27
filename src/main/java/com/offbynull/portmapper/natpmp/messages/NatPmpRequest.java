@@ -59,4 +59,29 @@ public abstract class NatPmpRequest implements NatPmpMessage {
     public final int getOp() {
         return op;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 11 * hash + this.op;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NatPmpRequest other = (NatPmpRequest) obj;
+        if (this.op != other.op) {
+            return false;
+        }
+        return true;
+    }
 }

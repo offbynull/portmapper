@@ -127,8 +127,8 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
      * Construct a {@link UdpMappingNatPmpRequest} object.
      * @param data buffer containing NAT-PMP request data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 1}), or if the op {@code != 0}
+     * @throws IllegalArgumentException if {@code buffer} isn't the right size or is malformed ({@code op != 1 || version != 0 ||
+     * @code 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 0 > lifetime > 0xFFFFFFFFL})
      */
     public UdpMappingNatPmpRequest(byte[] data) {
         super(OP, data);
@@ -139,10 +139,33 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
      * @param internalPort internal port
      * @param suggestedExternalPort suggested external port ({@code 0} for no preference)
      * @param lifetime desired lifetime of mapping ({@code 0} to destroy mapping)
-     * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code suggestedExternalPort < 0 || > 65535}, or if
-     * {@code lifetime < 0 || > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {@code 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535
+     * || 0 > lifetime > 0xFFFFFFFFL}
      */
     public UdpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
         super(OP, internalPort, suggestedExternalPort, lifetime);
+    }
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UdpMappingNatPmpRequest other = (UdpMappingNatPmpRequest) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
     }
 }

@@ -20,6 +20,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -57,21 +58,12 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
 
     private InetAddress inetAddress;
 
-    public ExternalAddressNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, InetAddress inetAddress) {
-        super(OP, resultCode, secondsSinceStartOfEpoch);
-        
-        Validate.notNull(inetAddress);
-        Validate.isTrue(inetAddress instanceof Inet4Address);
-        
-        this.inetAddress = inetAddress;
-    }
-
     /**
      * Constructs a {@link ExternalAddressNatPmpResponse} object by parsing a buffer.
      * @param buffer buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 0}), or if the op {@code != 128}, or if there's an unsuccessful/unrecognized result code
+     * @throws IllegalArgumentException if {@code buffer} isn't the right size or is malformed ({@code op != 128 || version != 0 ||
+     * 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 0L > lifetime > 0xFFFFFFFFL})
      */
     public ExternalAddressNatPmpResponse(byte[] buffer) {
         super(buffer);
@@ -88,6 +80,23 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
         } catch (UnknownHostException uhe) {
             throw new IllegalStateException(uhe); // should never happen, will always be 4 bytes
         }
+    }
+
+    /**
+     * Constructs a {@link ExternalAddressNatPmpResponse} object.
+     * @param resultCode result code
+     * @param secondsSinceStartOfEpoch seconds since start of epoch
+     * @param inetAddress external IP address
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code !(inetAddress instanceof Inet4Address)}
+     */
+    public ExternalAddressNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, InetAddress inetAddress) {
+        super(OP, resultCode, secondsSinceStartOfEpoch);
+        
+        Validate.notNull(inetAddress);
+        Validate.isTrue(inetAddress instanceof Inet4Address);
+        
+        this.inetAddress = inetAddress;
     }
 
     @Override
@@ -113,5 +122,33 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
      */
     public InetAddress getAddress() {
         return inetAddress;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 79 * hash + Objects.hashCode(this.inetAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ExternalAddressNatPmpResponse other = (ExternalAddressNatPmpResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Objects.equals(this.inetAddress, other.inetAddress)) {
+            return false;
+        }
+        return true;
     }
 }

@@ -131,9 +131,9 @@ public final class TcpMappingNatPmpResponse extends MappingNatPmpResponse {
      * Constructs a {@link TcpMappingNatPmpResponse} object by parsing a buffer.
      * @param buffer buffer containing NAT-PMP response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if not enough data is available in {@code data}, or if the version doesn't match the expected
-     * version (must always be {@code 0}), or if the op {@code != 130}, or if internal port is {@code 0}, or if lifetime is {@code 0} but
-     * external port is not {@code 0} (if both are 0, this means mapping has been deleted)
+     * @throws IllegalArgumentException if {@code buffer} isn't the right size or is malformed ({@code op != 130 || version != 0 ||
+     * 1 > internalPort > 65535 || 1 > externalPort > 65535 || 0 > lifetime > 0xFFFFFFFFL || 0 > externalPort > 65535 ||
+     * (lifetime == 0 && externalPort != 0)})
      */
     public TcpMappingNatPmpResponse(byte[] buffer) {
         super(OP, buffer);
@@ -141,14 +141,39 @@ public final class TcpMappingNatPmpResponse extends MappingNatPmpResponse {
 
     /**
      * Construct a {@link TcpMappingNatPmpResponse} object.
+     * @param resultCode result code
+     * @param secondsSinceStartOfEpoch seconds since start of epoch
      * @param internalPort internal port
      * @param externalPort external port
      * @param lifetime desired lifetime of mapping ({@code 0} to destroy mapping)
-     * @throws IllegalArgumentException if {@code internalPort < 1 || > 65535}, or if {@code externalPort < 1 || > 65535}, or if
-     * {@code lifetime < 0 || > 0xFFFFFFFFL}, or if {@code externalPort < 0 || > 65535}, or if lifetime is {@code 0} but external port is
-     * not {@code 0} (if both are 0, this means mapping has been deleted)
+     * @throws IllegalArgumentException if {@code 1 > internalPort > 65535 || 1 > externalPort > 65535 || 0 > lifetime > 0xFFFFFFFFL ||
+     * 0 > externalPort > 65535 || (lifetime == 0 && externalPort != 0)} (if both lifetime and externalPort is 0, it means mapping has been
+     * deleted)
      */
     public TcpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
+    }
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final TcpMappingNatPmpResponse other = (TcpMappingNatPmpResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
     }
 }
