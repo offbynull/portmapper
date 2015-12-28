@@ -29,6 +29,10 @@ public final class UpnpIgdService {
 
     private UpnpIgdServiceReference serviceReference;
 
+    private String getExternalIPAddressName;
+    private String getSpecificPortMappingEntryName;
+    private String deletePortMappingName;
+    private String addPortMappingName;
     private Range<Long> leaseDurationRange;
     private Range<Long> externalPortRange;
 

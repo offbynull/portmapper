@@ -18,14 +18,15 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.common.NetworkUtils;
+import com.offbynull.portmapper.common.TextUtils;
 import com.offbynull.portmapper.common.UdpCommunicator;
 import com.offbynull.portmapper.common.UdpCommunicatorListener;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,10 +35,12 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.DatagramChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,23 +56,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * Utility class used to discover UPNP-IGD-enabled routers.
@@ -92,6 +84,18 @@ public final class UpnpIgdDiscovery {
             + "MX: " + MAX_WAIT + "\r\n" // server should send response in rand(0, MX)
             + "ST: ssdp:all\r\n"
             + "\r\n";
+    
+    private static final Set<String> EXPECTED_ACTION_NAMES; // unmodifiable
+    static {
+        Set<String> set = new HashSet<>();
+        
+        set.add("GetExternalIPAddress");
+        set.add("GetSpecificPortMappingEntry");
+        set.add("DeletePortMapping");
+        set.add("AddPortMapping");
+        
+        EXPECTED_ACTION_NAMES = Collections.unmodifiableSet(set);
+    }
 
     private UpnpIgdDiscovery() {
         // do nothing
@@ -259,27 +263,26 @@ public final class UpnpIgdDiscovery {
         Set<UpnpIgdServiceReference> services = new HashSet<>();
         for (Entry<UpnpIgdDevice, byte[]> rootBufferEntry : rootBuffers.entrySet()) {
             try {
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(new ByteArrayInputStream(rootBufferEntry.getValue()));
+                byte[] rootBuf = rootBufferEntry.getValue();
+                String rootBufStr = new String(rootBuf, Charset.forName("US-ASCII"));
 
-                XPath xPath = XPathFactory.newInstance().newXPath();
-                NodeList serviceNodes = (NodeList) xPath.compile(".//service").evaluate(doc, XPathConstants.NODESET);
+                List<String> serviceBlocks = TextUtils.findAllBlocks(rootBufStr, "<service>", "</service>", true);
+                for (String serviceBlock : serviceBlocks) {
+                    String serviceType = TextUtils.findFirstBlock(serviceBlock, "<serviceType>", "</serviceType>", true);
+                    String serviceId = TextUtils.findFirstBlock(serviceBlock, "<serviceId>", "</serviceId>", true);
+                    String controlUrl = TextUtils.findFirstBlock(serviceBlock, "<controlURL>", "</controlURL>", true);
+                    //String eventSubUrl = TextUtils.findFirstBlock(serviceBlock, "<eventSubURL>", "</eventSubURL>");
+                    String scpdUrl = TextUtils.findFirstBlock(serviceBlock, "<SCPDURL>", "</SCPDURL>", true);
 
-                for (int i = 0; i < serviceNodes.getLength(); i++) {
-                    Node serviceNode = serviceNodes.item(i);
-
-                    String serviceType = StringUtils.trim(xPath.compile("serviceType").evaluate(serviceNode));
-                    String serviceId = StringUtils.trim(xPath.compile("serviceId").evaluate(serviceNode));
-                    String controlUrl = StringUtils.trim(xPath.compile("controlURL").evaluate(serviceNode));
-                    //String eventSubUrl = StringUtils.trim(xPath.compile("eventSubURL").evaluate(serviceNode));
-                    String scpdUrl = StringUtils.trim(xPath.compile("SCPDURL").evaluate(serviceNode));
-
-                    UpnpIgdServiceReference service = new UpnpIgdServiceReference(rootBufferEntry.getKey(), serviceType, serviceId,
-                            controlUrl, scpdUrl);
+                    UpnpIgdServiceReference service = new UpnpIgdServiceReference(
+                            rootBufferEntry.getKey(),
+                            StringUtils.trim(serviceType),
+                            StringUtils.trim(serviceId),
+                            StringUtils.trim(controlUrl),
+                            StringUtils.trim(scpdUrl));
                     services.add(service);
                 }
-            } catch (SAXException | ParserConfigurationException | IOException | XPathExpressionException e) { // NOPMD
+            } catch (MalformedURLException e) {
                 // do nothing, just skip
             }
         }
@@ -318,98 +321,105 @@ public final class UpnpIgdDiscovery {
         
         return serviceXmls;
     }
-
+    
     private static Set<UpnpIgdService> parseServiceDescriptions(Map<UpnpIgdServiceReference, byte[]> scpds) {
         Set<UpnpIgdService> descriptions = new HashSet<>();
         
         for (Entry<UpnpIgdServiceReference, byte[]> scpdEntry : scpds.entrySet()) {
-            try {
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(new ByteArrayInputStream(scpdEntry.getValue()));
-
-                XPath xPath = XPathFactory.newInstance().newXPath();
-                Node geipaActionNode = (Node) xPath.evaluate("//actionList/action["
-                        + "name='GetExternalIPAddress' "
-                        + "and count(argumentList) = 1 "
-                        + "and argumentList/argument/name='NewExternalIPAddress']", doc, XPathConstants.NODE);
-                Node gspmeActionNode = (Node) xPath.evaluate("//actionList/action["
-                        + "name='GetSpecificPortMappingEntry' "
-                        + "and count(argumentList) = 1 "
-                        + "and argumentList/argument/name='NewRemoteHost' "
-                        + "and argumentList/argument/name='NewExternalPort' "
-                        + "and argumentList/argument/name='NewProtocol' "
-                        + "and argumentList/argument/name='NewInternalPort' "
-                        + "and argumentList/argument/name='NewInternalClient' "
-                        + "and argumentList/argument/name='NewEnabled' "
-                        + "and argumentList/argument/name='NewPortMappingDescription' "
-                        + "and argumentList/argument/name='NewLeaseDuration']", doc, XPathConstants.NODE);
-                Node dpmActionNode = (Node) xPath.evaluate("//actionList/action["
-                        + "name='DeletePortMapping' "
-                        + "and count(argumentList) = 1 "
-                        + "and argumentList/argument/name='NewRemoteHost' "
-                        + "and argumentList/argument/name='NewExternalPort' "
-                        + "and argumentList/argument/name='NewProtocol']", doc, XPathConstants.NODE);
-                Node apmActionNode = (Node) xPath.evaluate("//actionList/action["
-                        + "name='AddPortMapping' "
-                        + "and count(argumentList) = 1 "
-                        + "and argumentList/argument/name='NewRemoteHost' "
-                        + "and argumentList/argument/name='NewExternalPort' "
-                        + "and argumentList/argument/name='NewProtocol' "
-                        + "and argumentList/argument/name='NewInternalPort' "
-                        + "and argumentList/argument/name='NewInternalClient' "
-                        + "and argumentList/argument/name='NewEnabled' "
-                        + "and argumentList/argument/name='NewPortMappingDescription' "
-                        + "and argumentList/argument/name='NewLeaseDuration']", doc, XPathConstants.NODE);
-
-                if (geipaActionNode == null || gspmeActionNode == null || dpmActionNode == null || apmActionNode == null) {
-                    // One or more of the required methods aren't supported, skip this entry
+            byte[] scpdBuf = scpdEntry.getValue();
+            String scpdBufStr = new String(scpdBuf, Charset.forName("US-ASCII"));
+            
+            
+            // Get action names
+            List<String> actions = TextUtils.findAllBlocks(scpdBufStr, "<actions>", "</actions>", true);
+            Set<String> missingActionNames = new HashSet<>(EXPECTED_ACTION_NAMES);
+            for (String action : actions) {
+                String name = TextUtils.findFirstBlock(action, "<name>", "</name>", true);
+                if (name == null) {
                     continue;
                 }
-
-
-                // set lease range
-                String pmldStateMinValue = xPath.evaluate("//serviceStateTable/stateVariable["
-                        + "name='PortMappingLeaseDuration']"
-                        + "/allowedValueRange/minimum/text()", doc);
-                String pmldStateMaxValue = xPath.evaluate("//serviceStateTable/stateVariable["
-                        + "name='PortMappingLeaseDuration']"
-                        + "/allowedValueRange/maximum/text()", doc);
-                Range<Long> leaseDurationRange = extractRangeIfAvailable(pmldStateMinValue, pmldStateMaxValue, 0L, null);
-
-                // set external port range
-                String epStateMinValue = xPath.evaluate("//serviceStateTable/stateVariable["
-                        + "name='ExternalPort']"
-                        + "/allowedValueRange/minimum/text()", doc);
-                String epStateMaxValue = xPath.evaluate("//serviceStateTable/stateVariable["
-                        + "name='ExternalPort']"
-                        + "/allowedValueRange/maximum/text()", doc);
-                Range<Long> externalPortRange = extractRangeIfAvailable(epStateMinValue, epStateMaxValue, 1L, 65535L);
                 
-                UpnpIgdService desc = new UpnpIgdService(scpdEntry.getKey(), leaseDurationRange, externalPortRange);
-                descriptions.add(desc);
-            } catch (SAXException | ParserConfigurationException | IOException | XPathExpressionException e) { // NOPMD
-                throw new IllegalArgumentException(e);
+                Iterator<String> it = missingActionNames.iterator();
+                while (it.hasNext()) {
+                    String missingActionName = it.next();
+                    if (missingActionName.equalsIgnoreCase(name)) {
+                        it.remove();
+                        break;
+                    }
+                }
             }
+            
+            
+            // Make sure no action names are missing
+            if (!missingActionNames.isEmpty()) {
+                continue;
+            }
+
+
+            // Get state variables
+            Range<Long> leaseDurationRange = Range.between(0x0L, 0xFFFFFFFFL);
+            Range<Long> externalPortRange = Range.between(0x0L, 0xFFFFL);
+            List<String> stateVars = TextUtils.findAllBlocks(scpdBufStr, "<stateVariable>", "</stateVariable>", true);
+            for (String stateVar : stateVars) {
+                String name = TextUtils.findFirstBlock(stateVar, "<name>", "</name>", true);
+                if (name == null) {
+                    continue;
+                }
+                name = name.trim();
+                
+                if (name.equalsIgnoreCase("PortMappingLeaseDuration")) {
+                    leaseDurationRange = extractRange(stateVar, 0L, 0xFFFFFFFFL);
+                } else if (name.equalsIgnoreCase("ExternalPort")) {
+                    externalPortRange = extractRange(stateVar, 0L, 0xFFFFL);
+                }
+            }
+
+
+            // Generate service
+            UpnpIgdService desc = new UpnpIgdService(scpdEntry.getKey(), leaseDurationRange, externalPortRange);
+            descriptions.add(desc);
         }
         
         return descriptions;
     }
     
-    private static Range<Long> extractRangeIfAvailable(String min, String max, Long absoluteMin, Long absoluteMax) {
-        if (!NumberUtils.isNumber(min) || !NumberUtils.isNumber(max)) {
-            return null;
-        }
-
-        Range<Long> ret = Range.between(Long.valueOf(min), Long.valueOf(max));
+    private static Range<Long> extractRange(String block, long absoluteMin, long absoluteMax) {
+        Validate.validState(block != null);
+        Validate.validState(absoluteMin < absoluteMax);
         
-        if (absoluteMin != null && ret.getMinimum() < absoluteMin) {
+        String allowedRangeBlock = TextUtils.findFirstBlock(block, "<allowedValueRange>", "</allowedValueRange>", true);
+        if (allowedRangeBlock == null) {
             return null;
+        }
+        allowedRangeBlock = allowedRangeBlock.trim();
+
+        String minStr = TextUtils.findFirstBlock(allowedRangeBlock, "<minimum>", "</minimum>", true);
+        long min;
+        if (minStr == null) {
+            min = absoluteMin;
+        } else {
+            try {
+                min = Long.valueOf(minStr.trim());
+                min = Math.max(absoluteMin, min);
+            } catch (NumberFormatException nfe) {
+                min = absoluteMin;
+            }
         }
 
-        if (absoluteMax != null && ret.getMaximum() > absoluteMax) {
-            return null;
+        String maxStr = TextUtils.findFirstBlock(allowedRangeBlock, "<maximum>", "</maximum>", true);
+        long max;
+        if (maxStr == null) {
+            max = absoluteMax;
+        } else {
+            try {
+                max = Long.valueOf(maxStr.trim());
+                max = Math.max(absoluteMax, max);
+            } catch (NumberFormatException nfe) {
+                max = absoluteMax;
+            }
         }
+
+        Range<Long> ret = Range.between(min, max);
         
         return ret;
     }

@@ -19,6 +19,7 @@ package com.offbynull.portmapper.common;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -41,15 +42,40 @@ public final class TextUtils {
     }
 
     /**
-     * Finds text that start with a particular string and end with a particular string.
+     * Finds first block of text that start with a particular string (case insensitive) and end with a particular string (case insensitive).
      *
      * @param text block of text to search in
      * @param begin starting string to search for
      * @param end ending string to search for
+     * @param insensitiveSearch if there should be a case insensitive search for {@code start} and {@code end}
      * @return all found blocks in in {@code text}, not including the starting and ending strings
      * @throws NullPointerException if any argument is {@code null}
      */
-    public static List<String> findAllBlocks(String text, String begin, String end) {
+    public static String findFirstBlock(String text, String begin, String end, boolean insensitiveSearch) {
+        Validate.notNull(text);
+        Validate.notNull(begin);
+        Validate.notNull(end);
+
+        List<String> blocks = findAllBlocks(text, begin, end, insensitiveSearch);
+        
+        if (blocks.isEmpty()) {
+            return null;
+        }
+        
+        return blocks.get(0);
+    }
+
+    /**
+     * Finds all blocks of text that start with a particular string (case insensitive) and end with a particular string (case insensitive).
+     *
+     * @param text block of text to search in
+     * @param begin starting string to search for
+     * @param end ending string to search for
+     * @param insensitiveSearch if there should be a case insensitive search for {@code start} and {@code end}
+     * @return all found blocks in in {@code text}, not including the starting and ending strings
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public static List<String> findAllBlocks(String text, String begin, String end, boolean insensitiveSearch) {
         Validate.notNull(text);
         Validate.notNull(begin);
         Validate.notNull(end);
@@ -60,14 +86,14 @@ public final class TextUtils {
         
         while (true) {
             // Get start position
-            int startIdx = text.indexOf(begin, nextIdx);
+            int startIdx = insensitiveSearch ? StringUtils.indexOfIgnoreCase(text, begin, nextIdx) : text.indexOf(begin, nextIdx);
             if (startIdx == -1) {
                 break;
             }
             startIdx += begin.length();
             
             // Get end position
-            int endIdx = text.indexOf(end, startIdx);
+            int endIdx = insensitiveSearch ? StringUtils.indexOfIgnoreCase(text, end, startIdx) : text.indexOf(end, startIdx);
             if (endIdx == -1) {
                 break;
             }

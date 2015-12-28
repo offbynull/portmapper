@@ -2,6 +2,7 @@ package com.offbynull.portmapper.common;
 
 import java.util.List;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 public class TextUtilsTest {
@@ -214,7 +215,18 @@ public class TextUtilsTest {
     
     @Test
     public void mustFindBlocksOfText() {
-        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "hello", "goodbye");
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "hello", "goodbye",
+                false);
+        
+        assertEquals(2, blocks.size());
+        assertEquals(" this is a test ", blocks.get(0));
+        assertEquals("", blocks.get(1));
+    }
+
+    @Test
+    public void mustFindBlocksOfTextCaseInsensitive() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "heLLo", "goodbye",
+                true);
         
         assertEquals(2, blocks.size());
         assertEquals(" this is a test ", blocks.get(0));
@@ -222,30 +234,80 @@ public class TextUtilsTest {
     }
     
     @Test
-    public void mustRejectBlocksOfTextThatDontEndWithIdentifier() {
-        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbes\tfsdfshellogoodbe", "hello", "goodbye");
+    public void mustNotFindBlocksOfTextThatDontEndWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbes\tfsdfshellogoodbe", "hello", "goodbye",
+                false);
         
         assertEquals(0, blocks.size());
     }
     
     @Test
-    public void mustRejectBlocksOfTextThatDontStartWithIdentifier() {
-        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhell this is a test goodbyes\tfsdfshellgoodbye", "hello", "goodbye");
+    public void mustNotFindBlocksOfTextThatDontStartWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhell this is a test goodbyes\tfsdfshellgoodbye", "hello", "goodbye",
+                false);
         
         assertEquals(0, blocks.size());
     }
     
     @Test
-    public void mustRejectBlocksOfTextWhenStartIdentifierTooLargeWithIdentifier() {
-        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hellooooooooooooooooooooooooooooooooooooooo", "goodbye");
+    public void mustNotFindBlocksOfTextWhenStartIdentifierTooLargeWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hellooooooooooooooooooooooooooooooooooooooo", "goodbye",
+                false);
         
         assertEquals(0, blocks.size());
     }
     
     @Test
-    public void mustRejectBlocksOfTextWhenEndIdentifierTooLargeWithIdentifier() {
-        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hello", "goodbyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    public void mustNotFindBlocksOfTextWhenEndIdentifierTooLargeWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hello", "goodbyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                false);
         
         assertEquals(0, blocks.size());
+    }
+
+    @Test
+    public void mustFindFirstBlockOfText() {
+        String block = TextUtils.findFirstBlock("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "hello", "goodbye",
+                false);
+
+        assertEquals(" this is a test ", block);
+    }
+
+    @Test
+    public void mustFindFirstBlockOfTextCaseInsensitive() {
+        String block = TextUtils.findFirstBlock("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "heLLo", "goodbYe",
+                true);
+
+        assertEquals(" this is a test ", block);
+    }
+    
+    @Test
+    public void mustNotFindFirstBlockOfTextThatDontEndWithIdentifier() {
+        String block = TextUtils.findFirstBlock("\t\tsfosnfhello this is a test goodbes\tfsdfshellogoodbe", "hello", "goodbye", false);
+        
+        assertNull(block);
+    }
+    
+    @Test
+    public void mustNotFindFirstBlockOfTextThatDontStartWithIdentifier() {
+        String block = TextUtils.findFirstBlock("\t\tsfosnfhell this is a test goodbyes\tfsdfshellgoodbye", "hello", "goodbye", false);
+        
+        assertNull(block);
+    }
+    
+    @Test
+    public void mustNotFindFirstBlockOfTextWhenStartIdentifierTooLargeWithIdentifier() {
+        String block = TextUtils.findFirstBlock("\t\thelloffffffffgoodbye", "hellooooooooooooooooooooooooooooooooooooooo", "goodbye",
+                false);
+        
+        assertNull(block);
+    }
+    
+    @Test
+    public void mustNotFindFirstBlockOfTextWhenEndIdentifierTooLargeWithIdentifier() {
+        String block = TextUtils.findFirstBlock("\t\thelloffffffffgoodbye", "hello", "goodbyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                false);
+        
+        assertNull(block);
     }
 }
