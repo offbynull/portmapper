@@ -1,6 +1,8 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
-import java.net.InetSocketAddress;
+import com.offbynull.portmapper.common.NetworkUtils;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Locale;
@@ -25,6 +27,12 @@ public final class ProbeRequest {
             + "MX: 3\r\n" // server should send response in rand(0, MX)
             + "ST: ssdp:all\r\n" // query any service type (see example in http://www.upnp-hacks.org/upnp.html to finetune if desired)
             + "\r\n";
+    
+    private static final InetAddress IPV4_HOST =
+            NetworkUtils.convertBytesToAddress(new byte[] { -17, -1, -1, -6 }); // 239.255.255.250
+    
+    private static final InetAddress IPV6_HOST =
+            NetworkUtils.convertBytesToAddress(new byte[] { -1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12 }); // FF02::C
     
     private Mode mode;
 
@@ -72,7 +80,7 @@ public final class ProbeRequest {
 
         
         // Validate key-value pairs
-        Validate.isTrue(dataMap.containsKey("st")); // do we care what st is? or de we just care that it exists?
+        Validate.isTrue(dataMap.containsKey("st")); // do we care what st is? or do we just care that it exists?
         Validate.isTrue(dataMap.containsKey("mx")); // do we care that the mx field is present?
         Validate.isTrue("ssdp:discover".equalsIgnoreCase(dataMap.get("man")));
         
@@ -80,15 +88,22 @@ public final class ProbeRequest {
         // Pick mode based on host value
         String host = dataMap.get("host");
         Validate.isTrue(host != null);
-        switch (host.toLowerCase(Locale.ENGLISH)) {
-            case "239.255.255.250:1900":
-                mode = Mode.IPV4;
-                break;
-            case "[FF02::C]:1900":
-                mode = Mode.IPV6;
-                break;
-            default:
-                throw new IllegalArgumentException();
+        Validate.isTrue(host.endsWith(":1900"));
+        
+        host = host.substring(0, ":1900".length());
+        InetAddress hostAddr;
+        try {
+            hostAddr = InetAddress.getByName(host);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(uhe);
+        }
+        
+        if (hostAddr.equals(IPV4_HOST)) {
+            mode = Mode.IPV4;
+        } else if (hostAddr.equals(IPV6_HOST)) {
+            mode = Mode.IPV6;
+        } else {
+            throw new IllegalArgumentException();
         }
     }
 
