@@ -265,7 +265,7 @@ public final class NetworkUtils {
                 throw new InterruptedException();
             }
         }
-        LinkedHashSet<String> strAddresses = new LinkedHashSet<>(RegexUtils.findAllIpv4Addresses(netstatOutput));
+        LinkedHashSet<String> strAddresses = new LinkedHashSet<>(TextUtils.findAllIpv4Addresses(netstatOutput));
         
         // Push in defaults
         strAddresses.addAll(PRESET_IPV4_GATEWAY_ADDRESSES);
