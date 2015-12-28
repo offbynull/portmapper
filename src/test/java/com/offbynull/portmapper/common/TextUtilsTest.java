@@ -211,4 +211,41 @@ public class TextUtilsTest {
         assertEquals(1, addresses.size());
         assertEquals("f8:9:a:b:c:d:e:f", addresses.get(0));
     }
+    
+    @Test
+    public void mustFindBlocksOfText() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbyes\tfsdfshellogoodbye", "hello", "goodbye");
+        
+        assertEquals(2, blocks.size());
+        assertEquals(" this is a test ", blocks.get(0));
+        assertEquals("", blocks.get(1));
+    }
+    
+    @Test
+    public void mustRejectBlocksOfTextThatDontEndWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhello this is a test goodbes\tfsdfshellogoodbe", "hello", "goodbye");
+        
+        assertEquals(0, blocks.size());
+    }
+    
+    @Test
+    public void mustRejectBlocksOfTextThatDontStartWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\tsfosnfhell this is a test goodbyes\tfsdfshellgoodbye", "hello", "goodbye");
+        
+        assertEquals(0, blocks.size());
+    }
+    
+    @Test
+    public void mustRejectBlocksOfTextWhenStartIdentifierTooLargeWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hellooooooooooooooooooooooooooooooooooooooo", "goodbye");
+        
+        assertEquals(0, blocks.size());
+    }
+    
+    @Test
+    public void mustRejectBlocksOfTextWhenEndIdentifierTooLargeWithIdentifier() {
+        List<String> blocks = TextUtils.findAllBlocks("\t\thelloffffffffgoodbye", "hello", "goodbyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        
+        assertEquals(0, blocks.size());
+    }
 }

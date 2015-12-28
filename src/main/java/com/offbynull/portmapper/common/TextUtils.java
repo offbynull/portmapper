@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,49 @@ public final class TextUtils {
         // do nothing
     }
 
+    /**
+     * Finds text that start with a particular string and end with a particular string.
+     *
+     * @param text block of text to search in
+     * @param begin starting string to search for
+     * @param end ending string to search for
+     * @return all found blocks in in {@code text}, not including the starting and ending strings
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public static List<String> findAllBlocks(String text, String begin, String end) {
+        Validate.notNull(text);
+        Validate.notNull(begin);
+        Validate.notNull(end);
+        
+        List<String> ret = new LinkedList<>();
+        
+        int nextIdx = 0;
+        
+        while (true) {
+            // Get start position
+            int startIdx = text.indexOf(begin, nextIdx);
+            if (startIdx == -1) {
+                break;
+            }
+            startIdx += begin.length();
+            
+            // Get end position
+            int endIdx = text.indexOf(end, startIdx);
+            if (endIdx == -1) {
+                break;
+            }
+            
+            // Get block of text from being and end
+            String block = text.substring(startIdx, endIdx);
+            ret.add(block);
+            
+            // Calculate index to start searching for next block at
+            nextIdx = endIdx + end.length();
+        }
+        
+        return ret;
+    }
+    
     /**
      * Finds all IPv4 addresses in a block of text.
      *
