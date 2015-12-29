@@ -1,23 +1,36 @@
+/*
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.
+ */
 package com.offbynull.portmapper.upnpigd.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
-import com.offbynull.portmapper.common.TextUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.lang3.StringUtils;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
 /**
- * * Represents a UPnP probe request.
+ * Represents a UPnP probe request.
  * @author Kasra Faghihi
  */
-public final class ProbeRequest implements UpnpIgdMessage {
+public final class ProbeRequest extends UpnpIgdHttpRequest {
 
-    private static final String QUERY_STRING = "M-SEARCH * HTTP/1.1";
+    private static final String METHOD_NAME = "M-SEARCH";
+    private static final String LOCATION = "*";
     private static final String HOST_KEY = "HOST";
     private static final String MAN_KEY = "MAN";
     private static final String MAN_VALUE = "ssdp:discover";
@@ -31,14 +44,9 @@ public final class ProbeRequest implements UpnpIgdMessage {
     private static final InetAddress IPV6_HOST =
             NetworkUtils.convertBytesToAddress(new byte[] { -1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12 }); // FF02::C
     private static final int PORT = 1900;
-    private static final String TERMINATOR = "\r\n";
-    
 
-    
-    private Integer mm; // https://tools.ietf.org/html/draft-goland-http-udp-00
-    private Integer mx; // https://tools.ietf.org/html/draft-goland-http-udp-00
-    private String serviceType; // http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
-    private ProbeDeviceType probeDeviceType;
+    // https://tools.ietf.org/html/draft-goland-http-udp-00
+    // http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
 
     /**
      * Constructs a {@link ProbeRequest} object.
@@ -52,6 +60,10 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * @throws IllegalArgumentException if {@code mm < 0 || mx < 0 || mm > mx}
      */
     public ProbeRequest(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
+        super(METHOD_NAME, LOCATION, generateHeaders(probeDeviceType, mm, mx, serviceType), null);
+    }
+    
+    private static Map<String, String> generateHeaders(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
         Validate.notNull(probeDeviceType);
         if (mm != null) {
             Validate.isTrue(mm >= 0);
@@ -64,18 +76,29 @@ public final class ProbeRequest implements UpnpIgdMessage {
         }
         Validate.notNull(serviceType);
 
-        this.mm = mm;
-        this.mx = mx;
-        this.serviceType = serviceType;
+        Map<String, String> ret = new HashMap<>();
+        
+        if (mm != null) {
+            ret.put(MM_KEY, mm.toString());
+        }
+        if (mx != null) {
+            ret.put(MX_KEY, mx.toString());
+        }
+        ret.put(ST_KEY, serviceType);
+        ret.put(MAN_KEY, MAN_VALUE);
         
         switch (probeDeviceType) {
             case IPV4:
+                ret.put(HOST_KEY, IPV4_HOST_STR + ':' + PORT);
+                break;
             case IPV6:
-                this.probeDeviceType = probeDeviceType;
+                ret.put(HOST_KEY, IPV6_HOST_STR + ':' + PORT);
                 break;
             default:
                 throw new IllegalStateException(); // should never happen
         }
+        
+        return ret;
     }
 
     /**
@@ -86,107 +109,52 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * incorrect/missing, or MAN header is missing or isn't {@code "ssdp:discover"})
      */
     public ProbeRequest(byte[] buffer) {
-        Validate.notNull(buffer);
+        super(buffer);
+        
+        Validate.isTrue(getMethod().equalsIgnoreCase(METHOD_NAME));
+        Validate.isTrue(getLocation().equalsIgnoreCase(LOCATION));
+        
+        
+        // Get header values
+        String mmValue = getHeaderIgnoreCase(MM_KEY);
+        String mxValue = getHeaderIgnoreCase(MX_KEY);
+        String stValue = getHeaderIgnoreCase(ST_KEY);
+        String manValue = getHeaderIgnoreCase(MAN_KEY);
+        String hostValue = getHeaderIgnoreCase(HOST_KEY);
 
         
-        // Convert buffer to string
-        String query = new String(buffer, Charset.forName("US-ASCII"));
-        
-        
-        // Split buffer to lines
-        List<String> lines = Arrays.asList(StringUtils.splitByWholeSeparator(query, "\r\n"));
-        
-        // Search until empty line -- stuff after empty line is content, which technically can be valid, but we ignore it.
-        // If we didn't find an empty line, just use the whole list -- trying to be fault tolerant here
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(0).isEmpty()) {
-                lines = lines.subList(0, i);
-                break;
-            }
-        }
-        
-        
-        // Validate that the query string is what it should be
-        Validate.isTrue(lines.size() >= 1); // must contain at least 1 line, which is the query string'
-        String queryStr = TextUtils.collapseWhitespace(lines.get(0)).trim(); // get query string, collapse whitespace for fault tolerance
-        
-        Validate.isTrue(QUERY_STRING.equalsIgnoreCase(queryStr)); // must be query string -- case insensitive for fault tolerance
-        
-        
-        // Convert lines to key-value pairs
-        String mmValue = null;
-        String mxValue = null;
-        String stValue = null;
-        String manValue = null;
-        String hostValue = null;
-        for (String line : lines) {
-            String[] splitLine = StringUtils.split(line, ":", 1);
-            if (splitLine.length != 2) {
-                continue; // skip line if no : found
-            }
-            
-            String key = splitLine[0].trim();
-            String value = splitLine[1].trim();
-            
-            // ignore case when checking to be fault tolerant -- this is why we can't use a map
-            if (key.equalsIgnoreCase(HOST_KEY)) {
-                if (hostValue != null) {
-                    continue; // skip duplicate header -- trying to be fault tolerant
-                }
-                hostValue = value;                
-            } else if (key.equalsIgnoreCase(ST_KEY)) {
-                if (stValue != null) {
-                    continue; // skip duplicate header -- trying to be fault tolerant
-                }
-                stValue = value;
-            } else if (key.equalsIgnoreCase(MM_KEY)) {
-                if (mmValue != null) {
-                    continue; // skip duplicate header -- trying to be fault tolerant
-                }
-                mmValue = value;
-            } else if (key.equalsIgnoreCase(MX_KEY)) {
-                if (mxValue != null) {
-                    continue; // skip duplicate header -- trying to be fault tolerant
-                }
-                mxValue = value;
-            } else if (key.equalsIgnoreCase(MAN_KEY)) {
-                if (manValue != null) {
-                    continue; // skip duplicate header -- trying to be fault tolerant
-                }
-                manValue = value;
-            }
-        }
-
-        
-        // Set key-value pairs
+        // Check for required values
         Validate.isTrue(stValue != null);
         Validate.isTrue(hostValue != null);
         Validate.isTrue(MAN_VALUE.equalsIgnoreCase(manValue)); // ignore case -- trying to be fault tolerant
 
+        
+        // Validate MM
+        Integer mmAsInt = null;
         try {
-            int mmAsInt = Integer.parseInt(mmValue);
+            mmAsInt = Integer.parseInt(mmValue);
             Validate.isTrue(mmAsInt >= 0);
-            mm = mmAsInt;
         } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
             // ignore if value is incorrect -- trying to be fault tolerant
         }
 
+        
+        // Validate MX
+        Integer mxAsInt = null;
         try {
-            int mxAsInt = Integer.parseInt(mxValue);
+            mxAsInt = Integer.parseInt(mxValue);
             Validate.isTrue(mxAsInt >= 0);
-            mx = mxAsInt;
         } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
             // ignore if value is incorrect -- trying to be fault tolerant
         }
         
-        if (mm != null && mx != null && mm > mx) {
-            // min is greater than max, not allowed so blank it out. don't crash here because we want to be fault tolerant
-            mm = null;
-            mx = null;
+        if (mmAsInt != null && mxAsInt != null && mmAsInt > mxAsInt) {
+            // min is greater than max, not allowed so blank it out MM -- trying to be fault tolerant
+            removeHeaderIgnoreCase(MM_KEY);
         }
         
-        serviceType = stValue;
         
+        // Validate HOST
         String addrSuffix = ":" + PORT;
         Validate.isTrue(hostValue.endsWith(addrSuffix)); // ignore warning: host value already checked for nullness
         
@@ -198,11 +166,7 @@ public final class ProbeRequest implements UpnpIgdMessage {
             throw new IllegalArgumentException(uhe);
         }
         
-        if (hostAddr.equals(IPV4_HOST)) {
-            probeDeviceType = ProbeDeviceType.IPV4;
-        } else if (hostAddr.equals(IPV6_HOST)) {
-            probeDeviceType = ProbeDeviceType.IPV6;
-        } else {
+        if (!(hostAddr.equals(IPV4_HOST) || hostAddr.equals(IPV6_HOST))) {
             throw new IllegalArgumentException();
         }
     }
@@ -212,7 +176,12 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * @return minimum wait time
      */
     public Integer getMm() {
-        return mm;
+        String mmValue = getHeaderIgnoreCase(MM_KEY);
+        try {
+            return Integer.parseInt(mmValue);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
@@ -220,7 +189,12 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * @return maximum wait time
      */
     public Integer getMx() {
-        return mx;
+        String mxValue = getHeaderIgnoreCase(MX_KEY);
+        try {
+            return Integer.parseInt(mxValue);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
@@ -228,7 +202,7 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * @return service type being probed for
      */
     public String getServiceType() {
-        return serviceType;
+        return getHeaderIgnoreCase(ST_KEY);
     }
 
     /**
@@ -236,52 +210,26 @@ public final class ProbeRequest implements UpnpIgdMessage {
      * @return type of device being probed for
      */
     public ProbeDeviceType getProbeDeviceType() {
-        return probeDeviceType;
-    }
-
-    @Override
-    public byte[] dump() {
-        StringBuilder sb = new StringBuilder();
+        String hostValue = getHeaderIgnoreCase(HOST_KEY);
         
-        // "M-SEARCH * HTTP/1.1\r\n"
-        sb.append(QUERY_STRING).append(TERMINATOR);
+        String addrSuffix = ":" + PORT;
+        Validate.validState(hostValue.endsWith(addrSuffix)); // should never happen -- validation checks in constructor
         
-        // "HOST: 239.255.255.250:1900\r\n"
-        //   ... or ...
-        // "HOST: [FF02::C]:1900\r\n"
-        sb.append(HOST_KEY).append(": ");
-        switch (probeDeviceType) {
-            case IPV4:
-                sb.append(IPV4_HOST_STR);
-                break;
-            case IPV6:
-                sb.append(IPV6_HOST_STR);
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-        sb.append(TERMINATOR);
-        
-        // "MAN: ssdp:discover\r\n"
-        sb.append(MAN_KEY).append(": ").append(MAN_VALUE).append(TERMINATOR);
-        
-        // "MM: <some positive int>\r\n"  -- discarded if null
-        if (mm != null) {
-            sb.append(MM_KEY).append(": ").append(mm).append(TERMINATOR);
+        hostValue = hostValue.substring(0, addrSuffix.length());
+        InetAddress hostAddr;
+        try {
+            hostAddr = InetAddress.getByName(hostValue); // ipv6 surrounded by square brackets properly parsed by this method
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(uhe);
         }
         
-        // "MX: <some positive int>\r\n"   -- discarded if null
-        if (mx != null) {
-            sb.append(MX_KEY).append(": ").append(mx).append(TERMINATOR);
+        if (hostAddr.equals(IPV4_HOST)) {
+            return ProbeDeviceType.IPV4;
+        } else if (hostAddr.equals(IPV6_HOST)) {
+            return ProbeDeviceType.IPV6;
+        } else {
+            throw new IllegalStateException(); // should never happen -- validation checks in constructor
         }
-        
-        // "ST: <service type>\r\n"
-        sb.append(ST_KEY).append(": ").append(serviceType).append(TERMINATOR);
-        
-        // "\r\n"
-        sb.append(TERMINATOR);
-        
-        return sb.toString().getBytes(Charsets.toCharset("US-ASCII"));
     }
 
     /**
