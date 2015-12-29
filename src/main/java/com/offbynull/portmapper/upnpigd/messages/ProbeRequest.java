@@ -101,75 +101,75 @@ public final class ProbeRequest extends UpnpIgdHttpRequest {
         return ret;
     }
 
-    /**
-     * Constructs a {@link ProbeRequest} object by parsing a buffer.
-     * @param buffer buffer containing probe request data
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if buffer is malformed (M-SEARCH query is missing, or ST header is missing, or HOST header is
-     * incorrect/missing, or MAN header is missing or isn't {@code "ssdp:discover"})
-     */
-    public ProbeRequest(byte[] buffer) {
-        super(buffer);
-        
-        Validate.isTrue(getMethod().equalsIgnoreCase(METHOD_NAME));
-        Validate.isTrue(getLocation().equalsIgnoreCase(LOCATION));
-        
-        
-        // Get header values
-        String mmValue = getHeaderIgnoreCase(MM_KEY);
-        String mxValue = getHeaderIgnoreCase(MX_KEY);
-        String stValue = getHeaderIgnoreCase(ST_KEY);
-        String manValue = getHeaderIgnoreCase(MAN_KEY);
-        String hostValue = getHeaderIgnoreCase(HOST_KEY);
-
-        
-        // Check for required values
-        Validate.isTrue(stValue != null);
-        Validate.isTrue(hostValue != null);
-        Validate.isTrue(MAN_VALUE.equalsIgnoreCase(manValue)); // ignore case -- trying to be fault tolerant
-
-        
-        // Validate MM
-        Integer mmAsInt = null;
-        try {
-            mmAsInt = Integer.parseInt(mmValue);
-            Validate.isTrue(mmAsInt >= 0);
-        } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
-            // ignore if value is incorrect -- trying to be fault tolerant
-        }
-
-        
-        // Validate MX
-        Integer mxAsInt = null;
-        try {
-            mxAsInt = Integer.parseInt(mxValue);
-            Validate.isTrue(mxAsInt >= 0);
-        } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
-            // ignore if value is incorrect -- trying to be fault tolerant
-        }
-        
-        if (mmAsInt != null && mxAsInt != null && mmAsInt > mxAsInt) {
-            // min is greater than max, not allowed so blank it out MM -- trying to be fault tolerant
-            removeHeaderIgnoreCase(MM_KEY);
-        }
-        
-        
-        // Validate HOST
-        String addrSuffix = ":" + PORT;
-        Validate.isTrue(hostValue.endsWith(addrSuffix)); // ignore warning: host value already checked for nullness
-        
-        hostValue = hostValue.substring(0, addrSuffix.length());
-        InetAddress hostAddr;
-        try {
-            hostAddr = InetAddress.getByName(hostValue); // ipv6 surrounded by square brackets properly parsed by this method
-        } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe);
-        }
-        
-        if (!(hostAddr.equals(IPV4_HOST) || hostAddr.equals(IPV6_HOST))) {
-            throw new IllegalArgumentException();
-        }
-    }
+//    /**
+//     * Constructs a {@link ProbeRequest} object by parsing a buffer.
+//     * @param buffer buffer containing probe request data
+//     * @throws NullPointerException if any argument is {@code null}
+//     * @throws IllegalArgumentException if buffer is malformed (M-SEARCH query is missing, or ST header is missing, or HOST header is
+//     * incorrect/missing, or MAN header is missing or isn't {@code "ssdp:discover"})
+//     */
+//    public ProbeRequest(byte[] buffer) {
+//        super(buffer);
+//        
+//        Validate.isTrue(getMethod().equalsIgnoreCase(METHOD_NAME));
+//        Validate.isTrue(getLocation().equalsIgnoreCase(LOCATION));
+//        
+//        
+//        // Get header values
+//        String mmValue = getHeaderIgnoreCase(MM_KEY);
+//        String mxValue = getHeaderIgnoreCase(MX_KEY);
+//        String stValue = getHeaderIgnoreCase(ST_KEY);
+//        String manValue = getHeaderIgnoreCase(MAN_KEY);
+//        String hostValue = getHeaderIgnoreCase(HOST_KEY);
+//
+//        
+//        // Check for required values
+//        Validate.isTrue(stValue != null);
+//        Validate.isTrue(hostValue != null);
+//        Validate.isTrue(MAN_VALUE.equalsIgnoreCase(manValue)); // ignore case -- trying to be fault tolerant
+//
+//        
+//        // Validate MM
+//        Integer mmAsInt = null;
+//        try {
+//            mmAsInt = Integer.parseInt(mmValue);
+//            Validate.isTrue(mmAsInt >= 0);
+//        } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
+//            // ignore if value is incorrect -- trying to be fault tolerant
+//        }
+//
+//        
+//        // Validate MX
+//        Integer mxAsInt = null;
+//        try {
+//            mxAsInt = Integer.parseInt(mxValue);
+//            Validate.isTrue(mxAsInt >= 0);
+//        } catch (IllegalArgumentException e) { // NumberFormatException is derived from IllegalArgException
+//            // ignore if value is incorrect -- trying to be fault tolerant
+//        }
+//        
+//        if (mmAsInt != null && mxAsInt != null && mmAsInt > mxAsInt) {
+//            // min is greater than max, not allowed so blank it out MM -- trying to be fault tolerant
+//            removeHeaderIgnoreCase(MM_KEY);
+//        }
+//        
+//        
+//        // Validate HOST
+//        String addrSuffix = ":" + PORT;
+//        Validate.isTrue(hostValue.endsWith(addrSuffix)); // ignore warning: host value already checked for nullness
+//        
+//        hostValue = hostValue.substring(0, addrSuffix.length());
+//        InetAddress hostAddr;
+//        try {
+//            hostAddr = InetAddress.getByName(hostValue); // ipv6 surrounded by square brackets properly parsed by this method
+//        } catch (UnknownHostException uhe) {
+//            throw new IllegalArgumentException(uhe);
+//        }
+//        
+//        if (!(hostAddr.equals(IPV4_HOST) || hostAddr.equals(IPV6_HOST))) {
+//            throw new IllegalArgumentException();
+//        }
+//    }
 
     /**
      * Get the MM value -- minimum amount of time the UPnP server will wait before responding ({@code null} if not set).
