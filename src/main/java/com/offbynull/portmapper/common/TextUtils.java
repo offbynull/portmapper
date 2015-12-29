@@ -42,6 +42,40 @@ public final class TextUtils {
     }
 
     /**
+     * Collapses contiguous whitespace in to a single space character (0x20).
+     * @param text text containing whitespace to collapse
+     * @return {@code text} with whitespace collapsed
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public static String collapseWhitespace(String text) {
+        Validate.notNull(text);
+        
+        StringBuilder sb = new StringBuilder(text.length());
+
+        int len = text.length();
+        boolean prevCharWhitespace = false;
+        for (int i = 0; i < len;) {
+            int cp = text.codePointAt(i);
+            
+            if (Character.isWhitespace(cp)) {
+                if (prevCharWhitespace) {
+                    i += Character.charCount(cp);
+                } else {
+                    prevCharWhitespace = true;
+                    sb.append(' ');
+                    i += Character.charCount(cp);
+                }
+            } else {
+                prevCharWhitespace = false;
+                sb.appendCodePoint(cp);
+                i += Character.charCount(cp);
+            }
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
      * Finds first block of text that start with a particular string (case insensitive) and end with a particular string (case insensitive).
      *
      * @param text block of text to search in

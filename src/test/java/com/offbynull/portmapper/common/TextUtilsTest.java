@@ -310,4 +310,28 @@ public class TextUtilsTest {
         
         assertNull(block);
     }
+    
+    @Test
+    public void mustCollapseWhitespace() {
+        String collapsed = TextUtils.collapseWhitespace("    fff   \t\taaa v ");
+        assertEquals(" fff aaa v ", collapsed);
+    }
+    
+    @Test
+    public void mustCollapseWhitespaceWhenNoPaddingInStartOrEnd() {
+        String collapsed = TextUtils.collapseWhitespace("fff   \t\taaa v");
+        assertEquals("fff aaa v", collapsed);
+    }
+    
+    @Test
+    public void mustNotCollapseSingleWhitespace() {
+        String collapsed = TextUtils.collapseWhitespace(" fff\taaa v ");
+        assertEquals(" fff aaa v ", collapsed);
+    }
+    
+    @Test
+    public void mustNotCollapseSingleWhitespaceWhenNoPaddingInStartOrEnd() {
+        String collapsed = TextUtils.collapseWhitespace("fff\taaa v");
+        assertEquals("fff aaa v", collapsed);
+    }
 }
