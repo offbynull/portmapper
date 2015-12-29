@@ -65,7 +65,7 @@ public final class ProbeResponse extends UpnpIgdHttpResponse {
 
     /**
      * Constructs a {@link ProbeResponse} object by parsing a buffer.
-     * @param buffer buffer containing probe request data
+     * @param buffer buffer containing response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if buffer is malformed (response is not 200 OK, or LOCATION header is missing)
      */
