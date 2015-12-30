@@ -27,12 +27,13 @@ public final class DeviceQueryResponse extends UpnpIgdHttpResponse {
     public DeviceQueryResponse(URI deviceUri, byte[] buffer) {
         super(buffer);
 
+        Validate.isTrue(isResponseSuccessful());
         Validate.notNull(deviceUri);
 
         String content = getContent();
         
         List<String> serviceBlocks = TextUtils.findAllBlocks(content, "<service>", "</service>", true);
-        List<ServiceReference> services = new ArrayList<>(serviceBlocks.size());
+        List<ServiceReference> servicesList = new ArrayList<>(serviceBlocks.size());
         for (String serviceBlock : serviceBlocks) {
             String serviceType = TextUtils.findFirstBlock(serviceBlock, "<serviceType>", "</serviceType>", true);
             String serviceId = TextUtils.findFirstBlock(serviceBlock, "<serviceId>", "</serviceId>", true);
@@ -52,10 +53,10 @@ public final class DeviceQueryResponse extends UpnpIgdHttpResponse {
                 throw new IllegalArgumentException(e);
             }
 
-            services.add(service);
+            servicesList.add(service);
         }
         
-        this.services = Collections.unmodifiableList(this.services);
+        this.services = Collections.unmodifiableList(services);
     }
 
     /**

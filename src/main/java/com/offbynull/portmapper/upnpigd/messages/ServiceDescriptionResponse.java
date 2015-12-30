@@ -34,6 +34,8 @@ public final class ServiceDescriptionResponse extends UpnpIgdHttpResponse {
      */
     public ServiceDescriptionResponse(byte[] buffer) {
         super(buffer);
+        
+        Validate.isTrue(isResponseSuccessful());
 
         String content = getContent();
 

@@ -16,6 +16,8 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
+import org.apache.commons.lang3.Validate;
+
 /**
  * Represents a UPnP probe response.
  * @author Kasra Faghihi
@@ -71,6 +73,8 @@ public final class ProbeResponse extends UpnpIgdHttpResponse {
      */
     public ProbeResponse(byte[] buffer) {
         super(buffer);
+        
+        Validate.isTrue(isResponseSuccessful());
     }
 
     /**

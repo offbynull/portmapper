@@ -34,19 +34,21 @@ import org.apache.commons.lang3.Validate;
 public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
 
     private static final String HTTP_VERSION = "HTTP/1.1";
-    private static final String RESPONSE_CODE = "200";
     private static final String TERMINATOR = "\r\n";
     private static final String HEADER_SPLIT_POINT = TERMINATOR + TERMINATOR;
 
     private final Map<String, String> headers;
+    private final int responseCode;
     private final String content;
 
-    UpnpIgdHttpResponse(Map<String, String> headers, String content) {
+    UpnpIgdHttpResponse(int responseCode, Map<String, String> headers, String content) {
         Validate.notNull(headers);
         Validate.noNullElements(headers.keySet());
         Validate.noNullElements(headers.values());
+        Validate.isTrue(responseCode >= 0);
 //        Validate.notNull(content); // content may be null
 
+        this.responseCode = responseCode;
         this.headers = new HashMap<>(headers);
         this.content = content;
     }
@@ -79,7 +81,9 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
         String[] splitResp = StringUtils.split(respStr, ' ');
         Validate.isTrue(splitResp.length >= 2); // ignore stuff afterwards if any (reason text)? -- trying to be fault tolerant
         Validate.isTrue(HTTP_VERSION.equalsIgnoreCase(splitResp[0])); // case insensitive for fault tolerance
-        Validate.isTrue(RESPONSE_CODE.equalsIgnoreCase(splitResp[1])); // case insensitive for fault tolerance
+        responseCode = Integer.parseInt(splitResp[1]); // throws nfe, but nfe extends illegalargexc so this is okay
+        
+        Validate.isTrue(responseCode >= 0);
 
 
         Map<String, String> headers = new HashMap<>();
@@ -102,6 +106,10 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
 
         this.headers = Collections.unmodifiableMap(headers);
         this.content = contentStr;
+    }
+    
+    final boolean isResponseSuccessful() {
+        return responseCode / 100 == 2; // is 2xx code?
     }
     
     final String getHeaderIgnoreCase(String key) {
@@ -132,7 +140,7 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
     public final byte[] dump() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(HTTP_VERSION).append(' ').append(RESPONSE_CODE).append(' ').append("OK").append(TERMINATOR);
+        sb.append(HTTP_VERSION).append(' ').append(responseCode).append(' ').append("UNKNOWN").append(TERMINATOR);
         for (Entry<String, String> entry : headers.entrySet()) {
             sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(TERMINATOR);
         }
