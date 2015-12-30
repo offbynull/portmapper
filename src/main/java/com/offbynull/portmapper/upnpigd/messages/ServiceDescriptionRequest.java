@@ -9,9 +9,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class ServiceDescriptionRequest extends UpnpIgdHttpRequest {
-    private static final String HOST_KEY = "HOST";
-    private static final String CONNECTION_KEY = "Connection";
-    
+
     /**
      * Constructs a {@link ServiceDescriptionRequest} object.
      * @param host device host
@@ -26,8 +24,9 @@ public final class ServiceDescriptionRequest extends UpnpIgdHttpRequest {
         
         Map<String, String> ret = new HashMap<>();
         
-        ret.put(HOST_KEY, host);
-        ret.put(CONNECTION_KEY, "Close");
+        // content-length is added by parent class
+        ret.put("Host", host);
+        ret.put("Connection", "Close");
         
         return ret;
     }

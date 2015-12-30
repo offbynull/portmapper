@@ -170,67 +170,67 @@ public final class ProbeRequest extends UpnpIgdHttpRequest {
 //            throw new IllegalArgumentException();
 //        }
 //    }
-
-    /**
-     * Get the MM value -- minimum amount of time the UPnP server will wait before responding ({@code null} if not set).
-     * @return minimum wait time
-     */
-    public Integer getMm() {
-        String mmValue = getHeaderIgnoreCase(MM_KEY);
-        try {
-            return Integer.parseInt(mmValue);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get the MX value -- minimum amount of time the UPnP server will wait before responding ({@code null} if not set).
-     * @return maximum wait time
-     */
-    public Integer getMx() {
-        String mxValue = getHeaderIgnoreCase(MX_KEY);
-        try {
-            return Integer.parseInt(mxValue);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get the ST value -- UPnP service type being probed for.
-     * @return service type being probed for
-     */
-    public String getServiceType() {
-        return getHeaderIgnoreCase(ST_KEY);
-    }
-
-    /**
-     * Get type of device being probe for (IPv4 or IPv6).
-     * @return type of device being probed for
-     */
-    public ProbeDeviceType getProbeDeviceType() {
-        String hostValue = getHeaderIgnoreCase(HOST_KEY);
-        
-        String addrSuffix = ":" + PORT;
-        Validate.validState(hostValue.endsWith(addrSuffix)); // should never happen -- validation checks in constructor
-        
-        hostValue = hostValue.substring(0, addrSuffix.length());
-        InetAddress hostAddr;
-        try {
-            hostAddr = InetAddress.getByName(hostValue); // ipv6 surrounded by square brackets properly parsed by this method
-        } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe);
-        }
-        
-        if (hostAddr.equals(IPV4_HOST)) {
-            return ProbeDeviceType.IPV4;
-        } else if (hostAddr.equals(IPV6_HOST)) {
-            return ProbeDeviceType.IPV6;
-        } else {
-            throw new IllegalStateException(); // should never happen -- validation checks in constructor
-        }
-    }
+//
+//    /**
+//     * Get the MM value -- minimum amount of time the UPnP server will wait before responding ({@code null} if not set).
+//     * @return minimum wait time
+//     */
+//    public Integer getMm() {
+//        String mmValue = getHeaderIgnoreCase(MM_KEY);
+//        try {
+//            return Integer.parseInt(mmValue);
+//        } catch (IllegalArgumentException e) {
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * Get the MX value -- minimum amount of time the UPnP server will wait before responding ({@code null} if not set).
+//     * @return maximum wait time
+//     */
+//    public Integer getMx() {
+//        String mxValue = getHeaderIgnoreCase(MX_KEY);
+//        try {
+//            return Integer.parseInt(mxValue);
+//        } catch (IllegalArgumentException e) {
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * Get the ST value -- UPnP service type being probed for.
+//     * @return service type being probed for
+//     */
+//    public String getServiceType() {
+//        return getHeaderIgnoreCase(ST_KEY);
+//    }
+//
+//    /**
+//     * Get type of device being probe for (IPv4 or IPv6).
+//     * @return type of device being probed for
+//     */
+//    public ProbeDeviceType getProbeDeviceType() {
+//        String hostValue = getHeaderIgnoreCase(HOST_KEY);
+//        
+//        String addrSuffix = ":" + PORT;
+//        Validate.validState(hostValue.endsWith(addrSuffix)); // should never happen -- validation checks in constructor
+//        
+//        hostValue = hostValue.substring(0, addrSuffix.length());
+//        InetAddress hostAddr;
+//        try {
+//            hostAddr = InetAddress.getByName(hostValue); // ipv6 surrounded by square brackets properly parsed by this method
+//        } catch (UnknownHostException uhe) {
+//            throw new IllegalArgumentException(uhe);
+//        }
+//        
+//        if (hostAddr.equals(IPV4_HOST)) {
+//            return ProbeDeviceType.IPV4;
+//        } else if (hostAddr.equals(IPV6_HOST)) {
+//            return ProbeDeviceType.IPV6;
+//        } else {
+//            throw new IllegalStateException(); // should never happen -- validation checks in constructor
+//        }
+//    }
 
     /**
      * Type of device to probe.

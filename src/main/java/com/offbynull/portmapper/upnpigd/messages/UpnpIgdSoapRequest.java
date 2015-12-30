@@ -13,11 +13,10 @@ import org.apache.commons.lang3.Validate;
  */
 public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
 
-    private static final String HOST_KEY = "Host";
-    private static final String CONNECTION_KEY = "Connection";
-
     UpnpIgdSoapRequest(String host, String location, String serviceType, String actionName, Map<String, String> arguments) {
-        super("POST", location, generateHeaders(host), generateContent(serviceType, actionName, arguments));
+        super("POST", location,
+                generateHeaders(host, serviceType, actionName),
+                generateContent(serviceType, actionName, arguments));
 
         //<?xml version="1.0"?>
         //<soap:Envelope
@@ -35,13 +34,19 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         //<?xml version="1.0"?>
     }
 
-    private static Map<String, String> generateHeaders(String host) {
-        Validate.notNull(host);
+    private static Map<String, String> generateHeaders(String host, String serviceType, String actionName) {
+        Validate.notNull(serviceType);
+        Validate.notNull(actionName);
 
         Map<String, String> ret = new HashMap<>();
 
-        ret.put(HOST_KEY, host);
-        ret.put(CONNECTION_KEY, "Close");
+        // content-length is added by parent class
+        ret.put("Host", host);
+        ret.put("Content-Type", "text/xml");
+        ret.put("SOAPAction", serviceType + "#" + actionName);
+        ret.put("Connection", "Close");
+	ret.put("Cache-Control", "no-cache");
+	ret.put("Pragma", "no-cache");
 
         return ret;
     }

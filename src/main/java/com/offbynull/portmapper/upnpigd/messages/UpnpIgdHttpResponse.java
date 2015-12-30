@@ -20,7 +20,6 @@ import com.offbynull.portmapper.common.TextUtils;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
@@ -28,10 +27,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a UPnP-IGD HTTP response.
+ * Represents a UPnP-IGD response. Note that these messages aren't bound to any specific protocol. Some will be sent over UDP broadcast and
+ * others will be sent via TCP (HTTP).
  * @author Kasra Faghihi
  */
-public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
+public abstract class UpnpIgdHttpResponse {
 
     private static final String HTTP_VERSION = "HTTP/1.1";
     private static final String TERMINATOR = "\r\n";
@@ -47,6 +47,13 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
         Validate.noNullElements(headers.values());
         Validate.isTrue(responseCode >= 0);
 //        Validate.notNull(content); // content may be null
+
+        // content len calculated on dump
+        for (String header : headers.keySet()) {
+            if (header.equalsIgnoreCase("Content-Length")) {
+                throw new IllegalArgumentException();
+            }
+        }
 
         this.responseCode = responseCode;
         this.headers = new HashMap<>(headers);
@@ -100,6 +107,10 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
 
             String key = splitLine[0].trim();
             String value = splitLine[1].trim();
+            
+            if (key.equalsIgnoreCase("Content-Length")) { // ignore, calculated on dump
+                continue;
+            }
 
             headers.put(key, value);
         }
@@ -121,37 +132,7 @@ public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
         return null;
     }
 
-    final void removeHeaderIgnoreCase(String key) {
-        Iterator<Entry<String, String>> it = headers.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, String> header = it.next();
-            if (header.getKey().equalsIgnoreCase(key)) {
-                it.remove();
-                return;
-            }
-        }
-    }
-
     final String getContent() {
         return content;
     }
-
-    @Override
-    public final byte[] dump() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(HTTP_VERSION).append(' ').append(responseCode).append(' ').append("UNKNOWN").append(TERMINATOR);
-        for (Entry<String, String> entry : headers.entrySet()) {
-            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(TERMINATOR);
-        }
-
-        sb.append(TERMINATOR); // split
-
-        if (content != null) {
-            sb.append(content);
-        }
-
-        return sb.toString().getBytes(Charset.forName("US-ASCII"));
-    }
-
 }

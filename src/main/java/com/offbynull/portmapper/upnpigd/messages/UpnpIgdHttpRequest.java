@@ -16,26 +16,22 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
-import com.offbynull.portmapper.common.TextUtils;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.StringTokenizer;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a UPnP-IGD HTTP request.
+ * Represents a UPnP-IGD request. Note that these messages aren't bound to any specific protocol. Some will be sent over UDP broadcast and
+ * others will be sent via TCP (HTTP).
  * @author Kasra Faghihi
  */
 public abstract class UpnpIgdHttpRequest implements UpnpIgdMessage {
 
     private static final String HTTP_VERSION = "HTTP/1.1";
     private static final String TERMINATOR = "\r\n";
-    private static final String HEADER_SPLIT_POINT = TERMINATOR + TERMINATOR;
+//    private static final String HEADER_SPLIT_POINT = TERMINATOR + TERMINATOR;
 
     private final String method;
     private final String location;
@@ -50,97 +46,23 @@ public abstract class UpnpIgdHttpRequest implements UpnpIgdMessage {
         Validate.noNullElements(headers.values());
 //        Validate.notNull(content); // content may be null
 
+        // content len calculated on dump
+        for (String header : headers.keySet()) {
+            if (header.equalsIgnoreCase("Content-Length")) {
+                throw new IllegalArgumentException();
+            }
+        }
+
         this.method = method;
         this.location = location;
         this.headers = new HashMap<>(headers);
         this.content = content;
     }
 
-    UpnpIgdHttpRequest(byte[] buffer) {
-        Validate.notNull(buffer);
-
-        // Convert buffer to string
-        String bufferStr = new String(buffer, Charset.forName("US-ASCII"));
-
-        // Split buffer to header and content
-        int splitIdx = bufferStr.indexOf(HEADER_SPLIT_POINT);
-        String headersStr;
-        String contentStr;
-        if (splitIdx == -1) {
-            // No content, so just grab headers and say we don't have content? -- trying to be fault tolerant here 
-            headersStr = bufferStr;
-            contentStr = null;
-        } else {
-            headersStr = bufferStr.substring(0, splitIdx);
-            contentStr = bufferStr.substring(splitIdx + HEADER_SPLIT_POINT.length());
-        }
-
-        // Parse req and headers
-        StringTokenizer tokenizer = new StringTokenizer(headersStr, TERMINATOR);
-
-        String reqStr = tokenizer.nextToken();
-        reqStr = TextUtils.collapseWhitespace(reqStr).trim(); // get req string, collapse whitespace for fault tolerance
-
-        String[] splitReq = StringUtils.split(reqStr, ' ');
-        Validate.isTrue(splitReq.length >= 3); // ignore garbage afterwards? -- trying to be fault tolerant
-        method = splitReq[0];
-        location = splitReq[1];
-        Validate.isTrue(HTTP_VERSION.equalsIgnoreCase(splitReq[2])); // case insensitive for fault tolerance
-
-        Map<String, String> headers = new HashMap<>();
-        while (tokenizer.hasMoreTokens()) {
-            String headerLine = tokenizer.nextToken().trim(); // trim to be fault tolerant, in case header has extra spaces
-            if (headerLine.isEmpty()) {
-                break;
-            }
-
-            String[] splitLine = StringUtils.split(headerLine, ":", 1);
-            if (splitLine.length != 2) {
-                continue; // skip line if no : found
-            }
-
-            String key = splitLine[0].trim();
-            String value = splitLine[1].trim();
-
-            headers.put(key, value);
-        }
-
-        this.headers = Collections.unmodifiableMap(headers);
-        this.content = contentStr;
-    }
-
-    final String getMethod() {
-        return method;
-    }
-
-    final String getLocation() {
-        return location;
-    }
-    
-    final String getHeaderIgnoreCase(String key) {
-        for (Entry<String, String> header : headers.entrySet()) {
-            if (header.getKey().equalsIgnoreCase(key)) {
-                return header.getValue();
-            }
-        }
-        return null;
-    }
-
-    final void removeHeaderIgnoreCase(String key) {
-        Iterator<Entry<String, String>> it = headers.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, String> header = it.next();
-            if (header.getKey().equalsIgnoreCase(key)) {
-                it.remove();
-                return;
-            }
-        }
-    }
-
-    final String getContent() {
-        return content;
-    }
-
+    /**
+     * Dump out the UPnP-IGD message as a buffer.
+     * @return UPnP-IGD packet/buffer
+     */
     @Override
     public final byte[] dump() {
         StringBuilder sb = new StringBuilder();
@@ -149,14 +71,22 @@ public abstract class UpnpIgdHttpRequest implements UpnpIgdMessage {
         for (Entry<String, String> entry : headers.entrySet()) {
             sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(TERMINATOR);
         }
-
-        sb.append(TERMINATOR); // split
-
+        
         if (content != null) {
-            sb.append(content);
+            byte[] contentBytes = content.getBytes(Charset.forName("US-ASCII"));
+         
+            sb.append("Content-Length: ").append(contentBytes.length).append(TERMINATOR);
+            sb.append(TERMINATOR); // split
+            byte[] headerBytes = sb.toString().getBytes(Charset.forName("US-ASCII"));
+            
+            byte[] finalBytes = new byte[contentBytes.length + headerBytes.length];
+            System.arraycopy(headerBytes, 0, finalBytes, 0, headerBytes.length);
+            System.arraycopy(contentBytes, 0, finalBytes, headerBytes.length, contentBytes.length);
+            
+            return finalBytes;
+        } else {
+            sb.append(TERMINATOR); // split
+            return sb.toString().getBytes(Charset.forName("US-ASCII"));
         }
-
-        return sb.toString().getBytes(Charset.forName("US-ASCII"));
     }
-
 }
