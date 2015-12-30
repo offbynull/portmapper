@@ -26,7 +26,7 @@ import org.apache.commons.lang3.Validate;
  * Represents a UPnP probe request.
  * @author Kasra Faghihi
  */
-public final class ProbeRequest extends UpnpIgdHttpRequest {
+public final class ProbeUpnpIgdRequest extends UpnpIgdHttpRequest {
 
     private static final String METHOD_NAME = "M-SEARCH";
     private static final String LOCATION = "*";
@@ -58,7 +58,7 @@ public final class ProbeRequest extends UpnpIgdHttpRequest {
      * @throws NullPointerException if {@code probeDeviceType} or {@code serviceType} is {@code null}
      * @throws IllegalArgumentException if {@code mm < 0 || mx < 0 || mm > mx}
      */
-    public ProbeRequest(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
+    public ProbeUpnpIgdRequest(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
         super(METHOD_NAME, LOCATION, generateHeaders(probeDeviceType, mm, mx, serviceType), null);
     }
     

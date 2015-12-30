@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,14 +17,17 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
 /**
- * Represents a UPnP-IGD message. Note that these messages aren't bound to any specific protocol. Some will be sent over UDP broadcast and
- * others will be sent via TCP (HTTP).
+ * Protocol type.
  * @author Kasra Faghihi
  */
-public interface UpnpIgdMessage {
+public enum Protocol {
+
     /**
-     * Dump out the UPnP-IGD message as a packet/buffer.
-     * @return UPnP-IGD packet/buffer
+     * UDP protocol.
      */
-    byte[] dump();
+    UDP,
+    /**
+     * TCP protocol.
+     */
+    TCP;
 }

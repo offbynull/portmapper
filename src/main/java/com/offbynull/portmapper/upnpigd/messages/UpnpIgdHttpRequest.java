@@ -27,7 +27,7 @@ import org.apache.commons.lang3.Validate;
  * others will be sent via TCP (HTTP).
  * @author Kasra Faghihi
  */
-public abstract class UpnpIgdHttpRequest implements UpnpIgdMessage {
+public abstract class UpnpIgdHttpRequest {
 
     private static final String HTTP_VERSION = "HTTP/1.1";
     private static final String TERMINATOR = "\r\n";
@@ -60,10 +60,9 @@ public abstract class UpnpIgdHttpRequest implements UpnpIgdMessage {
     }
 
     /**
-     * Dump out the UPnP-IGD message as a buffer.
+     * Dump out the UPnP-IGD request as a buffer.
      * @return UPnP-IGD packet/buffer
      */
-    @Override
     public final byte[] dump() {
         StringBuilder sb = new StringBuilder();
 

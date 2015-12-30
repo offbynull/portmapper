@@ -31,7 +31,7 @@ import org.apache.commons.lang3.Validate;
  * Represents a UPnP device query response.
  * @author Kasra Faghihi
  */
-public final class DeviceQueryResponse extends UpnpIgdHttpResponse {
+public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
 
     private List<ServiceReference> services;
 
@@ -40,7 +40,7 @@ public final class DeviceQueryResponse extends UpnpIgdHttpResponse {
      * @param deviceUri device URI
      * @param buffer buffer containing response data
      */
-    public DeviceQueryResponse(URI deviceUri, byte[] buffer) {
+    public RootUpnpIgdResponse(URI deviceUri, byte[] buffer) {
         super(buffer);
 
         Validate.isTrue(isResponseSuccessful());

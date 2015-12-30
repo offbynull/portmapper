@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -41,22 +42,22 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
 
         String content = getContent();
         
-        // A really hacky way of finding the body block
+        // A really hacky way of finding the body block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
+        // consistent... we'd have to do more hacky parsing to figure out what it is
         String bodyBlock = TextUtils.findFirstBlock(content, /*<soapprefix*/":Body>", /*</soapprefix:*/":Body>", true);
 
-        // A really hacky way of finding the fault block
+        // A really hacky way of finding the fault block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
+        // consistent... we'd have to do more hacky parsing to figure out what it is
         String faultBlock = TextUtils.findFirstBlock(bodyBlock, /*<soapprefix*/":Fault>", /*</soapprefix:*/":Fault>", true);
-        if (faultBlock != null) {
-            String faultCode = TextUtils.findFirstBlock(content, "faultcode", "faultcode", true);
-            String faultString = TextUtils.findFirstBlock(content, "faultstring", "faultstring", true);
-            
-            throw new IllegalArgumentException("Response contains fault (code: " + faultCode + " / message: " + faultString);
-        }
+        Validate.isTrue(faultBlock == null, "Response contains fault: %s", StringUtils.substringBeforeLast(faultBlock, "<"));
         
         
         Map<String, String> args = new HashMap<>();
         for (String key : expectedArguments) {
+            // A really hacky way of finding args -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
+            // consistent... we'd have to do more hacky parsing to figure out what it is
             String value = TextUtils.findFirstBlock(content, key + ">", key + ">", true);
+            value = StringUtils.substringBeforeLast(value, "<");
             if (value != null) {
                 value = StringEscapeUtils.unescapeXml(value).trim();
                 args.put(key, value);
@@ -65,6 +66,18 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
 
         arguments = Collections.unmodifiableMap(args);
         
+        //<?xml version="1.0"?>
+        //
+        //<soap:Envelope
+        //xmlns:soap="http://www.w3.org/2003/05/soap-envelope/"
+        //soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+        //<soap:Body>
+        //  <soap:Fault>
+        //  ...
+        //  </soap:Fault>
+        //</soap:Body>
+        //</soap:Envelope>
+
         //<?xml version="1.0"?>
         //
         //<soap:Envelope

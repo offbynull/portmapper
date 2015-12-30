@@ -35,7 +35,7 @@ import org.apache.commons.lang3.Validate;
  * to support IPv4 only. While pinhole services (e.g. WANIPv6FirewallControl:1) are said to support IPv6 only.
  * @author Kasra Faghihi
  */
-public final class ServiceDescriptionResponse extends UpnpIgdHttpResponse {
+public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse {
     
     private Map<ServiceType, IdentifiedService> identifiedServices;
 
@@ -46,7 +46,7 @@ public final class ServiceDescriptionResponse extends UpnpIgdHttpResponse {
      * @throws IllegalArgumentException if {@code buffer} was malformed (neither an IPv4 port mapping service was identified nor was an
      * IPv6 firewall service identified)
      */
-    public ServiceDescriptionResponse(byte[] buffer) {
+    public ServiceDescriptionUpnpIgdResponse(byte[] buffer) {
         super(buffer);
         
         Validate.isTrue(isResponseSuccessful());

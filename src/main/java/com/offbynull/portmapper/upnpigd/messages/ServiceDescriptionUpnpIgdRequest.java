@@ -24,14 +24,14 @@ import org.apache.commons.lang3.Validate;
  * Represents a UPnP service description request.
  * @author Kasra Faghihi
  */
-public final class ServiceDescriptionRequest extends UpnpIgdHttpRequest {
+public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {
 
     /**
      * Constructs a {@link ServiceDescriptionRequest} object.
      * @param host device host
      * @param scpdLocation SCPD location (found during discovery)
      */
-    public ServiceDescriptionRequest(String host, String scpdLocation) {
+    public ServiceDescriptionUpnpIgdRequest(String host, String scpdLocation) {
         super("GET", scpdLocation, generateHeaders(host), null);
     }
     

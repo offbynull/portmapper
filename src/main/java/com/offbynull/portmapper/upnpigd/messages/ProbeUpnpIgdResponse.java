@@ -22,7 +22,7 @@ import org.apache.commons.lang3.Validate;
  * Represents a UPnP probe response.
  * @author Kasra Faghihi
  */
-public final class ProbeResponse extends UpnpIgdHttpResponse {
+public final class ProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
 
     private static final String LOCATION_KEY = "HOST";
     private static final String SERVER_KEY = "SERVER";
@@ -71,7 +71,7 @@ public final class ProbeResponse extends UpnpIgdHttpResponse {
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if buffer is malformed (response is not 200 OK, or LOCATION header is missing)
      */
-    public ProbeResponse(byte[] buffer) {
+    public ProbeUpnpIgdResponse(byte[] buffer) {
         super(buffer);
         
         Validate.isTrue(isResponseSuccessful());
