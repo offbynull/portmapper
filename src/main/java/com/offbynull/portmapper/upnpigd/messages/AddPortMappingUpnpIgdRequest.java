@@ -29,7 +29,7 @@ import org.apache.commons.lang3.Validate;
 public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
     
     /**
-     * Constructs a {@link ServiceDescriptionRequest} object.
+     * Constructs a {@link AddPortMappingUpnpIgdRequest} object.
      * @param host device host
      * @param controlLocation control location
      * @param serviceType service type
