@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -57,7 +58,8 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         for (String key : expectedArguments) {
             String value = TextUtils.findFirstBlock(content, key + ">", key + ">", true);
             if (value != null) {
-                args.put(key, value.trim());
+                value = StringEscapeUtils.unescapeXml(value).trim();
+                args.put(key, value);
             }
         }
 
