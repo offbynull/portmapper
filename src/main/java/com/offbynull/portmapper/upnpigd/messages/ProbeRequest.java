@@ -18,7 +18,6 @@ package com.offbynull.portmapper.upnpigd.messages;
 
 import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
