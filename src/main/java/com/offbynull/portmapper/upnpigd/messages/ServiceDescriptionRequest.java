@@ -10,11 +10,12 @@ import org.apache.commons.lang3.Validate;
  */
 public final class ServiceDescriptionRequest extends UpnpIgdHttpRequest {
     private static final String HOST_KEY = "HOST";
+    private static final String CONNECTION_KEY = "Connection";
     
     /**
      * Constructs a {@link ServiceDescriptionRequest} object.
      * @param host device host
-     * @param scpdLocation scpd URL location (found during discovery)
+     * @param scpdLocation SCPD location (found during discovery)
      */
     public ServiceDescriptionRequest(String host, String scpdLocation) {
         super("GET", scpdLocation, generateHeaders(host), null);
@@ -26,6 +27,7 @@ public final class ServiceDescriptionRequest extends UpnpIgdHttpRequest {
         Map<String, String> ret = new HashMap<>();
         
         ret.put(HOST_KEY, host);
+        ret.put(CONNECTION_KEY, "Close");
         
         return ret;
     }

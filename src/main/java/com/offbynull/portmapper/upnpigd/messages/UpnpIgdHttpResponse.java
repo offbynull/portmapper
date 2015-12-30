@@ -27,6 +27,10 @@ import java.util.StringTokenizer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Represents a UPnP-IGD HTTP response.
+ * @author Kasra Faghihi
+ */
 public abstract class UpnpIgdHttpResponse implements UpnpIgdMessage {
 
     private static final String HTTP_VERSION = "HTTP/1.1";

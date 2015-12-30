@@ -9,12 +9,13 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class DeviceQueryRequest extends UpnpIgdHttpRequest {
-    private static final String HOST_KEY = "HOST";
+    private static final String HOST_KEY = "Host";
+    private static final String CONNECTION_KEY = "Connection";
     
     /**
      * Constructs a {@link DeviceQueryRequest} object.
      * @param host device host
-     * @param rootLocation device's root URL location (found during discovery)
+     * @param rootLocation device's root location (found during discovery)
      */
     public DeviceQueryRequest(String host, String rootLocation) {
         super("GET", rootLocation, generateHeaders(host), null);
@@ -26,6 +27,7 @@ public final class DeviceQueryRequest extends UpnpIgdHttpRequest {
         Map<String, String> ret = new HashMap<>();
         
         ret.put(HOST_KEY, host);
+        ret.put(CONNECTION_KEY, "Close");
         
         return ret;
     }
