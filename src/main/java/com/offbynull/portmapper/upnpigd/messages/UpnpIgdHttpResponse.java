@@ -122,6 +122,10 @@ public abstract class UpnpIgdHttpResponse {
     final boolean isResponseSuccessful() {
         return responseCode / 100 == 2; // is 2xx code?
     }
+
+    final void validateResponseCode() {
+        Validate.isTrue(isResponseSuccessful(), "Bad response code: %d", responseCode);
+    }
     
     final String getHeaderIgnoreCase(String key) {
         for (Entry<String, String> header : headers.entrySet()) {

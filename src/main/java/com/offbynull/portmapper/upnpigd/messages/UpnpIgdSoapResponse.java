@@ -39,6 +39,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         
         Validate.notNull(expectedArguments);
         Validate.noNullElements(expectedArguments);
+//        validateResponseCode();
 
         String content = getContent();
         
