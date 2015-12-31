@@ -16,6 +16,8 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -26,11 +28,6 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class SsdpProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
-
-    private static final String LOCATION_KEY = "HOST";
-    private static final String SERVER_KEY = "SERVER";
-    private static final String USN_KEY = "USN";
-    private static final String ST_KEY = "ST";
 
     // http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
 
@@ -83,9 +80,16 @@ public final class SsdpProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
     /**
      * Get location to access service.
      * @return location
+     * @throws IllegalStateException if was not found or could not be interpreted
      */
-    public String getLocation() {
-        return getHeaderIgnoreCase(LOCATION_KEY);
+    public URI getLocation() {
+        String uriStr = getHeaderIgnoreCase("LOCATION");
+        Validate.validState(uriStr != null);
+        try {
+            return new URI(uriStr);
+        } catch (URISyntaxException urise) {
+            throw new IllegalStateException(urise);
+        }
     }
 
     /**
@@ -93,22 +97,28 @@ public final class SsdpProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
      * @return server description (may be {@code null})
      */
     public String getServer() {
-        return getHeaderIgnoreCase(SERVER_KEY);
+        return getHeaderIgnoreCase("SERVER");
     }
 
     /**
      * Get unique service identifier.
-     * @return unique service identifier (may be {@code null})
+     * @return unique service identifier
+     * @throws IllegalStateException if was not found
      */
     public String getUsn() {
-        return getHeaderIgnoreCase(USN_KEY);
+        String val = getHeaderIgnoreCase("USN");
+        Validate.validState(val != null);
+        return val;
     }
 
     /**
      * Get service type.
-     * @return service type (may be {@code null})
+     * @return service type
+     * @throws IllegalStateException if was not found
      */
     public String getServiceType() {
-        return getHeaderIgnoreCase(ST_KEY);
+        String val = getHeaderIgnoreCase("ST");
+        Validate.validState(val != null);
+        return val;
     }
 }

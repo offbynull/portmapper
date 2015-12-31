@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
 import java.nio.charset.Charset;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.commons.lang3.Validate;
@@ -55,7 +55,7 @@ public abstract class UpnpIgdHttpRequest {
 
         this.method = method;
         this.location = location;
-        this.headers = new HashMap<>(headers);
+        this.headers = new LinkedHashMap<>(headers);
         this.content = content;
     }
 

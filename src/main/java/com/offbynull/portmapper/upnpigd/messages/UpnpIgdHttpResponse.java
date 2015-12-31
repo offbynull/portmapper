@@ -100,7 +100,7 @@ public abstract class UpnpIgdHttpResponse {
                 break;
             }
 
-            String[] splitLine = StringUtils.split(headerLine, ":", 1);
+            String[] splitLine = StringUtils.split(headerLine, ":", 2);
             if (splitLine.length != 2) {
                 continue; // skip line if no : found
             }

@@ -19,7 +19,7 @@ package com.offbynull.portmapper.upnpigd.messages;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
@@ -72,7 +72,7 @@ public final class SsdpProbeUpnpIgdRequest extends UpnpIgdHttpRequest {
         }
         Validate.notNull(serviceType);
 
-        Map<String, String> ret = new HashMap<>();
+        Map<String, String> ret = new LinkedHashMap<>();
         
         if (mm != null) {
             ret.put(MM_KEY, mm.toString());
