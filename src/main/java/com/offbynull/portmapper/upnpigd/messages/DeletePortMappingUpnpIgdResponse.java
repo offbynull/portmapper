@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.
+ */
+package com.offbynull.portmapper.upnpigd.messages;
+
+import java.util.Collections;
+
+/**
+ * Represents a UPnP DeletePortMapping response.
+ * @author Kasra Faghihi
+ */
+public final class DeletePortMappingUpnpIgdResponse extends UpnpIgdSoapResponse {
+    
+    /**
+     * Constructs a {@link DeletePortMappingUpnpIgdResponse} object.
+     * @param buffer buffer containing response data
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code buffer} was malformed
+     */
+    public DeletePortMappingUpnpIgdResponse(byte[] buffer) {
+        super("DeletePortMappingResponse", Collections.<String>emptySet(), buffer);
+    }
+}

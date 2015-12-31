@@ -37,7 +37,7 @@ public final class ProbeUpnpIgdRequest extends UpnpIgdHttpRequest {
     private static final String MX_KEY = "MX";
     private static final String ST_KEY = "ST";
     private static final String IPV4_HOST_STR = "239.255.255.250";
-    private static final String IPV6_HOST_STR = "[FF02::C]";
+    private static final String IPV6_HOST_STR = "[FF02::C]"; // SEE TICKET FOR OTHER HOSTS TO PROBE, MINIUPNPC DEFINES ATLEAST 3
     private static final InetAddress IPV4_HOST =
             NetworkUtils.convertBytesToAddress(new byte[] { -17, -1, -1, -6 }); // 239.255.255.250
     private static final InetAddress IPV6_HOST =

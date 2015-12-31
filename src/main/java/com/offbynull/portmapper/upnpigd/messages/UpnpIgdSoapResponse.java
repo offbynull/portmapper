@@ -34,7 +34,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
 
     private Map<String, String> arguments;
     
-    UpnpIgdSoapResponse(Set<String> expectedArguments, byte[] buffer) {
+    UpnpIgdSoapResponse(String expectedResponseAction, Set<String> expectedArguments, byte[] buffer) {
         super(buffer);
         
         Validate.notNull(expectedArguments);
@@ -45,18 +45,27 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         // A really hacky way of finding the body block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
         // consistent... we'd have to do more hacky parsing to figure out what it is
         String bodyBlock = TextUtils.findFirstBlock(content, /*<soapprefix*/":Body>", /*</soapprefix:*/":Body>", true);
+        bodyBlock = StringUtils.substringBeforeLast(bodyBlock, "<"); // null input should be fine
+        Validate.isTrue(bodyBlock != null);
 
         // A really hacky way of finding the fault block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
         // consistent... we'd have to do more hacky parsing to figure out what it is
         String faultBlock = TextUtils.findFirstBlock(bodyBlock, /*<soapprefix*/":Fault>", /*</soapprefix:*/":Fault>", true);
-        Validate.isTrue(faultBlock == null, "Response contains fault: %s", StringUtils.substringBeforeLast(faultBlock, "<"));
+        faultBlock = StringUtils.substringBeforeLast(faultBlock, "<"); // null input shoudl be fine
+        Validate.isTrue(faultBlock == null, "Response contains fault: %s", faultBlock);
         
+        
+        String responseBlock = TextUtils.findFirstBlock(bodyBlock,
+                /*<soapprefix*/":" + expectedResponseAction+ ">",
+                /*</soapprefix:*/":" + expectedResponseAction+ ">", true);
+        responseBlock = StringUtils.substringBeforeLast(responseBlock, "<"); // null input shoudl be fine
+        Validate.isTrue(responseBlock != null);
         
         Map<String, String> args = new HashMap<>();
         for (String key : expectedArguments) {
             // A really hacky way of finding args -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
             // consistent... we'd have to do more hacky parsing to figure out what it is
-            String value = TextUtils.findFirstBlock(content, key + ">", key + ">", true);
+            String value = TextUtils.findFirstBlock(responseBlock, key + ">", key + ">", true);
             value = StringUtils.substringBeforeLast(value, "<");
             if (value != null) {
                 value = StringEscapeUtils.unescapeXml(value).trim();
