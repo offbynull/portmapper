@@ -22,15 +22,15 @@ import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a UPnP DeletePortMapping request.
+ * Represents a UPnP GetSpecificPortMappingEntry request.
  * <p>
  * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
-public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
+public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoapRequest {
     
     /**
-     * Constructs a {@link DeletePortMappingUpnpIgdRequest} object.
+     * Constructs a {@link GetSpecificPortMappingEntryUpnpIgdRequest} object.
      * @param host device host
      * @param controlLocation control location
      * @param serviceType service type
@@ -40,11 +40,11 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @throws NullPointerException if any argument other than {@code remoteHost} is {@code null}
      * @throws IllegalArgumentException if {@code 0 > externalPort > 65535}
      */
-    public DeletePortMappingUpnpIgdRequest(String host, String controlLocation, String serviceType,
+    public GetSpecificPortMappingEntryUpnpIgdRequest(String host, String controlLocation, String serviceType,
             InetAddress remoteHost,
             int externalPort,
             Protocol protocol) {
-        super(host, controlLocation, serviceType, "AddPortMapping",
+        super(host, controlLocation, serviceType, "GetSpecificPortMappingEntry",
                 generateArguments(remoteHost, externalPort, protocol));
     }
     

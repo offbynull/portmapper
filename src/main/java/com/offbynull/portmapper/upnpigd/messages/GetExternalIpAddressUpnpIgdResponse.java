@@ -23,12 +23,12 @@ import org.apache.commons.lang3.Validate;
 
 /**
  * Represents a UPnP GetExternalIPAddress response.
+ * <p>
+ * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
 public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapResponse {
-    
-    private InetAddress externalIpAddress;
-    
+
     /**
      * Constructs a {@link GetExternalIpAddressUpnpIgdResponse} object.
      * @param buffer buffer containing response data
@@ -37,22 +37,20 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
      */
     public GetExternalIpAddressUpnpIgdResponse(byte[] buffer) {
         super("GetExternalIPAddressResponse", Collections.<String>emptySet(), buffer);
-        
-        
-        String extIpStr = getArgumentIgnoreCase("NewExternalIPAddress");
-        Validate.isTrue(extIpStr != null);
-        try {
-            externalIpAddress = InetAddress.getByName(extIpStr);
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException(e);
-        }
     }
     
     /**
      * Get external IP address.
      * @return external IP address
+     * @throws IllegalStateException if was not found or could not be interpreted
      */
     public InetAddress getIpAddress() {
-        return externalIpAddress;
+        String extIpStr = getArgumentIgnoreCase("NewExternalIPAddress");
+        Validate.validState(extIpStr != null);
+        try {
+            return InetAddress.getByName(extIpStr);
+        } catch (UnknownHostException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

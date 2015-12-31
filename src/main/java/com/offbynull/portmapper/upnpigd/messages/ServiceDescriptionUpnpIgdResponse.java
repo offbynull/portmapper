@@ -33,6 +33,8 @@ import org.apache.commons.lang3.Validate;
  * <p>
  * Port mapping services (e.g. InternetGatewayDevice:1, InternetGatewayDevice:2, WANIPConnection:1, WANIPConnection:2, etc..) are said
  * to support IPv4 only. While pinhole services (e.g. WANIPv6FirewallControl:1) are said to support IPv6 only.
+ * <p>
+ * Specifications are documented at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
 public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse {
@@ -292,8 +294,17 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
 
     }
     
+    /**
+     * Service type.
+     */
     public enum ServiceType {
+        /**
+         * Port mapper service.
+         */
         PORT_MAPPER, // ipv4 only according to docs
+        /**
+         * Firewall service.
+         */
         FIREWALL  // ipv6 only according to docs
     }
 }

@@ -61,8 +61,8 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         ret.put("Content-Type", "text/xml");
         ret.put("SOAPAction", serviceType + "#" + actionName);
         ret.put("Connection", "Close");
-	ret.put("Cache-Control", "no-cache");
-	ret.put("Pragma", "no-cache");
+        ret.put("Cache-Control", "no-cache");
+        ret.put("Pragma", "no-cache");
 
         return ret;
     }

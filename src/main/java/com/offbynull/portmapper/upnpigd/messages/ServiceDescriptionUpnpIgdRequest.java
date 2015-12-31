@@ -22,6 +22,8 @@ import org.apache.commons.lang3.Validate;
 
 /**
  * Represents a UPnP service description request.
+ * <p>
+ * Specifications are documented at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
 public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {

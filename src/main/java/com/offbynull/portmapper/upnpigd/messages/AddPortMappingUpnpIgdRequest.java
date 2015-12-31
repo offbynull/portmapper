@@ -22,8 +22,9 @@ import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a UPnP AddPortMapping request. For a more thorough description of the AddPortMapping arguments, see docs at
- * http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
+ * Represents a UPnP AddPortMapping request.
+ * <p>
+ * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
 public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
@@ -44,6 +45,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @throws NullPointerException if any argument other than {@code remoteHost} is {@code null}
      * @throws IllegalArgumentException if {@code 0 > externalPort > 65535 || 1 > internalPort > 65535 || 0L > leaseDuration > 0xFFFFFFFFL}
      */
+    // CHECKSTYLE:OFF:ParameterNumber
     public AddPortMappingUpnpIgdRequest(String host, String controlLocation, String serviceType,
             InetAddress remoteHost,
             int externalPort,
@@ -53,6 +55,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
             boolean enabled,
             String description,
             long leaseDuration) {
+    // CHECKSTYLE:ON
         super(host, controlLocation, serviceType, "AddPortMapping",
                 generateArguments(remoteHost, externalPort, protocol, internalPort, internalClient, enabled, description, leaseDuration));
     }

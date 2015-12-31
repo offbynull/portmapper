@@ -20,6 +20,8 @@ import java.util.Collections;
 
 /**
  * Represents a UPnP AddPortMapping response.
+ * <p>
+ * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
 public final class AddPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse {

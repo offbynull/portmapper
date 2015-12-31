@@ -20,6 +20,9 @@ import org.apache.commons.lang3.Validate;
 
 /**
  * Represents a UPnP probe response.
+ * <p>
+ * Specifications are documented at https://tools.ietf.org/html/draft-goland-http-udp-00 and
+ * http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
  * @author Kasra Faghihi
  */
 public final class ProbeUpnpIgdResponse extends UpnpIgdHttpResponse {

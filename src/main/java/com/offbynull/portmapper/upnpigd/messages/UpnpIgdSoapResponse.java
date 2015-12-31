@@ -57,8 +57,8 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         
         
         String responseBlock = TextUtils.findFirstBlock(bodyBlock,
-                /*<soapprefix*/":" + expectedResponseAction+ ">",
-                /*</soapprefix:*/":" + expectedResponseAction+ ">", true);
+                /*<soapprefix*/":" + expectedResponseAction + ">",
+                /*</soapprefix:*/":" + expectedResponseAction + ">", true);
         responseBlock = StringUtils.substringBeforeLast(responseBlock, "<"); // null input shoudl be fine
         Validate.isTrue(responseBlock != null);
         
