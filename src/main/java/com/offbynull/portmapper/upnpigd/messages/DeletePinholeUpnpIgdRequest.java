@@ -37,7 +37,7 @@ public final class DeletePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @throws NullPointerException if any argument is {@code null}
      */
     public DeletePinholeUpnpIgdRequest(String host, String controlLocation, String serviceType, String uniqueId) {
-        super(host, controlLocation, serviceType, "UpdatePinhole", generateArguments(uniqueId));
+        super(host, controlLocation, serviceType, "DeletePinhole", generateArguments(uniqueId));
     }
     
     private static Map<String, String> generateArguments(
