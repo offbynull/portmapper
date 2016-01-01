@@ -30,7 +30,7 @@ import org.apache.commons.lang3.Validate;
  * http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
  * @author Kasra Faghihi
  */
-public final class SsdpProbeUpnpIgdRequest extends UpnpIgdHttpRequest {
+public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
 
     private static final String METHOD_NAME = "M-SEARCH";
     private static final String LOCATION = "*";
@@ -55,7 +55,7 @@ public final class SsdpProbeUpnpIgdRequest extends UpnpIgdHttpRequest {
      * @throws NullPointerException if {@code probeDeviceType} or {@code serviceType} is {@code null}
      * @throws IllegalArgumentException if {@code mm < 0 || mx < 0 || mm > mx}
      */
-    public SsdpProbeUpnpIgdRequest(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
+    public ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType probeDeviceType, Integer mm, Integer mx, String serviceType) {
         super(METHOD_NAME, LOCATION, generateHeaders(probeDeviceType, mm, mx, serviceType), null);
     }
     

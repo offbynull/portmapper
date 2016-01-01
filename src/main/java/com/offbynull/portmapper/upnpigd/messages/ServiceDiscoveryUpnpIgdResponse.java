@@ -27,7 +27,7 @@ import org.apache.commons.lang3.Validate;
  * http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
  * @author Kasra Faghihi
  */
-public final class SsdpProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
+public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
 
     // http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
 
@@ -71,7 +71,7 @@ public final class SsdpProbeUpnpIgdResponse extends UpnpIgdHttpResponse {
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if buffer is malformed (response is not 200 OK, or LOCATION header is missing)
      */
-    public SsdpProbeUpnpIgdResponse(byte[] buffer) {
+    public ServiceDiscoveryUpnpIgdResponse(byte[] buffer) {
         super(buffer);
         
         Validate.isTrue(isResponseSuccessful());
