@@ -19,21 +19,20 @@ package com.offbynull.portmapper.upnpigd.messages;
 import java.util.Collections;
 
 /**
- * Represents a UPnP GetExternalIPAddress request.
+ * Represents a UPnP DeletePinhole response.
  * <p>
  * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
-public final class GetExternalIpAddressUpnpIgdRequest extends UpnpIgdSoapRequest {
+public final class DeletePinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     
     /**
-     * Constructs a {@link GetExternalIpAddressUpnpIgdRequest} object.
-     * @param host device host
-     * @param controlLocation control location
-     * @param serviceType service type
+     * Constructs a {@link DeletePinholeUpnpIgdResponse} object.
+     * @param buffer buffer containing response data
      * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code buffer} was malformed
      */
-    public GetExternalIpAddressUpnpIgdRequest(String host, String controlLocation, String serviceType) {
-        super(host, controlLocation, serviceType, "GetExternalIPAddress", Collections.<String, String>emptyMap());
+    public DeletePinholeUpnpIgdResponse(byte[] buffer) {
+        super("DeletePinholeResponse", Collections.<String>emptySet(), buffer);
     }
 }

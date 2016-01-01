@@ -16,24 +16,38 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
-import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a UPnP GetExternalIPAddress request.
+ * Represents a UPnP DeletePinhole request.
  * <p>
  * For a more thorough description of arguments, see docs at http://upnp.org/specs/gw/igd1 and http://upnp.org/specs/gw/igd2.
  * @author Kasra Faghihi
  */
-public final class GetExternalIpAddressUpnpIgdRequest extends UpnpIgdSoapRequest {
+public final class DeletePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
     
     /**
-     * Constructs a {@link GetExternalIpAddressUpnpIgdRequest} object.
+     * Constructs a {@link DeletePinholeUpnpIgdRequest} object.
      * @param host device host
      * @param controlLocation control location
      * @param serviceType service type
+     * @param uniqueId uniqueId of the mapping (should be a number between 0 to 65535 -- but not checked by this method)
      * @throws NullPointerException if any argument is {@code null}
      */
-    public GetExternalIpAddressUpnpIgdRequest(String host, String controlLocation, String serviceType) {
-        super(host, controlLocation, serviceType, "GetExternalIPAddress", Collections.<String, String>emptyMap());
+    public DeletePinholeUpnpIgdRequest(String host, String controlLocation, String serviceType, String uniqueId) {
+        super(host, controlLocation, serviceType, "UpdatePinhole", generateArguments(uniqueId));
+    }
+    
+    private static Map<String, String> generateArguments(
+            String uniqueId) { // should be a number between 0 to 65535 -- but not checked
+        
+        Map<String, String> ret = new LinkedHashMap<>();
+        
+        Validate.notNull(uniqueId);
+        ret.put("UniqueID", uniqueId);
+        
+        return ret;
     }
 }

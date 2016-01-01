@@ -44,10 +44,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         String content = getContent();
 
         if (!isResponseSuccessful()) {
-            // A really hacky way of finding the fault block -- reason why the whole tag isn't used is because the soap prefix in the tag
-            // isn't consistent... we'd have to do more hacky parsing to figure out what it is
-            String faultBlock = TextUtils.findFirstBlock(content, /*<soapprefix*/":Fault", /*</soapprefix:*/":Fault", true);
-            throw new IllegalArgumentException("Response contains fault: " + faultBlock);
+            throw new IllegalArgumentException("Response contains fault: " + content);
         }
         
         

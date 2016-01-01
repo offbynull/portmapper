@@ -16,6 +16,8 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
+import org.apache.commons.lang3.Validate;
+
 /**
  * Protocol type.
  * @author Kasra Faghihi
@@ -25,9 +27,21 @@ public enum Protocol {
     /**
      * UDP protocol.
      */
-    UDP,
+    UDP(17),
     /**
      * TCP protocol.
      */
-    TCP;
+    TCP(6);
+    
+    private int iana;
+
+    private Protocol(int iana) {
+        Validate.inclusiveBetween(0, 255, iana);
+        this.iana = iana;
+    }
+
+    int getIana() {
+        return iana;
+    }
+    
 }
