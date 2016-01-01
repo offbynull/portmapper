@@ -170,6 +170,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         if (expectedStateVar == null) { // didn't find related state var for arg -- try to be fault tolerant and return max range
             return maxRange;
         }
+        expectedStateVar = expectedStateVar.trim();
         
         
         // find state variable
@@ -224,6 +225,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
                 continue;
             }
 
+            name = name.trim();
             if (expectedValue.equalsIgnoreCase(name)) { // ignore case to be fault tolerant
                 return block;
             }
