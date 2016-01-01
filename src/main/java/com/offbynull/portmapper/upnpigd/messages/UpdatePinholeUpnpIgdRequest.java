@@ -36,7 +36,7 @@ public final class UpdatePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @param uniqueId uniqueId of the mapping (should be a number between 0 to 65535 -- but not checked by this method)
      * @param leaseDuration lease duration
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if {@code 0L > leaseDuration > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {@code 1L > leaseDuration > 0xFFFFFFFFL}
      */
     public UpdatePinholeUpnpIgdRequest(String host, String controlLocation, String serviceType, String uniqueId, long leaseDuration) {
         super(host, controlLocation, serviceType, "UpdatePinhole", generateArguments(uniqueId, leaseDuration));
@@ -44,15 +44,15 @@ public final class UpdatePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
     
     private static Map<String, String> generateArguments(
             String uniqueId, // should be a number between 0 to 65535 -- but not checked
-            long leaseDuration) { // 0 to max 0xFFFFFFFF
+            long leaseDuration) { // 1 to max 0xFFFFFFFF
         
         Map<String, String> ret = new LinkedHashMap<>();
         
         Validate.notNull(uniqueId);
         ret.put("UniqueID", uniqueId);
         
-        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, leaseDuration);
-        ret.put("NewLeaseDuration", "" + leaseDuration);
+        Validate.inclusiveBetween(1L, 0xFFFFFFFFL, leaseDuration);
+        ret.put("NewLeaseTime", "" + leaseDuration);
         
         return ret;
     }
