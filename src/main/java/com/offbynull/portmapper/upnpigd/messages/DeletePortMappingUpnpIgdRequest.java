@@ -44,7 +44,7 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
             InetAddress remoteHost,
             int externalPort,
             Protocol protocol) {
-        super(host, controlLocation, serviceType, "AddPortMapping",
+        super(host, controlLocation, serviceType, "DeletePortMapping",
                 generateArguments(remoteHost, externalPort, protocol));
     }
     
