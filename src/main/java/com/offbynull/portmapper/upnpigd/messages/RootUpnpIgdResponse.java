@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
@@ -37,22 +38,27 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
 
     /**
      * Constructs a {@link DeviceQueryResponse} object by parsing a buffer.
-     * @param deviceUri device URI
+     * @param baseUrl device URI
      * @param buffer buffer containing response data
      */
-    public RootUpnpIgdResponse(URI deviceUri, byte[] buffer) {
+    public RootUpnpIgdResponse(URI baseUrl, byte[] buffer) {
         super(buffer);
 
         Validate.isTrue(isResponseSuccessful());
-        Validate.notNull(deviceUri);
+        Validate.notNull(baseUrl);
 
         String content = getContent();
+        
+        String baseUrlOverrideStr = TextUtils.findFirstBlock(content, "<URLBase>", "</URLBase>", true);
+        if (baseUrlOverrideStr != null) {
+            baseUrl = URI.create(baseUrlOverrideStr);
+        }
         
         List<String> serviceBlocks = TextUtils.findAllBlocks(content, "<service>", "</service>", true);
         List<ServiceReference> servicesList = new ArrayList<>(serviceBlocks.size());
         for (String serviceBlock : serviceBlocks) {
             String serviceType = TextUtils.findFirstBlock(serviceBlock, "<serviceType>", "</serviceType>", true);
-            String serviceId = TextUtils.findFirstBlock(serviceBlock, "<serviceId>", "</serviceId>", true);
+//            String serviceId = TextUtils.findFirstBlock(serviceBlock, "<serviceId>", "</serviceId>", true);
             String controlUrl = TextUtils.findFirstBlock(serviceBlock, "<controlURL>", "</controlURL>", true);
             //String eventSubUrl = TextUtils.findFirstBlock(serviceBlock, "<eventSubURL>", "</eventSubURL>");
             String scpdUrl = TextUtils.findFirstBlock(serviceBlock, "<SCPDURL>", "</SCPDURL>", true);
@@ -60,19 +66,17 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
             ServiceReference service;
             try {
                 service = new ServiceReference(
-                        deviceUri,
-                        StringUtils.trim(serviceType),
-                        StringUtils.trim(serviceId),
-                        StringUtils.trim(controlUrl),
-                        StringUtils.trim(scpdUrl));
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException(e);
+                        baseUrl,
+                        StringUtils.trim(StringEscapeUtils.unescapeXml(serviceType)),
+                        StringUtils.trim(StringEscapeUtils.unescapeXml(controlUrl)),
+                        StringUtils.trim(StringEscapeUtils.unescapeXml(scpdUrl)));
+                servicesList.add(service);
+            } catch (IllegalArgumentException | NullPointerException | MalformedURLException e) {
+                // unable to handle -- something was malformed or missing, so skip to next one
             }
-
-            servicesList.add(service);
         }
         
-        this.services = Collections.unmodifiableList(services);
+        this.services = Collections.unmodifiableList(servicesList);
     }
 
     /**
@@ -89,51 +93,37 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
     public final class ServiceReference {
 
         private final String serviceType;
-        private final String serviceId;
         private final URI controlUrl;
         private final URI scpdUrl;
 
         /**
          * Constructs a {@link UpnpIgdServiceReference} object.
          *
-         * @param deviceUri URL of device -- grabbed via probing
+         * @param baseUrl base URL
          * @param serviceType service type
-         * @param serviceId service ID
          * @param controlUrl control URL
          * @param scpdUrl SCPD URL
          * @throws MalformedURLException if any of the URL arguments are malformed
          * @throws NullPointerException if any argument other than {@code serviceType} and {@code serviceId} is {@code null}
          */
-        public ServiceReference(URI deviceUri, String serviceType, String serviceId, String controlUrl, String scpdUrl)
-                throws MalformedURLException {
-            Validate.notNull(deviceUri);
-//            Validate.notNull(serviceType); // don't care about this
-//            Validate.notNull(serviceId);  // don't care about this
+        public ServiceReference(URI baseUrl, String serviceType, String controlUrl, String scpdUrl) throws MalformedURLException {
+            Validate.notNull(baseUrl);
+//            Validate.notNull(serviceType);
             Validate.notNull(controlUrl); // need this for controlling
             Validate.notNull(scpdUrl); // need this to see if port mapping actions are present with service
 
             this.serviceType = serviceType;
-            this.serviceId = serviceId;
-            this.controlUrl = deviceUri.resolve(controlUrl);
-            this.scpdUrl = deviceUri.resolve(scpdUrl);
+            this.controlUrl = baseUrl.resolve(controlUrl);
+            this.scpdUrl = baseUrl.resolve(scpdUrl);
         }
 
         /**
          * Get service type.
          *
-         * @return service type
+         * @return service type ({@code null} if does not exist -- another way to identify the service type is to query the SCPD url)
          */
         public String getServiceType() {
             return serviceType;
-        }
-
-        /**
-         * Get service ID.
-         *
-         * @return service ID
-         */
-        public String getServiceId() {
-            return serviceId;
         }
 
         /**
@@ -158,7 +148,6 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
         public int hashCode() {
             int hash = 7;
             hash = 19 * hash + Objects.hashCode(this.serviceType);
-            hash = 19 * hash + Objects.hashCode(this.serviceId);
             hash = 19 * hash + Objects.hashCode(this.controlUrl);
             hash = 19 * hash + Objects.hashCode(this.scpdUrl);
             return hash;
@@ -176,9 +165,6 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
             if (!Objects.equals(this.serviceType, other.serviceType)) {
                 return false;
             }
-            if (!Objects.equals(this.serviceId, other.serviceId)) {
-                return false;
-            }
             if (!Objects.equals(this.controlUrl, other.controlUrl)) {
                 return false;
             }
@@ -190,8 +176,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
 
         @Override
         public String toString() {
-            return "ServiceReference{" + ", serviceType=" + serviceType + ", serviceId=" + serviceId + ", controlUrl="
-                    + controlUrl + ", scpdUrl=" + scpdUrl + '}';
+            return "ServiceReference{" + ", serviceType=" + serviceType + ", controlUrl=" + controlUrl + ", scpdUrl=" + scpdUrl + '}';
         }
     }
 }

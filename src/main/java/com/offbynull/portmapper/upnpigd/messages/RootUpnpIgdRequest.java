@@ -29,10 +29,11 @@ public final class RootUpnpIgdRequest extends UpnpIgdHttpRequest {
     /**
      * Constructs a {@link DeviceQueryRequest} object.
      * @param host device host
-     * @param rootLocation device's root location (found during discovery)
+     * @param location device's root location (found during probe)
+     * @throws NullPointerException if any argument is {@code null}
      */
-    public RootUpnpIgdRequest(String host, String rootLocation) {
-        super("GET", rootLocation, generateHeaders(host), null);
+    public RootUpnpIgdRequest(String host, String location) {
+        super("GET", location, generateHeaders(host), null);
     }
     
     private static Map<String, String> generateHeaders(String host) {
