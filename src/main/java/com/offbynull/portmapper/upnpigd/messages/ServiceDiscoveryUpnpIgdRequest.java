@@ -103,16 +103,16 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
         /**
          * Probe for site local IPv6 device.
          */
-        IPV6_SITE_LOCAL("[FF05::C]", 1900);
-        // We're targetting home routers -- so don't bother checking GLOBAL and ORGANIZATION-LOCAL?
-//        /**
-//         * Probe for organization local IPv6 device.
-//         */
-//        IPV6_ORGANIZATION_LOCAL("[FF08::C]", 1900),
-//        /**
-//         * Probe for global IPv6 device.
-//         */
-//        IPV6_GLOBAL("[FF0E::C]", 1900);
+        IPV6_SITE_LOCAL("[FF05::C]", 1900),
+        // We're targetting home routers -- so should we borther checking GLOBAL and ORGANIZATION-LOCAL???
+        /**
+         * Probe for organization local IPv6 device.
+         */
+        IPV6_ORGANIZATION_LOCAL("[FF08::C]", 1900),
+        /**
+         * Probe for global IPv6 device.
+         */
+        IPV6_GLOBAL("[FF0E::C]", 1900);
         
         private String multicastSocketAddressAsHeader;
         private InetSocketAddress multicastSocketAddress;
