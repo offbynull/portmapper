@@ -18,7 +18,8 @@ package com.offbynull.portmapper.upnpigd.messages;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -36,7 +37,7 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
      * @throws IllegalArgumentException if {@code buffer} was malformed
      */
     public GetExternalIpAddressUpnpIgdResponse(byte[] buffer) {
-        super("GetExternalIPAddressResponse", Collections.<String>emptySet(), buffer);
+        super("GetExternalIPAddressResponse", new HashSet<>(Arrays.asList("NewExternalIPAddress")), buffer);
     }
     
     /**
