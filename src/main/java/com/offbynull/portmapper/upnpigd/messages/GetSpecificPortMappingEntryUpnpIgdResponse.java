@@ -84,9 +84,9 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
     public boolean getEnabled() {
         String enabledStr = getArgumentIgnoreCase("NewEnabled");
         Validate.validState(enabledStr != null);
-        if (enabledStr.equalsIgnoreCase(Boolean.TRUE.toString()) || enabledStr.equalsIgnoreCase("1")) {
+        if (enabledStr.equalsIgnoreCase("1")) {
             return true;
-        } else if (enabledStr.equalsIgnoreCase(Boolean.FALSE.toString()) || enabledStr.equalsIgnoreCase("0")) {
+        } else if (enabledStr.equalsIgnoreCase("0")) {
             return false;
         } else {
             throw new IllegalArgumentException();

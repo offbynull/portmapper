@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
 import java.net.InetAddress;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
@@ -70,7 +70,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
             String description, // if null then set to empty string
             long leaseDuration) { // 0 to max 0xFFFFFFFF
         
-        Map<String, String> ret = new HashMap<>();
+        Map<String, String> ret = new LinkedHashMap<>();
         
         if (remoteHost == null) {
             ret.put("NewRemoteHost", "");
@@ -90,7 +90,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
         Validate.notNull(internalClient);
         ret.put("NewInternalClient", internalClient.getHostAddress());
         
-        ret.put("NewEnabled", "" + enabled);
+        ret.put("NewEnabled", enabled ? "1" : "0");
         
         Validate.notNull(description);
         ret.put("NewPortMappingDescription", description);

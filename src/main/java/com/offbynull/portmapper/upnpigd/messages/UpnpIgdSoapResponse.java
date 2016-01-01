@@ -98,7 +98,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
     final String getArgumentIgnoreCase(String key) {
         for (Map.Entry<String, String> header : arguments.entrySet()) {
             if (header.getKey().equalsIgnoreCase(key)) {
-                return header.getValue();
+                return header.getValue().trim();
             }
         }
         return null;
