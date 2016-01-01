@@ -4,7 +4,6 @@ import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceRefe
 import java.net.URI;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 public class RootUpnpIgdResponseTest {

@@ -17,7 +17,6 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
 import com.offbynull.portmapper.common.TextUtils;
-import com.offbynull.portmapper.upnpigd.UpnpIgdServiceReference;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;

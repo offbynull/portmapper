@@ -134,6 +134,10 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
             return multicastSocketAddressAsHeader;
         }
 
+        /**
+         * Get multicast socket address to probe for UPnP-IGD devices.
+         * @return multicast socket address
+         */
         public InetSocketAddress getMulticastSocketAddress() {
             return multicastSocketAddress;
         }
