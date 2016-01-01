@@ -39,10 +39,9 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @param internalClient internal address -- <b>should</b> be IPv4
      * @param internalPort internal port ({@code 0} means wildcard)
      * @param protocol protocol to target for port mapping (TCP/UDP) -- ({@code null} means wildcard) 
-     * @param enabled port mapping enabled
      * @param leaseDuration lease duration
      * @throws NullPointerException if any argument other than {@code remoteHost} is {@code null}
-     * @throws IllegalArgumentException if {@code 0 > externalPort > 65535 || 1 > internalPort > 65535 || 0L > leaseDuration > 0xFFFFFFFFL}
+     * @throws IllegalArgumentException if {@code 0 > externalPort > 65535 || 0 > internalPort > 65535 || 1L > leaseDuration > 0xFFFFFFFFL}
      */
     public AddPinholeUpnpIgdRequest(String host, String controlLocation, String serviceType,
             InetAddress remoteHost,
@@ -50,10 +49,9 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
             InetAddress internalClient,
             int internalPort,
             Protocol protocol,
-            boolean enabled,
             long leaseDuration) {
         super(host, controlLocation, serviceType, "AddPinhole",
-                generateArguments(remoteHost, remotePort, protocol, internalPort, internalClient, enabled, leaseDuration));
+                generateArguments(remoteHost, remotePort, protocol, internalPort, internalClient, leaseDuration));
     }
     
     private static Map<String, String> generateArguments(
@@ -62,32 +60,32 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
             Protocol protocol, // must be either "TCP" or "UDP" -- null means wildcard
             int internalPort, //  0 to 65535 -- 0 means wildcard
             InetAddress internalClient, // must be IPv6 address of interface accessing server (don't bother checking)
-            boolean enabled,
-            long leaseDuration) { // 0 to max 0xFFFFFFFF
+            long leaseDuration) { // 1 to max 0xFFFFFFFF
         
         Map<String, String> ret = new LinkedHashMap<>();
         
         if (remoteHost == null) {
-            ret.put("NewRemoteHost", "");
+            ret.put("RemoteHost", "");
         } else {
-            ret.put("NewRemoteHost", remoteHost.getHostAddress());
+            ret.put("RemoteHost", remoteHost.getHostAddress());
         }
         
         Validate.inclusiveBetween(0, 65535, externalPort);
-        ret.put("NewExternalPort", "" + externalPort);
+        ret.put("RemotePort", "" + externalPort);
         
-        ret.put("NewProtocol", (protocol == null ? "65535" : "" + protocol.getIana())); // 65535 is wildcard
-        
+        if (internalClient == null) {
+            ret.put("InternalClient", "");
+        } else {
+            ret.put("InternalClient", internalClient.getHostAddress());
+        }
+
         Validate.inclusiveBetween(0, 65535, internalPort);
-        ret.put("NewInternalPort", "" + internalPort);
+        ret.put("InternalPort", "" + internalPort);
         
-        Validate.notNull(internalClient);
-        ret.put("NewInternalClient", internalClient.getHostAddress());
+        ret.put("Protocol", (protocol == null ? "65535" : "" + protocol.getIana())); // 65535 is wildcard
         
-        ret.put("NewEnabled", enabled ? "1" : "0");
-        
-        Validate.inclusiveBetween(0L, 0xFFFFFFFFL, leaseDuration);
-        ret.put("NewLeaseDuration", "" + leaseDuration);
+        Validate.inclusiveBetween(1L, 0xFFFFFFFFL, leaseDuration);
+        ret.put("LeaseDuration", "" + leaseDuration);
         
         return ret;
     }
