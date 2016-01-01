@@ -767,10 +767,6 @@ public class RootUpnpIgdResponseTest {
         RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
-        assertEquals(1, services.size());
-        
-        assertNull(services.get(0).getServiceType());
-        assertEquals(URI.create("http://fake:80/IGD-WANCommonInterfaceConfig.xml"), services.get(0).getScpdUrl());
-        assertEquals(URI.create("http://fake:80/"), services.get(0).getControlUrl());
+        assertEquals(0, services.size());
     }
 }

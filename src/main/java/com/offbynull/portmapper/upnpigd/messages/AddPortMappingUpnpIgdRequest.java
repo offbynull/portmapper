@@ -34,11 +34,11 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @param host device host
      * @param controlLocation control location
      * @param serviceType service type
-     * @param remoteHost remote address ({@code null} means wildcard)
+     * @param remoteHost remote address ({@code null} means wildcard) -- <b>should</b> be IPv4
      * @param externalPort external port ({@code 0} means wildcard)
      * @param protocol protocol to target for port mapping (TCP/UDP)
      * @param internalPort internal port
-     * @param internalClient internal address
+     * @param internalClient internal address -- <b>should</b> be IPv4
      * @param enabled port mapping enabled
      * @param description port mapping description
      * @param leaseDuration lease duration

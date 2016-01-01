@@ -88,7 +88,7 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         for (Entry<String, String> argument : arguments.entrySet()) {
             String key = StringEscapeUtils.escapeXml10(argument.getKey());
             String val = StringEscapeUtils.escapeXml10(argument.getValue());
-            sb.append("<").append(key).append("/>").append(val).append("<").append(key).append("/>\r\n");
+            sb.append("<").append(key).append(">").append(val).append("<").append(key).append("/>\r\n");
         }
 
         sb.append("</u:").append(actionName).append(">\r\n");

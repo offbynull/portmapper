@@ -18,7 +18,8 @@ package com.offbynull.portmapper.upnpigd.messages;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -36,7 +37,14 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
      * @throws IllegalArgumentException if {@code buffer} was malformed
      */
     public GetSpecificPortMappingEntryUpnpIgdResponse(byte[] buffer) {
-        super("GetSpecificPortMappingEntryResponse", Collections.<String>emptySet(), buffer);
+        super("GetSpecificPortMappingEntryResponse",
+                new HashSet<>(Arrays.asList(
+                        "NewInternalPort",
+                        "NewInternalClient",
+                        "NewEnabled",
+                        "NewPortMappingDescription",
+                        "NewLeaseDuration")),
+                buffer);
     }
 
     /**
@@ -59,7 +67,7 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
      * @throws IllegalStateException if was not found or could not be interpreted
      */
     public InetAddress getInternalClient() {
-        String internalClientStr = getArgumentIgnoreCase("NewInternalPort");
+        String internalClientStr = getArgumentIgnoreCase("NewInternalClient");
         Validate.validState(internalClientStr != null);
         try {
             return InetAddress.getByName(internalClientStr);
@@ -75,9 +83,10 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
      */
     public boolean getEnabled() {
         String enabledStr = getArgumentIgnoreCase("NewEnabled");
-        if (enabledStr.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        Validate.validState(enabledStr != null);
+        if (enabledStr.equalsIgnoreCase(Boolean.TRUE.toString()) || enabledStr.equalsIgnoreCase("1")) {
             return true;
-        } else if (enabledStr.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        } else if (enabledStr.equalsIgnoreCase(Boolean.FALSE.toString()) || enabledStr.equalsIgnoreCase("0")) {
             return false;
         } else {
             throw new IllegalArgumentException();

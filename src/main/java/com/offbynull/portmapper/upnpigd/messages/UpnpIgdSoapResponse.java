@@ -42,24 +42,18 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
 //        validateResponseCode();
 
         String content = getContent();
-        
-        // A really hacky way of finding the body block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
-        // consistent... we'd have to do more hacky parsing to figure out what it is
-        String bodyBlock = TextUtils.findFirstBlock(content, /*<soapprefix*/":Body>", /*</soapprefix:*/":Body>", true);
-        bodyBlock = StringUtils.substringBeforeLast(bodyBlock, "<"); // null input should be fine
-        Validate.isTrue(bodyBlock != null);
 
-        // A really hacky way of finding the fault block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
-        // consistent... we'd have to do more hacky parsing to figure out what it is
-        String faultBlock = TextUtils.findFirstBlock(bodyBlock, /*<soapprefix*/":Fault>", /*</soapprefix:*/":Fault>", true);
-        faultBlock = StringUtils.substringBeforeLast(faultBlock, "<"); // null input shoudl be fine
-        Validate.isTrue(faultBlock == null, "Response contains fault: %s", faultBlock);
+        if (!isResponseSuccessful()) {
+            // A really hacky way of finding the fault block -- reason why the whole tag isn't used is because the soap prefix in the tag isn't
+            // consistent... we'd have to do more hacky parsing to figure out what it is
+            String faultBlock = TextUtils.findFirstBlock(content, /*<soapprefix*/":Fault", /*</soapprefix:*/":Fault", true);
+            throw new IllegalArgumentException("Response contains fault: " + faultBlock);
+        }
         
         
-        String responseBlock = TextUtils.findFirstBlock(bodyBlock,
-                /*<soapprefix*/":" + expectedResponseAction + ">",
-                /*</soapprefix:*/":" + expectedResponseAction + ">", true);
-        responseBlock = StringUtils.substringBeforeLast(responseBlock, "<"); // null input shoudl be fine
+        String responseBlock = TextUtils.findFirstBlock(content,
+                /*<soapprefix*/":" + expectedResponseAction,
+                /*</soapprefix:*/":" + expectedResponseAction, true);
         Validate.isTrue(responseBlock != null);
         
         Map<String, String> args = new HashMap<>();

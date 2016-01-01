@@ -97,7 +97,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
         private final URI scpdUrl;
 
         /**
-         * Constructs a {@link UpnpIgdServiceReference} object.
+         * Constructs a {@link ServiceReference} object.
          *
          * @param baseUrl base URL
          * @param serviceType service type
@@ -108,7 +108,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
          */
         public ServiceReference(URI baseUrl, String serviceType, String controlUrl, String scpdUrl) throws MalformedURLException {
             Validate.notNull(baseUrl);
-//            Validate.notNull(serviceType);
+            Validate.notNull(serviceType);
             Validate.notNull(controlUrl); // need this for controlling
             Validate.notNull(scpdUrl); // need this to see if port mapping actions are present with service
 
@@ -120,7 +120,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
         /**
          * Get service type.
          *
-         * @return service type ({@code null} if does not exist -- another way to identify the service type is to query the SCPD url)
+         * @return service type
          */
         public String getServiceType() {
             return serviceType;

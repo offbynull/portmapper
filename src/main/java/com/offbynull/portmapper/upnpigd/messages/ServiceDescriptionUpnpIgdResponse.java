@@ -45,8 +45,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
      * Constructs a {@link ServiceDescriptionResponse} object by parsing a buffer.
      * @param buffer buffer containing response data
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if {@code buffer} was malformed (neither an IPv4 port mapping service was identified nor was an
-     * IPv6 firewall service identified)
+     * @throws IllegalArgumentException if {@code buffer} was malformed
      */
     public ServiceDescriptionUpnpIgdResponse(byte[] buffer) {
         super(buffer);
@@ -68,8 +67,6 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
             descs.put(ServiceType.FIREWALL, firewallDescription);
         }
         
-        Validate.isTrue(!descs.isEmpty());
-        
         identifiedServices = Collections.unmodifiableMap(descs);
     }
 
@@ -81,7 +78,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
      * if the service being accessed wasn't implemented properly (or possibly a newer standard that wasn't around when this library was
      * written). Either way, the service may still be usable, but it's up to the user to decide which actions to use (IPv4 portmapping
      * actions or IPv6 firewall actions).
-     * @return service descriptions (will never be empty / almost always have only 1 key in it / will never have more than 2 keys)
+     * @return service descriptions (almost always have only 1 key in it / will never have more than 2 keys)
      */
     public Map<ServiceType, IdentifiedService> getIdentifiedServices() {
         return identifiedServices;

@@ -34,7 +34,7 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
      * @param host device host
      * @param controlLocation control location
      * @param serviceType service type
-     * @param remoteHost remote address ({@code null} means wildcard)
+     * @param remoteHost remote address ({@code null} means wildcard) -- <b>should</b> be IPv4
      * @param externalPort external port ({@code 0} means wildcard)
      * @param protocol protocol to target for port mapping (TCP/UDP)
      * @throws NullPointerException if any argument other than {@code remoteHost} is {@code null}

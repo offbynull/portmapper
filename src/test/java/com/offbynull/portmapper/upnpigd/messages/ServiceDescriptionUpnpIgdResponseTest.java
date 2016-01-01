@@ -2132,12 +2132,12 @@ public class ServiceDescriptionUpnpIgdResponseTest {
         assertEquals(Range.between(1L, 11111L), service.getLeaseDurationRange());
     }
 
-    @Test(expected = IllegalArgumentException.class)
     public void mustFailWhenNoServicesIdentified() throws Exception {
         byte[] buffer = EMPTY_CONTENT.getBytes("US-ASCII");
         ServiceDescriptionUpnpIgdResponse resp = new ServiceDescriptionUpnpIgdResponse(buffer);
 
         Map<ServiceType, IdentifiedService> services = resp.getIdentifiedServices();
+        assertEquals(0, services.size());
     }
 
 }

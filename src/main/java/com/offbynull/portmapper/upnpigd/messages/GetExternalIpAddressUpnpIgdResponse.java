@@ -41,7 +41,7 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
     
     /**
      * Get external IP address.
-     * @return external IP address
+     * @return external IP address -- <b>should</b> be IPv4
      * @throws IllegalStateException if was not found or could not be interpreted
      */
     public InetAddress getIpAddress() {
