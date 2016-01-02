@@ -16,7 +16,8 @@
  */
 package com.offbynull.portmapper.io;
 
-import com.offbynull.portmapper.common.*;
+import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.io.UdpNetworkEntry.AddressedByteBuffer;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkResponse;
@@ -31,6 +32,7 @@ import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -74,6 +76,10 @@ public final class NetworkGateway {
     
     public Bus getBus() {
         return runnable.bus;
+    }
+    
+    public void join() throws InterruptedException {
+        thread.join();
     }
     
     private static final class NetworkRunnable implements Runnable {
@@ -122,6 +128,8 @@ public final class NetworkGateway {
                         } else {
                             throw new IllegalStateException(); // should never happen
                         }
+
+                        updateReadWriteSelectionKey(entry, (AbstractSelectableChannel) channel);
                     }
 
                     LinkedList<Object> msgs = new LinkedList<>();
@@ -144,15 +152,22 @@ public final class NetworkGateway {
             if (selectionKey.isConnectable()) {
                 int id = entry.getId();
 
-                if (!channel.finishConnect()) {
-                    // socket disconnected
+                try {
+                    // This block is sometimes called more than once for each connection -- we still call finishConnect but we also check to
+                    // see if we're already connected before sending the CreateTcpSocketNetworkResponse msg
+                    boolean alreadyConnected = channel.isConnected();
+                    boolean connected = channel.finishConnect();
+                    if (!alreadyConnected && connected) {
+                        responseBus.send(new CreateTcpSocketNetworkResponse(id));
+                    }
+                } catch (IOException ioe) {
+                    // socket failed to connect
                     Object errorResp = new ErrorNetworkResponse();
                     responseBus.send(errorResp);
-                    return;
                 }
-
-                responseBus.send(new CreateTcpSocketNetworkResponse(id));
-            } else if (selectionKey.isReadable()) {
+            }
+            
+            if (selectionKey.isReadable()) {
                 buffer.clear();
 
                 int readCount = channel.read(buffer);
@@ -160,29 +175,36 @@ public final class NetworkGateway {
                     // socket disconnected
                     Object errorResp = new ErrorNetworkResponse();
                     responseBus.send(errorResp);
-                    return;
+                } else {
+                    buffer.flip();
+
+                    if (buffer.remaining() > 0) {
+                        byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
+                        Object readResp = new ReadTcpBlockNetworkResponse(bufferAsArray);
+                        responseBus.send(readResp);
+                    }
                 }
-
-                buffer.flip();
-
-                byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                Object readResp = new ReadTcpBlockNetworkResponse(bufferAsArray);
-                responseBus.send(readResp);
-            } else if (selectionKey.isWritable()) {
-                LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
-                ByteBuffer outBuffer = outBuffers.getFirst(); // if OP_WRITE was set, we should have at least 1 outgoing buffer
-
-                int writeCount = channel.write(outBuffer);
-                if (outBuffer.position() == outBuffer.limit()) {
-                    outBuffers.removeFirst();
-                }
-
-                Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
-                responseBus.send(writeResp);
             }
+            
+            if (selectionKey.isWritable()) {
+                LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
 
-
-            updateSelectionKey(entry, channel);
+                // if OP_WRITE was set, WriteTcpBlockNetworkRequest is pending (we should have at least 1 outgoing buffer)
+                int writeCount = 0;
+                while (!outBuffers.isEmpty()) {
+                    ByteBuffer outBuffer = outBuffers.getFirst();
+                    
+                    writeCount += channel.write(outBuffer);
+                    if (outBuffer.remaining() > 0) {
+                        break; // not everything was written, which means we can't send anymore data until we get another OP_WRITE, so leave
+                    }
+                    
+                    outBuffers.removeFirst();
+                    
+                    Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
+                    responseBus.send(writeResp);
+                }
+            }
         }
 
         private void handleSelectForUdpChannel(SelectionKey selectionKey, UdpNetworkEntry entry) throws IOException {
@@ -196,32 +218,41 @@ public final class NetworkGateway {
 
                 buffer.flip();
 
-                byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                Object readResp = new ReadUdpBlockNetworkResponse(incomingSocketAddress, bufferAsArray);
-                responseBus.send(readResp);
-            } else if (selectionKey.isWritable()) {
+                if (buffer.remaining() > 0) {
+                    byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
+                    Object readResp = new ReadUdpBlockNetworkResponse(incomingSocketAddress, bufferAsArray);
+                    responseBus.send(readResp);
+                }
+            }
+            
+            if (selectionKey.isWritable()) {
                 LinkedList<AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
                 AddressedByteBuffer outBuffer = outBuffers.removeFirst(); // if OP_WRITE was set, we should have at least 1 outgoing buffer
 
                 int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddres());
 
-                Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
+                Object writeResp = new WriteUdpBlockNetworkResponse(writeCount);
                 responseBus.send(writeResp);
             }
-
-
-            updateSelectionKey(entry, channel);
         }
 
-        private void updateSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
+        private void updateReadWriteSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
             int newKey = SelectionKey.OP_READ;
-            if (entry.getOutgoingBuffers().isEmpty()) {
+            if (!entry.getOutgoingBuffers().isEmpty()) {
                 newKey |= SelectionKey.OP_WRITE;
             }
 
             if (newKey != entry.getSelectionKey()) {
                 entry.setSelectionKey(newKey);
-                channel.register(selector, newKey); // only register new key if different -- calling register may have performance problems?
+                channel.register(selector, newKey); // register new key if different -- calling register may have performance issues?
+            }
+        }
+
+        private void setSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel, int selectionKey)
+                throws ClosedChannelException {
+            if (selectionKey != entry.getSelectionKey()) {
+                entry.setSelectionKey(selectionKey);
+                channel.register(selector, selectionKey); // register new key if different -- calling register may have performance issues?
             }
         }
 
@@ -235,12 +266,13 @@ public final class NetworkGateway {
                     DatagramChannel channel = DatagramChannel.open();
                     channel.configureBlocking(false);
                     channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
-                    channel.register(selector, SelectionKey.OP_READ);
 
                     int id = nextId++;
                     TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
                     idMap.put(id, entry);
                     channelMap.put(channel, entry);
+                    
+                    updateReadWriteSelectionKey(entry, channel);
 
                     responseBus.send(new CreateUdpSocketNetworkResponse(id));
                 } catch (RuntimeException re) {
@@ -255,12 +287,16 @@ public final class NetworkGateway {
                     SocketChannel channel = SocketChannel.open();
                     channel.configureBlocking(false);
                     channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
-                    channel.register(selector, SelectionKey.OP_CONNECT);
+                    
+                    InetSocketAddress dst = new InetSocketAddress(req.getDestinationAddress(), req.getDestinationPort());
+                    channel.connect(dst);
 
                     int id = nextId++;
                     TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
                     idMap.put(id, entry);
                     channelMap.put(channel, entry);
+                    
+                    setSelectionKey(entry, channel, SelectionKey.OP_CONNECT);
 
                     // no response -- we'll respond when connection succeeds
                 } catch (RuntimeException re) {
@@ -298,12 +334,12 @@ public final class NetworkGateway {
 
                     responseBus = entry.getResponseBus();
 
-                    AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
-                    channel.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
-
                     LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
                     ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
                     outBuffers.add(writeBuffer);
+                    
+                    AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
+                    updateReadWriteSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new ErrorNetworkResponse());
@@ -319,13 +355,13 @@ public final class NetworkGateway {
 
                     responseBus = entry.getResponseBus();
 
-                    AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
-                    channel.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
-
                     LinkedList<AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
                     ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
                     InetSocketAddress writeAddress = req.getOutgoingSocketAddress();
                     outBuffers.add(new AddressedByteBuffer(writeBuffer, writeAddress));
+                    
+                    AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
+                    updateReadWriteSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new ErrorNetworkResponse());
