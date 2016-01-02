@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@ import com.offbynull.portmapper.common.TextUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -100,4 +101,33 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         }
         return null;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 19 * hash + Objects.hashCode(this.arguments);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UpnpIgdSoapResponse other = (UpnpIgdSoapResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Objects.equals(this.arguments, other.arguments)) {
+            return false;
+        }
+        return true;
+    }
+    
 }

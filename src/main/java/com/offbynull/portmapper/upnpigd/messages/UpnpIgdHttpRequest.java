@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -88,4 +89,42 @@ public abstract class UpnpIgdHttpRequest {
             return sb.toString().getBytes(Charset.forName("US-ASCII"));
         }
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 29 * hash + Objects.hashCode(this.method);
+        hash = 29 * hash + Objects.hashCode(this.location);
+        hash = 29 * hash + Objects.hashCode(this.headers);
+        hash = 29 * hash + Objects.hashCode(this.content);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UpnpIgdHttpRequest other = (UpnpIgdHttpRequest) obj;
+        if (!Objects.equals(this.method, other.method)) {
+            return false;
+        }
+        if (!Objects.equals(this.location, other.location)) {
+            return false;
+        }
+        if (!Objects.equals(this.content, other.content)) {
+            return false;
+        }
+        if (!Objects.equals(this.headers, other.headers)) {
+            return false;
+        }
+        return true;
+    }
+    
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -229,6 +229,34 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         }
         
         return null;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 97 * hash + Objects.hashCode(this.identifiedServices);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ServiceDescriptionUpnpIgdResponse other = (ServiceDescriptionUpnpIgdResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Objects.equals(this.identifiedServices, other.identifiedServices)) {
+            return false;
+        }
+        return true;
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -116,5 +116,27 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
         Validate.inclusiveBetween(0L, 0xFFFFFFFFL, leaseDuration);
         return leaseDuration;
     }
-
+    
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final GetSpecificPortMappingEntryUpnpIgdResponse other = (GetSpecificPortMappingEntryUpnpIgdResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
+    }
 }

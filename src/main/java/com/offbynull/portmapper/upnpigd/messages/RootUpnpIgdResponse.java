@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -84,6 +84,34 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
      */
     public List<ServiceReference> getServices() {
         return services;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 41 * hash + Objects.hashCode(this.services);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final RootUpnpIgdResponse other = (RootUpnpIgdResponse) obj;
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!Objects.equals(this.services, other.services)) {
+            return false;
+        }
+        return true;
     }
 
     /**
