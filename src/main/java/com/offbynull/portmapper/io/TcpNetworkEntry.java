@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.util.LinkedList;
 
-final class TcpNetworkEntry extends NetworkEntry {
+final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
     private LinkedList<ByteBuffer> outgoingBuffers;
 
     public TcpNetworkEntry(int id, Channel channel, Bus responseBus) {
@@ -29,6 +29,7 @@ final class TcpNetworkEntry extends NetworkEntry {
         outgoingBuffers = new LinkedList<>();
     }
 
+    @Override
     public LinkedList<ByteBuffer> getOutgoingBuffers() {
         return outgoingBuffers;
     }

@@ -18,12 +18,14 @@ package com.offbynull.portmapper.io;
 
 import com.offbynull.portmapper.common.Bus;
 import java.nio.channels.Channel;
+import java.util.LinkedList;
 import org.apache.commons.lang3.Validate;
 
-abstract class NetworkEntry {
+abstract class NetworkEntry<B> {
     private int id;
     private Channel channel;
     private Bus responseBus;
+    private int selectionKey;
 
     public NetworkEntry(int id, Channel channel, Bus responseBus) {
         Validate.notNull(channel);
@@ -32,6 +34,7 @@ abstract class NetworkEntry {
         this.id = id;
         this.channel = channel;
         this.responseBus = responseBus;
+        this.selectionKey = 0;
     }
 
     public int getId() {
@@ -45,4 +48,14 @@ abstract class NetworkEntry {
     public Bus getResponseBus() {
         return responseBus;
     }
+
+    public int getSelectionKey() {
+        return selectionKey;
+    }
+
+    public void setSelectionKey(int selectionKey) {
+        this.selectionKey = selectionKey;
+    }
+    
+    public abstract LinkedList<B> getOutgoingBuffers();
 }

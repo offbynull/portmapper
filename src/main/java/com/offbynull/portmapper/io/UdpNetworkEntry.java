@@ -17,12 +17,13 @@
 package com.offbynull.portmapper.io;
 
 import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.io.UdpNetworkEntry.AddressedByteBuffer;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.util.LinkedList;
 
-final class UdpNetworkEntry extends NetworkEntry {
+final class UdpNetworkEntry extends NetworkEntry<AddressedByteBuffer> {
     private LinkedList<AddressedByteBuffer> outgoingBuffers;
 
     public UdpNetworkEntry(int id, Channel channel, Bus responseBus) {
@@ -30,6 +31,7 @@ final class UdpNetworkEntry extends NetworkEntry {
         outgoingBuffers = new LinkedList<>();
     }
 
+    @Override
     public LinkedList<AddressedByteBuffer> getOutgoingBuffers() {
         return outgoingBuffers;
     }

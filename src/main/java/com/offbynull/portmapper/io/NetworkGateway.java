@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -77,8 +78,8 @@ public final class NetworkGateway implements Runnable {
         return bus;
     }
 
-    private Map<Integer, NetworkEntry> idMap = new HashMap<>();
-    private Map<Channel, NetworkEntry> channelMap = new HashMap<>();
+    private Map<Integer, NetworkEntry<?>> idMap = new HashMap<>();
+    private Map<Channel, NetworkEntry<?>> channelMap = new HashMap<>();
     private ByteBuffer buffer = ByteBuffer.allocate(65535);
 
     @Override
@@ -94,7 +95,7 @@ public final class NetworkGateway implements Runnable {
 
                     Channel channel = (Channel) key.channel();
 
-                    NetworkEntry entry = channelMap.get(channel);
+                    NetworkEntry<?> entry = channelMap.get(channel);
                     if (entry == null) {
                         channel.close();
                         continue;
@@ -129,6 +130,13 @@ public final class NetworkGateway implements Runnable {
         if (selectionKey.isConnectable()) {
             int id = entry.getId();
 
+            if (!channel.finishConnect()) {
+                // socket disconnected
+                Object errorResp = new ErrorNetworkResponse();
+                responseBus.send(errorResp);
+                return;
+            }
+            
             responseBus.send(new CreateTcpSocketNetworkResponse(id));
         } else if (selectionKey.isReadable()) {
             buffer.clear();
@@ -158,6 +166,9 @@ public final class NetworkGateway implements Runnable {
             Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
             responseBus.send(writeResp);
         }
+        
+        
+        updateSelectionKey(entry, channel);
     }
 
     private void handleSelectForUdpChannel(SelectionKey selectionKey, UdpNetworkEntry entry) throws IOException {
@@ -182,6 +193,21 @@ public final class NetworkGateway implements Runnable {
 
             Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
             responseBus.send(writeResp);
+        }
+        
+        
+        updateSelectionKey(entry, channel);
+    }
+
+    private void updateSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
+        int newKey = SelectionKey.OP_READ;
+        if (entry.getOutgoingBuffers().isEmpty()) {
+            newKey |= SelectionKey.OP_WRITE;
+        }
+        
+        if (newKey != entry.getSelectionKey()) {
+            entry.setSelectionKey(newKey);
+            channel.register(selector, newKey); // only register new key if different -- calling register may have performance problems?
         }
     }
 
@@ -232,7 +258,7 @@ public final class NetworkGateway implements Runnable {
             Bus responseBus = null;
             try {
                 int id = req.getId();
-                NetworkEntry entry = idMap.get(id);
+                NetworkEntry<?> entry = idMap.get(id);
 
                 responseBus = entry.getResponseBus();
                 Channel channel = entry.getChannel();
@@ -297,7 +323,7 @@ public final class NetworkGateway implements Runnable {
     }
 
     private void releaseResources() {
-        for (Entry<Channel, NetworkEntry> entry : channelMap.entrySet()) {
+        for (Entry<Channel, NetworkEntry<?>> entry : channelMap.entrySet()) {
             try {
                 entry.getValue().getResponseBus().send(new ErrorNetworkResponse());
                 entry.getKey().close();
