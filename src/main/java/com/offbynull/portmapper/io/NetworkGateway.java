@@ -30,6 +30,7 @@ import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -55,6 +56,7 @@ public final class NetworkGateway implements Runnable {
     private final Bus bus;
     private final LinkedBlockingQueue<Object> queue;
     private final Selector selector;
+    private int nextId = 0;
 
     /**
      * Constructs a {@link NetworkGateway} object.
@@ -81,8 +83,6 @@ public final class NetworkGateway implements Runnable {
 
     @Override
     public void run() {
-        int nextId = 0;
-
         try {
             while (true) {
                 selector.select();
@@ -113,106 +113,7 @@ public final class NetworkGateway implements Runnable {
                 queue.drainTo(msgs);
 
                 for (Object msg : msgs) {
-                    if (msg instanceof CreateUdpSocketNetworkRequest) {
-                        CreateUdpSocketNetworkRequest req = (CreateUdpSocketNetworkRequest) msg;
-
-                        Bus responseBus = req.getResponseBus();
-
-                        try {
-                            DatagramChannel channel = DatagramChannel.open();
-                            channel.configureBlocking(false);
-                            channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
-                            channel.register(selector, SelectionKey.OP_READ);
-
-                            int id = nextId++;
-                            TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
-                            idMap.put(id, entry);
-                            channelMap.put(channel, entry);
-
-                            responseBus.send(new CreateUdpSocketNetworkResponse(id));
-                        } catch (RuntimeException re) {
-                            responseBus.send(new ErrorNetworkResponse());
-                        }
-                    } else if (msg instanceof CreateTcpSocketNetworkRequest) {
-                        CreateTcpSocketNetworkRequest req = (CreateTcpSocketNetworkRequest) msg;
-
-                        Bus responseBus = req.getResponseBus();
-
-                        try {
-                            SocketChannel channel = SocketChannel.open();
-                            channel.configureBlocking(false);
-                            channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
-                            channel.register(selector, SelectionKey.OP_CONNECT);
-
-                            int id = nextId++;
-                            TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
-                            idMap.put(id, entry);
-                            channelMap.put(channel, entry);
-
-                            // no response -- we'll respond when connection succeeds
-                        } catch (RuntimeException re) {
-                            responseBus.send(new ErrorNetworkResponse());
-                        }
-                    } else if (msg instanceof DestroySocketNetworkRequest) {
-                        DestroySocketNetworkRequest req = (DestroySocketNetworkRequest) msg;
-
-                        Bus responseBus = null;
-                        try {
-                            int id = req.getId();
-                            TcpNetworkEntry entry = idMap.get(id);
-
-                            responseBus = entry.getResponseBus();
-                            Channel channel = entry.getChannel();
-
-                            idMap.remove(id);
-                            channelMap.remove(channel);
-
-                            channel.close();
-
-                            responseBus.send(new DestroySocketNetworkResponse());
-                        } catch (RuntimeException re) {
-                            if (responseBus != null) {
-                                responseBus.send(new ErrorNetworkResponse());
-                            }
-                        }
-                    } else if (msg instanceof WriteTcpBlockNetworkRequest) {
-                        WriteTcpBlockNetworkRequest req = (WriteTcpBlockNetworkRequest) msg;
-
-                        Bus responseBus = null;
-                        try {
-                            int id = req.getId();
-                            TcpNetworkEntry entry = idMap.get(id);
-
-                            responseBus = entry.getResponseBus();
-
-                            AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
-                            channel.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
-
-                            LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
-                            ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
-                            outBuffers.add(writeBuffer);
-                        } catch (RuntimeException re) {
-                            if (responseBus != null) {
-                                responseBus.send(new ErrorNetworkResponse());
-                            }
-                        }
-                    } else if (msg instanceof KillNetworkRequest) {
-                        for (Entry<Channel, TcpNetworkEntry> entry : channelMap.entrySet()) {
-                            try {
-                                entry.getValue().getResponseBus().send(new ErrorNetworkResponse());
-                                entry.getKey().close();
-                            } catch (Exception e) {
-                                // do nothing
-                            }
-                        }
-                        try {
-                            selector.close();
-                        } catch (Exception e) {
-                            // do nothing
-                        }
-
-                        return;
-                    }
+                    processMessage(msg);
                 }
             }
         } catch (Exception e) {
@@ -265,9 +166,9 @@ public final class NetworkGateway implements Runnable {
 
         if (selectionKey.isReadable()) {
             buffer.clear();
-            
+
             InetSocketAddress incomingSocketAddress = (InetSocketAddress) channel.receive(buffer);
-            
+
             buffer.flip();
 
             byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
@@ -276,11 +177,122 @@ public final class NetworkGateway implements Runnable {
         } else if (selectionKey.isWritable()) {
             LinkedList<AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
             AddressedByteBuffer outBuffer = outBuffers.removeFirst(); // if OP_WRITE was set, we should have at least 1 outgoing buffer
-            
+
             int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddres());
-            
+
             Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
             responseBus.send(writeResp);
+        }
+    }
+
+    private void processMessage(Object msg) throws IOException {
+        if (msg instanceof CreateUdpSocketNetworkRequest) {
+            CreateUdpSocketNetworkRequest req = (CreateUdpSocketNetworkRequest) msg;
+
+            Bus responseBus = req.getResponseBus();
+
+            try {
+                DatagramChannel channel = DatagramChannel.open();
+                channel.configureBlocking(false);
+                channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
+                channel.register(selector, SelectionKey.OP_READ);
+
+                int id = nextId++;
+                TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
+                idMap.put(id, entry);
+                channelMap.put(channel, entry);
+
+                responseBus.send(new CreateUdpSocketNetworkResponse(id));
+            } catch (RuntimeException re) {
+                responseBus.send(new ErrorNetworkResponse());
+            }
+        } else if (msg instanceof CreateTcpSocketNetworkRequest) {
+            CreateTcpSocketNetworkRequest req = (CreateTcpSocketNetworkRequest) msg;
+
+            Bus responseBus = req.getResponseBus();
+
+            try {
+                SocketChannel channel = SocketChannel.open();
+                channel.configureBlocking(false);
+                channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
+                channel.register(selector, SelectionKey.OP_CONNECT);
+
+                int id = nextId++;
+                TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
+                idMap.put(id, entry);
+                channelMap.put(channel, entry);
+
+                // no response -- we'll respond when connection succeeds
+            } catch (RuntimeException re) {
+                responseBus.send(new ErrorNetworkResponse());
+            }
+        } else if (msg instanceof DestroySocketNetworkRequest) {
+            DestroySocketNetworkRequest req = (DestroySocketNetworkRequest) msg;
+
+            Bus responseBus = null;
+            try {
+                int id = req.getId();
+                NetworkEntry entry = idMap.get(id);
+
+                responseBus = entry.getResponseBus();
+                Channel channel = entry.getChannel();
+
+                idMap.remove(id);
+                channelMap.remove(channel);
+
+                channel.close();
+
+                responseBus.send(new DestroySocketNetworkResponse());
+            } catch (RuntimeException re) {
+                if (responseBus != null) {
+                    responseBus.send(new ErrorNetworkResponse());
+                }
+            }
+        } else if (msg instanceof WriteTcpBlockNetworkRequest) {
+            WriteTcpBlockNetworkRequest req = (WriteTcpBlockNetworkRequest) msg;
+
+            Bus responseBus = null;
+            try {
+                int id = req.getId();
+                TcpNetworkEntry entry = (TcpNetworkEntry) idMap.get(id);
+
+                responseBus = entry.getResponseBus();
+
+                AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
+                channel.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
+
+                LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
+                ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
+                outBuffers.add(writeBuffer);
+            } catch (RuntimeException re) {
+                if (responseBus != null) {
+                    responseBus.send(new ErrorNetworkResponse());
+                }
+            }
+        } else if (msg instanceof WriteUdpBlockNetworkRequest) {
+            WriteUdpBlockNetworkRequest req = (WriteUdpBlockNetworkRequest) msg;
+
+            Bus responseBus = null;
+            try {
+                int id = req.getId();
+                UdpNetworkEntry entry = (UdpNetworkEntry) idMap.get(id);
+
+                responseBus = entry.getResponseBus();
+
+                AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
+                channel.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
+
+                LinkedList<AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
+                ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
+                InetSocketAddress writeAddress = req.getOutgoingSocketAddress();
+                outBuffers.add(new AddressedByteBuffer(writeBuffer, writeAddress));
+            } catch (RuntimeException re) {
+                if (responseBus != null) {
+                    responseBus.send(new ErrorNetworkResponse());
+                }
+            }
+        } else if (msg instanceof KillNetworkRequest) {
+            throw new RuntimeException("Kill requested");
         }
     }
 
