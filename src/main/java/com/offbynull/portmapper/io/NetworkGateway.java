@@ -25,7 +25,10 @@ import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.DestroySocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.DestroySocketNetworkResponse;
+import com.offbynull.portmapper.io.messages.BrokenTcpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.ErrorNetworkResponse;
+import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
+import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
 import com.offbynull.portmapper.io.messages.KillNetworkRequest;
 import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
@@ -34,7 +37,9 @@ import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkResponse;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.ClosedChannelException;
@@ -43,10 +48,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -56,13 +64,13 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public final class NetworkGateway {
 
-    private NetworkRunnable runnable;
+    private GatewayRunnable runnable;
     private Thread thread;
     
     public static NetworkGateway create() {
         NetworkGateway ng = new NetworkGateway();
         
-        ng.runnable = new NetworkRunnable();
+        ng.runnable = new GatewayRunnable();
         ng.thread = new Thread(ng.runnable);
         
         ng.thread.start();
@@ -82,13 +90,13 @@ public final class NetworkGateway {
         thread.join();
     }
     
-    private static final class NetworkRunnable implements Runnable {
+    private static final class GatewayRunnable implements Runnable {
         private final Bus bus;
         private final LinkedBlockingQueue<Object> queue;
         private final Selector selector;
         private int nextId = 0;
 
-        public NetworkRunnable() {
+        public GatewayRunnable() {
             try {
                 selector = Selector.open();
             } catch (IOException ioe) {
@@ -148,10 +156,9 @@ public final class NetworkGateway {
         private void handleSelectForTcpChannel(SelectionKey selectionKey, TcpNetworkEntry entry) throws IOException {
             SocketChannel channel = (SocketChannel) entry.getChannel();
             Bus responseBus = entry.getResponseBus();
-
+            int id = entry.getId();
+            
             if (selectionKey.isConnectable()) {
-                int id = entry.getId();
-
                 try {
                     // This block is sometimes called more than once for each connection -- we still call finishConnect but we also check to
                     // see if we're already connected before sending the CreateTcpSocketNetworkResponse msg
@@ -162,7 +169,7 @@ public final class NetworkGateway {
                     }
                 } catch (IOException ioe) {
                     // socket failed to connect
-                    Object errorResp = new ErrorNetworkResponse();
+                    Object errorResp = new BrokenTcpSocketNetworkResponse(id);
                     responseBus.send(errorResp);
                 }
             }
@@ -173,14 +180,14 @@ public final class NetworkGateway {
                 int readCount = channel.read(buffer);
                 if (readCount == -1) {
                     // socket disconnected
-                    Object errorResp = new ErrorNetworkResponse();
+                    Object errorResp = new BrokenTcpSocketNetworkResponse(id);
                     responseBus.send(errorResp);
                 } else {
                     buffer.flip();
 
                     if (buffer.remaining() > 0) {
                         byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                        Object readResp = new ReadTcpBlockNetworkResponse(bufferAsArray);
+                        Object readResp = new ReadTcpBlockNetworkResponse(id, bufferAsArray);
                         responseBus.send(readResp);
                     }
                 }
@@ -201,7 +208,7 @@ public final class NetworkGateway {
                     
                     outBuffers.removeFirst();
                     
-                    Object writeResp = new WriteTcpBlockNetworkResponse(writeCount);
+                    Object writeResp = new WriteTcpBlockNetworkResponse(id, writeCount);
                     responseBus.send(writeResp);
                 }
             }
@@ -210,6 +217,7 @@ public final class NetworkGateway {
         private void handleSelectForUdpChannel(SelectionKey selectionKey, UdpNetworkEntry entry) throws IOException {
             DatagramChannel channel = (DatagramChannel) entry.getChannel();
             Bus responseBus = entry.getResponseBus();
+            int id = entry.getId();
 
             if (selectionKey.isReadable()) {
                 buffer.clear();
@@ -220,7 +228,7 @@ public final class NetworkGateway {
 
                 if (buffer.remaining() > 0) {
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadUdpBlockNetworkResponse(incomingSocketAddress, bufferAsArray);
+                    Object readResp = new ReadUdpBlockNetworkResponse(id, incomingSocketAddress, bufferAsArray);
                     responseBus.send(readResp);
                 }
             }
@@ -231,7 +239,7 @@ public final class NetworkGateway {
 
                 int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddres());
 
-                Object writeResp = new WriteUdpBlockNetworkResponse(writeCount);
+                Object writeResp = new WriteUdpBlockNetworkResponse(id, writeCount);
                 responseBus.send(writeResp);
             }
         }
@@ -306,8 +314,8 @@ public final class NetworkGateway {
                 DestroySocketNetworkRequest req = (DestroySocketNetworkRequest) msg;
 
                 Bus responseBus = null;
+                int id = req.getId();
                 try {
-                    int id = req.getId();
                     NetworkEntry<?> entry = idMap.get(id);
 
                     responseBus = entry.getResponseBus();
@@ -318,7 +326,7 @@ public final class NetworkGateway {
 
                     channel.close();
 
-                    responseBus.send(new DestroySocketNetworkResponse());
+                    responseBus.send(new DestroySocketNetworkResponse(id));
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new ErrorNetworkResponse());
@@ -362,6 +370,30 @@ public final class NetworkGateway {
                     
                     AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
                     updateReadWriteSelectionKey(entry, channel);
+                } catch (RuntimeException re) {
+                    if (responseBus != null) {
+                        responseBus.send(new ErrorNetworkResponse());
+                    }
+                }
+            } else if (msg instanceof GetLocalIpAddressesRequest) {
+                GetLocalIpAddressesRequest req = (GetLocalIpAddressesRequest) msg;
+
+                Set<InetAddress> ret = new HashSet<>();
+                Bus responseBus = req.getResponseBus();
+                try {
+                    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+                    while (interfaces.hasMoreElements()) {
+                        NetworkInterface networkInterface = interfaces.nextElement();
+                        Enumeration<InetAddress> addrs = networkInterface.getInetAddresses();
+                        while (addrs.hasMoreElements()) { // make sure atleast 1 ipv4 addr bound to interface
+                            InetAddress addr = addrs.nextElement();
+
+                            if (!addr.isAnyLocalAddress()) {
+                                ret.add(addr);
+                            }
+                        }
+                    }
+                    responseBus.send(new GetLocalIpAddressesResponse(ret));
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new ErrorNetworkResponse());

@@ -20,12 +20,18 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 
 public final class ReadUdpBlockNetworkResponse implements NetworkResponse {
+    private int id;
     private InetSocketAddress socketAddress;
     private byte[] data;
 
-    public ReadUdpBlockNetworkResponse(InetSocketAddress socketAddress, byte[] data) {
+    public ReadUdpBlockNetworkResponse(int id, InetSocketAddress socketAddress, byte[] data) {
+        this.id = id;
         this.socketAddress = socketAddress;
         this.data = Arrays.copyOf(data, data.length);
+    }
+
+    public int getId() {
+        return id;
     }
 
     public InetSocketAddress getSocketAddress() {

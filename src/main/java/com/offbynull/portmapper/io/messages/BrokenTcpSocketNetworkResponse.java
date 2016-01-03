@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,22 +14,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.common;
+package com.offbynull.portmapper.io.messages;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
+public final class BrokenTcpSocketNetworkResponse implements NetworkResponse {
+    private int id;
 
-/**
- * UDP response listener.
- * @author Kasra Faghihi
- */
-public interface UdpCommunicatorListener {
-    /**
-     * Called when a UDP packet arrives.
-     * @param sourceAddress source address
-     * @param channel channel
-     * @param packet packet contents
-     */
-    void incomingPacket(InetSocketAddress sourceAddress, DatagramChannel channel, ByteBuffer packet);
+    public BrokenTcpSocketNetworkResponse(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
 }

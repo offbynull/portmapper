@@ -17,5 +17,5 @@
 package com.offbynull.portmapper.io.messages;
 
 public final class ErrorNetworkResponse implements NetworkResponse {
-    
+
 }

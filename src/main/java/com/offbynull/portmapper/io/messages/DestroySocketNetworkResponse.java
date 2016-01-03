@@ -17,5 +17,13 @@
 package com.offbynull.portmapper.io.messages;
 
 public final class DestroySocketNetworkResponse implements NetworkResponse {
+    private int id;
 
+    public DestroySocketNetworkResponse(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
 }
