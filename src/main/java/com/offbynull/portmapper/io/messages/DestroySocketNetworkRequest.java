@@ -16,23 +16,15 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-import java.util.Arrays;
-
 public final class DestroySocketNetworkRequest implements NetworkRequest {
     private int id;
-    private byte[] data;
 
-    public DestroySocketNetworkRequest(int id, byte[] data) {
+    public DestroySocketNetworkRequest(int id) {
         this.id = id;
-        this.data = Arrays.copyOf(data, data.length);
     }
 
     public int getId() {
         return id;
-    }
-
-    public byte[] getData() {
-        return Arrays.copyOf(data, data.length);
     }
 
 }
