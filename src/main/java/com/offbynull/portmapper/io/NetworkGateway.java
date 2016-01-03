@@ -268,7 +268,7 @@ public final class NetworkGateway {
                     channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
 
                     int id = nextId++;
-                    TcpNetworkEntry entry = new TcpNetworkEntry(id, channel, responseBus);
+                    UdpNetworkEntry entry = new UdpNetworkEntry(id, channel, responseBus);
                     idMap.put(id, entry);
                     channelMap.put(channel, entry);
                     

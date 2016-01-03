@@ -1,31 +1,34 @@
 package com.offbynull.portmapper.testtools;
 
+import com.offbynull.portmapper.common.ByteBufferUtils;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 
 public final class TcpServerEmulator implements Closeable {
 
-    public ServerSocket serverSocket;
-    public Map<Pattern, String> requestResponseMap;
+    private ServerSocket serverSocket;
+    private Map<ByteBuffer, ByteBuffer> requestResponseMap;
 
     private TcpServerEmulator(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        requestResponseMap = Collections.synchronizedMap(new HashMap<Pattern, String>());
+        requestResponseMap = Collections.synchronizedMap(new HashMap<ByteBuffer, ByteBuffer>());
     }
 
-    public void addMapping(Pattern request, String response) {
-        requestResponseMap.put(request, response);
+    public void addMapping(ByteBuffer request, ByteBuffer response) {
+        requestResponseMap.put(
+                ByteBufferUtils.copyContents(request).asReadOnlyBuffer(),
+                ByteBufferUtils.copyContents(response).asReadOnlyBuffer());
     }
 
     public static TcpServerEmulator create(int port) throws IOException {
@@ -38,22 +41,29 @@ public final class TcpServerEmulator implements Closeable {
                 try {
                     while (true) {
                         
+                        byte[] data = new byte[1024];
+                        ByteArrayOutputStream bufferOs = new ByteArrayOutputStream();
                         try (Socket clientSocket = helper.serverSocket.accept();
                                 InputStream is = clientSocket.getInputStream();
                                 OutputStream os = clientSocket.getOutputStream();) {
-                            String msg = IOUtils.toString(is);
-
-                            for (Entry<Pattern, String> e : helper.requestResponseMap.entrySet()) {
-                                Matcher m = e.getKey().matcher(msg);
-                                if (m.matches()) {
-                                    IOUtils.write(e.getValue(), os);
-                                }
+                            int readCount = is.read(data);
+                            bufferOs.write(data, 0, readCount);
+                            ByteBuffer request = ByteBuffer.wrap(bufferOs.toByteArray());
+                            
+                            ByteBuffer response = helper.requestResponseMap.get(request);
+                            if (response != null) {
+                                IOUtils.write(ByteBufferUtils.copyContentsToArray(response, false), os);
                             }
                             
                             os.flush();
+                            
+                            Thread.sleep(2000L); // sleep for 2 seconds before forcing a close
+                            os.close();
                         }
                     }
                 } catch (IOException ioe) {
+                    // do nothing
+                } catch (InterruptedException ie) {
                     // do nothing
                 }
             }

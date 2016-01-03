@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class UdpServerEmulator implements Closeable {
-    public DatagramSocket socket;
-    public Map<ByteBuffer, ByteBuffer> requestResponseMap;
+    private DatagramSocket socket;
+    private Map<ByteBuffer, ByteBuffer> requestResponseMap;
     
     private UdpServerEmulator(int port) throws IOException {
         socket = new DatagramSocket(port);
