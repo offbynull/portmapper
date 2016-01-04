@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,17 +16,15 @@
  */
 package com.offbynull.portmapper.upnpigd;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortMapperEventListener;
-import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.io.NetworkGateway;
+import com.offbynull.portmapper.io.messages.KillNetworkRequest;
 import java.util.Set;
 
 /**
  * UPnP-IGD test.
  * @author Kasra Faghihi
  */
-public final class App {
+final class App {
     private App() {
         // do nothing
     }
@@ -37,30 +35,13 @@ public final class App {
      * @throws Throwable on error
      */
     public static void main(String []args) throws Throwable {
-//        Set<UpnpIgdService> services = UpnpIgdDiscovery.discover();
-//        UpnpIgdService service = services.iterator().next();
-//        
-//        PortMapper mapper = new UpnpIgdPortMapper(service, new PortMapperEventListener() { // NOPMD
-//
-//            @Override
-//            public void resetRequired(String details) {
-//                System.out.println(details);
-//                System.exit(0);
-//            }
-//        });
-//        
-//        
-//        //System.out.println(controller.getExternalIp());
-//        
-//        MappedPort mappedPort = mapper.mapPort(PortType.TCP, 12345, 10L);
-//        for (int i = 0; i < 3; i++) {
-//            Thread.sleep(5000L);
-//            System.out.println("Refreshing...");
-//            mapper.refreshPort(mappedPort, 10L);
-//        }
-//        
-//        Thread.sleep(20000L);
-//        
-//        mapper.close();
+        NetworkGateway networkGateway = NetworkGateway.create();
+        try {
+            Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkGateway.getBus());
+            System.out.println(mappers);
+        } finally {
+            networkGateway.getBus().send(new KillNetworkRequest());
+            networkGateway.join();
+        }
     }
 }

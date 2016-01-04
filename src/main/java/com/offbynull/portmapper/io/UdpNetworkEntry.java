@@ -49,7 +49,7 @@ final class UdpNetworkEntry extends NetworkEntry<AddressedByteBuffer> {
             return buffer;
         }
 
-        public InetSocketAddress getSocketAddres() {
+        public InetSocketAddress getSocketAddress() {
             return socketAddres;
         }
         
