@@ -16,8 +16,9 @@
  */
 package com.offbynull.portmapper.upnpigd.messages;
 
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -82,12 +83,12 @@ public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
      * @return location
      * @throws IllegalStateException if was not found or could not be interpreted
      */
-    public URI getLocation() {
+    public URL getLocation() {
         String uriStr = getHeaderIgnoreCase("LOCATION");
         Validate.validState(uriStr != null);
         try {
-            return new URI(uriStr);
-        } catch (URISyntaxException urise) {
+            return new URL(uriStr);
+        } catch (MalformedURLException urise) {
             throw new IllegalStateException(urise);
         }
     }

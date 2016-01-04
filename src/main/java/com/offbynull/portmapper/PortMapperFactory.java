@@ -46,24 +46,24 @@ public final class PortMapperFactory {
      * @throws IOException if IO error occurs
      */
     public static PortMapper create(PortMapperEventListener listener) throws InterruptedException, IOException {
-        Set<DiscoveredPcpDevice> pcpDevices = PcpDiscovery.discover();
-        if (!pcpDevices.isEmpty()) {
-            DiscoveredPcpDevice device = pcpDevices.iterator().next();
-            return new PcpPortMapper(device.getGatewayAddress(), device.getLocalAddress(), true, listener);
-        }
-        
-        Set<DiscoveredNatPmpDevice> natPmpDevices = NatPmpDiscovery.discover();
-        if (!natPmpDevices.isEmpty()) {
-            DiscoveredNatPmpDevice device = natPmpDevices.iterator().next();
-            return new NatPmpPortMapper(device.getGatewayAddress(), listener);
-        }
-        
-        Set<UpnpIgdService> upnpIgdService = UpnpIgdDiscovery.discover();
-        if (!upnpIgdService.isEmpty()) {
-            UpnpIgdService service = upnpIgdService.iterator().next();
-            return new UpnpIgdPortMapper(service, listener);
-        }
-        
+//        Set<DiscoveredPcpDevice> pcpDevices = PcpDiscovery.discover();
+//        if (!pcpDevices.isEmpty()) {
+//            DiscoveredPcpDevice device = pcpDevices.iterator().next();
+//            return new PcpPortMapper(device.getGatewayAddress(), device.getLocalAddress(), true, listener);
+//        }
+//        
+//        Set<DiscoveredNatPmpDevice> natPmpDevices = NatPmpDiscovery.discover();
+//        if (!natPmpDevices.isEmpty()) {
+//            DiscoveredNatPmpDevice device = natPmpDevices.iterator().next();
+//            return new NatPmpPortMapper(device.getGatewayAddress(), listener);
+//        }
+//        
+//        Set<UpnpIgdService> upnpIgdService = UpnpIgdDiscovery.discover();
+//        if (!upnpIgdService.isEmpty()) {
+//            UpnpIgdService service = upnpIgdService.iterator().next();
+//            return new UpnpIgdPortMapper(service, listener);
+//        }
+//        
         throw new IllegalStateException();
     }
 }

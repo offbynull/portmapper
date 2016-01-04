@@ -1,7 +1,7 @@
 package com.offbynull.portmapper.upnpigd.messages;
 
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceReference;
-import java.net.URI;
+import java.net.URL;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -637,133 +637,133 @@ public class RootUpnpIgdResponseTest {
     @Test
     public void mustProperlyParseGoodBuffer1() throws Exception {
         byte[] buffer = GOOD_BUFFER_1.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
         assertEquals(6, services.size());
 
         assertEquals("urn:schemas-upnp-org:service:Layer3Forwarding:1", services.get(0).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_l3f.xml"), services.get(0).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?Layer3Forwarding"), services.get(0).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_l3f.xml"), services.get(0).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?Layer3Forwarding"), services.get(0).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1", services.get(1).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_wcic.xml"), services.get(1).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANCommonInterfaceConfig"), services.get(1).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_wcic.xml"), services.get(1).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANCommonInterfaceConfig"), services.get(1).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANEthernetLinkConfig:1", services.get(2).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_wec.xml"), services.get(2).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANEthernetLinkConfig"), services.get(2).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_wec.xml"), services.get(2).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANEthernetLinkConfig"), services.get(2).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", services.get(3).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_wpc.xml"), services.get(3).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANPPPConnection"), services.get(3).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_wpc.xml"), services.get(3).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANPPPConnection"), services.get(3).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANIPConnection:1", services.get(4).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_wic.xml"), services.get(4).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANIPConnection"), services.get(4).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_wic.xml"), services.get(4).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANIPConnection"), services.get(4).getControlUrl());
 
         assertEquals("urn:schemas-wifialliance-org:service:WFAWLANConfig:1", services.get(5).getServiceType());
-        assertEquals(URI.create("http://192.168.243.1/igd_WSC_UPnP.xml"), services.get(5).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1/upnp/control?WFAWLANConfig"), services.get(5).getControlUrl());
+        assertEquals(new URL("http://192.168.243.1/igd_WSC_UPnP.xml"), services.get(5).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1/upnp/control?WFAWLANConfig"), services.get(5).getControlUrl());
     }
 
     @Test
     public void mustProperlyParseGoodBuffer2() throws Exception {
         byte[] buffer = GOOD_BUFFER_2.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
         assertEquals(6, services.size());
 
         assertEquals("urn:schemas-microsoft-com:service:OSInfo:1", services.get(0).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_osf.xml"), services.get(0).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?OSInfo1"), services.get(0).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_osf.xml"), services.get(0).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?OSInfo1"), services.get(0).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:Layer3Forwarding:1", services.get(1).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_l3f.xml"), services.get(1).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?Layer3Forwarding"), services.get(1).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_l3f.xml"), services.get(1).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?Layer3Forwarding"), services.get(1).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1", services.get(2).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_wcic.xml"), services.get(2).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?WANCommonInterfaceConfig"), services.get(2).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_wcic.xml"), services.get(2).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?WANCommonInterfaceConfig"), services.get(2).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANEthernetLinkConfig:1", services.get(3).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_wec.xml"), services.get(3).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?WANEthernetLinkConfig"), services.get(3).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_wec.xml"), services.get(3).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?WANEthernetLinkConfig"), services.get(3).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", services.get(4).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_wpc.xml"), services.get(4).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?WANPPPConnection"), services.get(4).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_wpc.xml"), services.get(4).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?WANPPPConnection"), services.get(4).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANIPConnection:1", services.get(5).getServiceType());
-        assertEquals(URI.create("http://192.168.2.1/igd_wic.xml"), services.get(5).getScpdUrl());
-        assertEquals(URI.create("http://192.168.2.1:5440/upnp/control?WANIPConnection"), services.get(5).getControlUrl());
+        assertEquals(new URL("http://192.168.2.1/igd_wic.xml"), services.get(5).getScpdUrl());
+        assertEquals(new URL("http://192.168.2.1:5440/upnp/control?WANIPConnection"), services.get(5).getControlUrl());
     }
 
     @Test
     public void mustProperlyParseGoodBuffer3() throws Exception {
         byte[] buffer = GOOD_BUFFER_3.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
         assertEquals(6, services.size());
 
         assertEquals("urn:schemas-upnp-org:service:Layer3Forwarding:1", services.get(0).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_l3f.xml"), services.get(0).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?Layer3Forwarding"), services.get(0).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_l3f.xml"), services.get(0).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?Layer3Forwarding"), services.get(0).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1", services.get(1).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_wcic.xml"), services.get(1).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANCommonInterfaceConfig"), services.get(1).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_wcic.xml"), services.get(1).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANCommonInterfaceConfig"), services.get(1).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANEthernetLinkConfig:1", services.get(2).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_wec.xml"), services.get(2).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANEthernetLinkConfig"), services.get(2).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_wec.xml"), services.get(2).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANEthernetLinkConfig"), services.get(2).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", services.get(3).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_wpc.xml"), services.get(3).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANPPPConnection"), services.get(3).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_wpc.xml"), services.get(3).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANPPPConnection"), services.get(3).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:WANIPConnection:1", services.get(4).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_wic.xml"), services.get(4).getScpdUrl());
-        assertEquals(URI.create("http://192.168.243.1:80/upnp/control?WANIPConnection"), services.get(4).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_wic.xml"), services.get(4).getScpdUrl());
+        assertEquals(new URL("http://192.168.243.1:80/upnp/control?WANIPConnection"), services.get(4).getControlUrl());
 
         assertEquals("urn:schemas-wifialliance-org:service:WFAWLANConfig:1", services.get(5).getServiceType());
-        assertEquals(URI.create("http://fake:80/igd_WSC_UPnP.xml"), services.get(5).getScpdUrl());
-        assertEquals(URI.create("http://fake:80/upnp/control?WFAWLANConfig"), services.get(5).getControlUrl());
+        assertEquals(new URL("http://fake:80/igd_WSC_UPnP.xml"), services.get(5).getScpdUrl());
+        assertEquals(new URL("http://fake:80/upnp/control?WFAWLANConfig"), services.get(5).getControlUrl());
     }
     
     @Test
     public void mustProperlyParseGoodBuffer4() throws Exception {
         byte[] buffer = GOOD_BUFFER_WITHOUT_IGD.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
         assertEquals(3, services.size());
 
         assertEquals("urn:schemas-upnp-org:service:ContentDirectory:1", services.get(0).getServiceType());
-        assertEquals(URI.create("http://fake:80/contentDirectory.xml"), services.get(0).getScpdUrl());
-        assertEquals(URI.create("http://fake:80/serviceControl"), services.get(0).getControlUrl());
+        assertEquals(new URL("http://fake:80/contentDirectory.xml"), services.get(0).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(0).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:ConnectionManager:1", services.get(1).getServiceType());
-        assertEquals(URI.create("http://fake:80/connectionManager.xml"), services.get(1).getScpdUrl());
-        assertEquals(URI.create("http://fake:80/serviceControl"), services.get(1).getControlUrl());
+        assertEquals(new URL("http://fake:80/connectionManager.xml"), services.get(1).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(1).getControlUrl());
 
         assertEquals("urn:schemas-upnp-org:service:X_MS_MediaReceiverRegistrar:1", services.get(2).getServiceType());
-        assertEquals(URI.create("http://fake:80/MSMediaReceiverRegistrar.xml"), services.get(2).getScpdUrl());
-        assertEquals(URI.create("http://fake:80/serviceControl"), services.get(2).getControlUrl());
+        assertEquals(new URL("http://fake:80/MSMediaReceiverRegistrar.xml"), services.get(2).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(2).getControlUrl());
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void mustFailOnHttpError() throws Exception {
         byte[] buffer = GOOD_BUFFER_WITH_BAD_RESPONSE_CODE.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
     }
 
     @Test
     public void mustNotReturnAnyFaultyServices() throws Exception {
         byte[] buffer = FAULTY_BUFFER.getBytes("US-ASCII");
-        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(URI.create("http://fake:80/IGD.xml"), buffer);
+        RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
 
         List<ServiceReference> services = resp.getServices();
         assertEquals(0, services.size());

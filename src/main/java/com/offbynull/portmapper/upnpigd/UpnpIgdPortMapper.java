@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,108 +16,318 @@
  */
 package com.offbynull.portmapper.upnpigd;
 
-import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortMapperEventListener;
-import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.common.ResponseException;
-import com.offbynull.portmapper.upnpigd.UpnpIgdController.PortMappingInfo;
+import com.offbynull.portmapper.common.BasicBus;
+import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.io.messages.BrokenTcpSocketNetworkResponse;
+import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkRequest;
+import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkResponse;
+import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkRequest;
+import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkResponse;
+import com.offbynull.portmapper.io.messages.DestroySocketNetworkRequest;
+import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
+import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
+import com.offbynull.portmapper.io.messages.NetworkResponse;
+import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
+import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceReference;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse.IdentifiedService;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse.ServiceType;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
+import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpRequest;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.util.Random;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
 /**
- * A UPNP-IGD {@link PortMapper} implementation.
+ * UPNP-IGD {@link PortMapper} implementation.
  *
  * @author Kasra Faghihi
  */
-public final class UpnpIgdPortMapper implements PortMapper {
+abstract class UpnpIgdPortMapper implements PortMapper {
 
-    private Random random = new Random();
-    private UpnpIgdController controller;
-    private volatile boolean closed;
+    private final InetAddress internalAddress;
+    private final URL controlUrl;
+    private final String serverName;
+    private final String serviceType;
+    private final Range<Long> externalPortRange;
+    private final Range<Long> leaseDurationRange;
+    
+    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
+        Validate.notNull(networkBus);
+        
+        Set<UpnpIgdPortMapper> ret = new HashSet<>();
+        
+        // Probe for devices -- for each device found, query the device
+        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = probe(networkBus);
+        for (Entry<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeEntry : probeResponses.entrySet()) {
+            InetAddress sourceAddress = probeEntry.getKey();
+            ServiceDiscoveryUpnpIgdResponse discoveryResp = probeEntry.getValue();
+            RootUpnpIgdResponse rootResp;
+            try {
+                rootResp = queryDevice(networkBus, sourceAddress, discoveryResp.getLocation());
+            } catch (RuntimeException | IOException ioe) {
+                continue;
+            }
 
-    /**
-     * Constructs a {@link UpnpIgdPortMapper} object.
-     * @param service UPNP-IGD service
-     * @param listener event listener
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    public UpnpIgdPortMapper(UpnpIgdService service, final PortMapperEventListener listener) {
-        Validate.notNull(service);
-        Validate.notNull(listener);
+            // For each service found in the device -- query the service description
+            for (ServiceReference serviceRef : rootResp.getServices()) {
+                ServiceDescriptionUpnpIgdResponse descResp;
+                try {
+                    descResp = queryService(networkBus, sourceAddress, serviceRef.getScpdUrl());
+                } catch (RuntimeException | IOException ioe) {
+                    continue;
+                }
+                
+                // Create a UPnP-IGD port mapper based on the type of service found (should almost always be either IPv4 portmapper or IPv6
+                // firewall, not both)
+                for(Entry<ServiceType, IdentifiedService> serviceEntry : descResp.getIdentifiedServices().entrySet()) {
+                    IdentifiedService identifiedService = serviceEntry.getValue();
+                    UpnpIgdPortMapper portMapper;
+                    switch (serviceEntry.getKey()) {
+                        case FIREWALL:
+                            portMapper = new FirewallUpnpIgdPortMapper(
+                                    sourceAddress,
+                                    serviceRef.getControlUrl(),
+                                    discoveryResp.getServer(),
+                                    serviceRef.getServiceType(),
+                                    identifiedService.getExternalPortRange(),
+                                    identifiedService.getLeaseDurationRange());
+                            break;
+                        case PORT_MAPPER:
+                            portMapper = new PortMapperUpnpIgdPortMapper(
+                                    sourceAddress,
+                                    serviceRef.getControlUrl(),
+                                    discoveryResp.getServer(),
+                                    serviceRef.getServiceType(),
+                                    identifiedService.getExternalPortRange(),
+                                    identifiedService.getLeaseDurationRange());
+                            break;
+                        default:
+                            throw new IllegalStateException(); // should never happen
+                    }
+                    ret.add(portMapper);
+                }
+            }
+        }
+        
+        return ret;
+    }
+    
+    private static Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probe(Bus networkBus) throws InterruptedException {
+        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+        Bus selfBus = new BasicBus(queue);
+        
+        // Get local IP addresses
+        networkBus.send(new GetLocalIpAddressesRequest(selfBus));
+        GetLocalIpAddressesResponse localIpsResp = (GetLocalIpAddressesResponse) queue.take();
+        
+        // Create UDP sockets and send discovery messages
+        Map<Integer, InetAddress> udpSocketIds = new HashMap<>(); // id to src address
+        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = new HashMap<>(); // source address to response
+        try {
+            for (InetAddress sourceAddress : localIpsResp.getLocalAddresses()) {
+                networkBus.send(new CreateUdpSocketNetworkRequest(selfBus, sourceAddress));
+                CreateUdpSocketNetworkResponse createResp = (CreateUdpSocketNetworkResponse) queue.take();
+                int id = createResp.getId();
 
-        controller = new UpnpIgdController(service, new UpnpIgdControllerListener() {
-            @Override
-            public void mappingExpired(UpnpIgdController.PortMappingInfo mappedPort) {
-                if (closed) {
-                    return;
+                udpSocketIds.put(id, sourceAddress);
+
+                UpnpIgdHttpRequest req;
+                if (sourceAddress instanceof Inet4Address) {
+                    req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV4, null, 3, "ssdp:all");
+                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                            id,
+                            ProbeDeviceType.IPV4.getMulticastSocketAddress(),
+                            req.dump()));
+                } else if (sourceAddress instanceof Inet6Address) {
+                    req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_LINK_LOCAL, null, 3, "ssdp:all");
+                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                            id,
+                            ProbeDeviceType.IPV6_LINK_LOCAL.getMulticastSocketAddress(),
+                            req.dump()));
+                    req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_SITE_LOCAL, null, 3, "ssdp:all");
+                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                            id,
+                            ProbeDeviceType.IPV6_SITE_LOCAL.getMulticastSocketAddress(),
+                            req.dump()));
+                    req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_ORGANIZATION_LOCAL, null, 3, "ssdp:all");
+                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                            id,
+                            ProbeDeviceType.IPV6_ORGANIZATION_LOCAL.getMulticastSocketAddress(),
+                            req.dump()));
+                    req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_GLOBAL, null, 3, "ssdp:all");
+                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                            id,
+                            ProbeDeviceType.IPV6_GLOBAL.getMulticastSocketAddress(),
+                            req.dump()));
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+
+            // Read responses to discovery message
+            long remainingTime = System.currentTimeMillis() + 10000L;
+            while (true) {
+                long sleepTime = remainingTime - System.currentTimeMillis();
+                if (sleepTime < 0L) {
+                    break;
                 }
 
-                listener.resetRequired("Mapping may have been lost: " + mappedPort);
+                ReadUdpBlockNetworkResponse netResp = (ReadUdpBlockNetworkResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                int id = netResp.getId();
+
+                InetAddress sourceAddress = udpSocketIds.get(id);
+                try {
+                    ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(netResp.getData());
+                    probeResponses.put(sourceAddress, resp);
+                } catch (IllegalArgumentException iae) {
+                    // if invalid, do nothing -- just skip over
+                }
             }
-        });
-    }
-
-    @Override
-    public MappedPort mapPort(PortType portType, int internalPort, long lifetime) throws InterruptedException {
-        Validate.validState(!closed);
-        Validate.notNull(portType);
-        Validate.inclusiveBetween(1, 65535, internalPort);
-        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
-        
-        int externalPort = random.nextInt(55535) + 10000; // 10000 - 65535
-        PortMappingInfo info;
-        InetAddress externalAddress;
-        try {
-            info = controller.addPortMapping(externalPort, internalPort, portType, lifetime);
-            externalAddress = controller.getExternalIp();
-        } catch (IllegalArgumentException | ResponseException re) {
-            throw new IllegalStateException(re);
+        } finally {
+            // Destroy UDP sockets
+            for (int id : udpSocketIds.keySet()) {
+                networkBus.send(new DestroySocketNetworkRequest(id));
+            }
         }
         
-        return new MappedPort(info.getInternalPort(), info.getExternalPort(), externalAddress, info.getPortType(),
-                info.getRemainingDuration());
+        return probeResponses;
+    }
+    
+    private static RootUpnpIgdResponse queryDevice(Bus networkBus, InetAddress sourceAddress, URL location)
+            throws UnknownHostException, IOException, InterruptedException {
+        InetAddress destinationAddress = InetAddress.getByName(location.getHost());
+        int destinationPort = location.getPort();
+        
+        RootUpnpIgdRequest req = new RootUpnpIgdRequest(location.getAuthority(), location.getFile());
+        byte[] reqData = req.dump();
+        
+        byte[] respData = tcpRequest(networkBus, sourceAddress, destinationAddress, destinationPort, reqData);
+        
+        return new RootUpnpIgdResponse(location, respData);
+    }
+    
+    private static ServiceDescriptionUpnpIgdResponse queryService(Bus networkBus, InetAddress sourceAddress, URL scpdUrl)
+            throws UnknownHostException, IOException, InterruptedException {
+        InetAddress destinationAddress = InetAddress.getByName(scpdUrl.getHost());
+        int destinationPort = scpdUrl.getPort();
+        
+        ServiceDescriptionUpnpIgdRequest req = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile());
+        byte[] reqData = req.dump();
+        
+        byte[] respData = tcpRequest(networkBus, sourceAddress, destinationAddress, destinationPort, reqData);
+        
+        return new ServiceDescriptionUpnpIgdResponse(respData);
     }
 
-    @Override
-    public void unmapPort(MappedPort mappedPort) throws InterruptedException {
-        Validate.validState(!closed);
-        Validate.notNull(mappedPort);
+    protected static byte[] tcpRequest(Bus networkBus, InetAddress sourceAddress, InetAddress destinationAddress, int destinationPort,
+            byte[] data) throws IOException, InterruptedException {
+        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+        Bus selfBus = new BasicBus(queue);
         
+        
+        // Create TCP socket
+        networkBus.send(new CreateTcpSocketNetworkRequest(selfBus, sourceAddress, destinationAddress, destinationPort));
+        CreateTcpSocketNetworkResponse createResp = (CreateTcpSocketNetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
+        int id = createResp.getId();
+        
+        // Write request, and save any data that comes in
+        ByteArrayOutputStream queuedRespBytes = new ByteArrayOutputStream();
         try {
-            controller.deletePortMapping(mappedPort.getExternalPort(), mappedPort.getPortType());
-        } catch (IllegalArgumentException | ResponseException re) {
-            throw new IllegalStateException(re);
+            int remainingDataLen = data.length;
+
+            long remainingTime = System.currentTimeMillis() + 10000L;
+            while (true) {
+                long sleepTime = remainingTime - System.currentTimeMillis();
+                if (sleepTime < 0L) {
+                    break;
+                }
+
+                if (remainingDataLen > 0) {
+                    networkBus.send(new WriteTcpBlockNetworkRequest(id, data));
+                }
+
+                NetworkResponse resp = (NetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
+
+                if (resp instanceof WriteTcpBlockNetworkResponse) {
+                    WriteTcpBlockNetworkResponse writeResp = (WriteTcpBlockNetworkResponse) resp;
+                    remainingDataLen -= writeResp.getAmountWritten();
+                } else if (resp instanceof ReadTcpBlockNetworkResponse) {
+                    ReadTcpBlockNetworkResponse readResp = (ReadTcpBlockNetworkResponse) resp;
+                    queuedRespBytes.write(readResp.getData());
+                } else if (resp instanceof BrokenTcpSocketNetworkResponse) {
+                    break;
+                }
+            }
+        } finally {
+            networkBus.send(new DestroySocketNetworkRequest(id));
         }
-    }
-
-    @Override
-    public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
-        Validate.validState(!closed);
-        Validate.notNull(mappedPort);
-        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
         
-        PortMappingInfo info;
-        InetAddress externalAddress;
-        try {
-            controller.deletePortMapping(mappedPort.getExternalPort(), mappedPort.getPortType());
-            info = controller.addPortMapping(mappedPort.getExternalPort(), mappedPort.getInternalPort(), mappedPort.getPortType(),
-                    lifetime);
-            externalAddress = controller.getExternalIp();
-        } catch (IllegalArgumentException | ResponseException re) {
-            throw new IllegalStateException(re);
-        }
+        // don't bother reading the destroysocket response, the queue being responded to is being thrown away
         
-        return new MappedPort(info.getInternalPort(), info.getExternalPort(), externalAddress, info.getPortType(),
-                info.getRemainingDuration());
+        return queuedRespBytes.toByteArray();
     }
 
-    @Override
-    public void close() throws IOException {
-        closed = true;
-        controller.close();
+    protected UpnpIgdPortMapper(InetAddress selfAddress, URL controlUrl, String serverName, String serviceType,
+            Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
+        Validate.notNull(selfAddress);
+        Validate.notNull(controlUrl);
+//        Validate.notNull(serverName); // can be null
+        Validate.notNull(serviceType);
+        Validate.notNull(externalPortRange);
+        Validate.notNull(leaseDurationRange);
+        this.internalAddress = selfAddress;
+        this.controlUrl = controlUrl;
+        this.serverName = serverName;
+        this.serviceType = serviceType;
+        this.externalPortRange = externalPortRange;
+        this.leaseDurationRange = leaseDurationRange;
     }
 
+    protected final InetAddress getInternalAddress() {
+        return internalAddress;
+    }
+
+    protected final URL getControlUrl() {
+        return controlUrl;
+    }
+
+    protected final String getServerName() {
+        return serverName;
+    }
+
+    protected final String getServiceType() {
+        return serviceType;
+    }
+
+    protected final Range<Long> getExternalPortRange() {
+        return externalPortRange;
+    }
+
+    protected final Range<Long> getLeaseDurationRange() {
+        return leaseDurationRange;
+    }
 }

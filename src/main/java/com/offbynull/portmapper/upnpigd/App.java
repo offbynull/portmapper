@@ -37,30 +37,30 @@ public final class App {
      * @throws Throwable on error
      */
     public static void main(String []args) throws Throwable {
-        Set<UpnpIgdService> services = UpnpIgdDiscovery.discover();
-        UpnpIgdService service = services.iterator().next();
-        
-        PortMapper mapper = new UpnpIgdPortMapper(service, new PortMapperEventListener() { // NOPMD
-
-            @Override
-            public void resetRequired(String details) {
-                System.out.println(details);
-                System.exit(0);
-            }
-        });
-        
-        
-        //System.out.println(controller.getExternalIp());
-        
-        MappedPort mappedPort = mapper.mapPort(PortType.TCP, 12345, 10L);
-        for (int i = 0; i < 3; i++) {
-            Thread.sleep(5000L);
-            System.out.println("Refreshing...");
-            mapper.refreshPort(mappedPort, 10L);
-        }
-        
-        Thread.sleep(20000L);
-        
-        mapper.close();
+//        Set<UpnpIgdService> services = UpnpIgdDiscovery.discover();
+//        UpnpIgdService service = services.iterator().next();
+//        
+//        PortMapper mapper = new UpnpIgdPortMapper(service, new PortMapperEventListener() { // NOPMD
+//
+//            @Override
+//            public void resetRequired(String details) {
+//                System.out.println(details);
+//                System.exit(0);
+//            }
+//        });
+//        
+//        
+//        //System.out.println(controller.getExternalIp());
+//        
+//        MappedPort mappedPort = mapper.mapPort(PortType.TCP, 12345, 10L);
+//        for (int i = 0; i < 3; i++) {
+//            Thread.sleep(5000L);
+//            System.out.println("Refreshing...");
+//            mapper.refreshPort(mappedPort, 10L);
+//        }
+//        
+//        Thread.sleep(20000L);
+//        
+//        mapper.close();
     }
 }

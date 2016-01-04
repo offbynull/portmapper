@@ -18,7 +18,8 @@ package com.offbynull.portmapper.upnpigd.messages;
 
 import com.offbynull.portmapper.common.TextUtils;
 import java.net.MalformedURLException;
-import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.apache.commons.lang3.Validate;
 
 /**
  * Represents a UPnP device query response.
+ *
  * @author Kasra Faghihi
  */
 public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
@@ -37,22 +39,29 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
 
     /**
      * Constructs a {@link DeviceQueryResponse} object by parsing a buffer.
+     *
      * @param baseUrl device URI
      * @param buffer buffer containing response data
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if any argument is {@code null}
      */
-    public RootUpnpIgdResponse(URI baseUrl, byte[] buffer) {
+    public RootUpnpIgdResponse(URL baseUrl, byte[] buffer) {
         super(buffer);
 
         Validate.isTrue(isResponseSuccessful());
         Validate.notNull(baseUrl);
 
         String content = getContent();
-        
+
         String baseUrlOverrideStr = TextUtils.findFirstBlock(content, "<URLBase>", "</URLBase>", true);
         if (baseUrlOverrideStr != null) {
-            baseUrl = URI.create(baseUrlOverrideStr);
+            try {
+                baseUrl = new URL(baseUrlOverrideStr);
+            } catch (MalformedURLException ex) {
+                throw new IllegalArgumentException(ex);
+            }
         }
-        
+
         List<String> serviceBlocks = TextUtils.findAllBlocks(content, "<service>", "</service>", true);
         List<ServiceReference> servicesList = new ArrayList<>(serviceBlocks.size());
         for (String serviceBlock : serviceBlocks) {
@@ -70,16 +79,17 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
                         StringUtils.trim(StringEscapeUtils.unescapeXml(controlUrl)),
                         StringUtils.trim(StringEscapeUtils.unescapeXml(scpdUrl)));
                 servicesList.add(service);
-            } catch (IllegalArgumentException | NullPointerException | MalformedURLException e) {
+            } catch (IllegalArgumentException | NullPointerException e) {
                 // unable to handle -- something was malformed or missing, so skip to next one
             }
         }
-        
+
         this.services = Collections.unmodifiableList(servicesList);
     }
 
     /**
      * Get services.
+     *
      * @return list of services (unmodifiable)
      */
     public List<ServiceReference> getServices() {
@@ -120,8 +130,8 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
     public final class ServiceReference {
 
         private final String serviceType;
-        private final URI controlUrl;
-        private final URI scpdUrl;
+        private final URL controlUrl;
+        private final URL scpdUrl;
 
         /**
          * Constructs a {@link ServiceReference} object.
@@ -130,18 +140,22 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
          * @param serviceType service type
          * @param controlUrl control URL
          * @param scpdUrl SCPD URL
-         * @throws MalformedURLException if any of the URL arguments are malformed
+         * @throws IllegalArgumentException if any of the URL arguments are malformed
          * @throws NullPointerException if any argument other than {@code serviceType} and {@code serviceId} is {@code null}
          */
-        public ServiceReference(URI baseUrl, String serviceType, String controlUrl, String scpdUrl) throws MalformedURLException {
+        public ServiceReference(URL baseUrl, String serviceType, String controlUrl, String scpdUrl) {
             Validate.notNull(baseUrl);
             Validate.notNull(serviceType);
             Validate.notNull(controlUrl); // need this for controlling
             Validate.notNull(scpdUrl); // need this to see if port mapping actions are present with service
 
             this.serviceType = serviceType;
-            this.controlUrl = baseUrl.resolve(controlUrl);
-            this.scpdUrl = baseUrl.resolve(scpdUrl);
+            try {
+                this.controlUrl = baseUrl.toURI().resolve(controlUrl).toURL();
+                this.scpdUrl = baseUrl.toURI().resolve(scpdUrl).toURL();
+            } catch (URISyntaxException | MalformedURLException ex) {
+                throw new IllegalArgumentException(ex);
+            }
         }
 
         /**
@@ -158,7 +172,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
          *
          * @return control URL
          */
-        public URI getControlUrl() {
+        public URL getControlUrl() {
             return controlUrl;
         }
 
@@ -167,7 +181,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
          *
          * @return SCPD URL
          */
-        public URI getScpdUrl() {
+        public URL getScpdUrl() {
             return scpdUrl;
         }
 

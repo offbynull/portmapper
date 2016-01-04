@@ -16,13 +16,11 @@
  */
 package com.offbynull.portmapper;
 
-import java.io.Closeable;
-
 /**
  * Interface for port mapping.
  * @author Kasra Faghihi
  */
-public interface PortMapper extends Closeable {
+public interface PortMapper {
 
     /**
      * Map a port. Mapping the same port multiple times has undefined behaviour.

@@ -108,10 +108,6 @@ public abstract class UpnpIgdHttpResponse {
 
             String key = splitLine[0].trim();
             String value = splitLine[1].trim();
-            
-            if (key.equalsIgnoreCase("Content-Length")) { // ignore, calculated on dump
-                continue;
-            }
 
             headers.put(key, value);
         }

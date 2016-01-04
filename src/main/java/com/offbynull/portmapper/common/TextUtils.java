@@ -42,6 +42,61 @@ public final class TextUtils {
     }
 
     /**
+     * Split a host/port combination (split by a colon). For example, {@code myhost.com:12345} will be split in to host {@code myhost.com}
+     * and port {@code 12345}.
+     * @param hostPort host port combination (split by colon)
+     * @param defaultPort default port to use if port portion isn't present in {@code hostPort}
+     * @return host and port combination
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code 1 > defaultPort > 65535}, or if the port parsed from {@code hostPort} is invalid
+     * ({@code < 1 || > 65535})
+     */
+    public static ParsedHost splitHostAndPort(String hostPort, int defaultPort) {
+        Validate.notNull(hostPort);
+        Validate.inclusiveBetween(1, 65535, defaultPort);
+        int idx = StringUtils.lastIndexOf(hostPort, ':');
+        if (idx == -1) {
+            return new ParsedHost(hostPort, defaultPort);
+        }
+        
+        int port = Integer.parseInt(hostPort.substring(idx)); // throws nfe, but nfe is derived from illegalargexc
+        Validate.inclusiveBetween(1, 65535, port);
+        
+        return new ParsedHost(hostPort, port);
+    }
+    
+    /**
+     * Parsed host/port combination
+     */
+    public static final class ParsedHost {
+        private final String host;
+        private final int port;
+
+        private ParsedHost(String host, int port) {
+            Validate.notNull(host);
+            Validate.inclusiveBetween(1, 65535, port);
+            this.host = host;
+            this.port = port;
+        }
+
+        /**
+         * Get host.
+         * @return host
+         */
+        public String getHost() {
+            return host;
+        }
+
+        /**
+         * Get port.
+         * @return port
+         */
+        public int getPort() {
+            return port;
+        }
+    }
+
+    /**
      * Collapses contiguous whitespace in to a single space character (0x20).
      * @param text text containing whitespace to collapse
      * @return {@code text} with whitespace collapsed
