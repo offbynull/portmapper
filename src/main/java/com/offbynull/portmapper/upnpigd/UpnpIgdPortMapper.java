@@ -149,7 +149,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         Map<Integer, InetAddress> udpSocketIds = new HashMap<>(); // id to src address
         Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = new HashMap<>(); // source address to response
         for (InetAddress sourceAddress : localIpsResp.getLocalAddresses()) {
-            System.out.println("sending to " + sourceAddress);
+            System.out.println("sending from " + sourceAddress);
             try {
                 networkBus.send(new CreateUdpSocketNetworkRequest(selfBus, sourceAddress));
                 NetworkResponse createResp = (NetworkResponse) queue.take();
@@ -210,6 +210,8 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 continue;
             }
             
+            System.out.println("Recved!");
+            
             ReadUdpBlockNetworkResponse readNetResp = (ReadUdpBlockNetworkResponse) netResp;
             int id = readNetResp.getId();
 
@@ -226,6 +228,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         for (int id : udpSocketIds.keySet()) {
             networkBus.send(new DestroySocketNetworkRequest(id));
         }
+        // don't worry about checking responses -- we abandon the queue we created in this method
 
         return probeResponses;
     }

@@ -223,16 +223,12 @@ public final class NetworkGateway {
 
             if (selectionKey.isReadable()) {
                 buffer.clear();
-
                 InetSocketAddress incomingSocketAddress = (InetSocketAddress) channel.receive(buffer);
-
                 buffer.flip();
 
-                if (buffer.remaining() > 0) {
-                    byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadUdpBlockNetworkResponse(id, incomingSocketAddress, bufferAsArray);
-                    responseBus.send(readResp);
-                }
+                byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
+                Object readResp = new ReadUdpBlockNetworkResponse(id, incomingSocketAddress, bufferAsArray);
+                responseBus.send(readResp);
             }
             
             LinkedList<AddressedByteBuffer> outBuffers;
@@ -391,8 +387,7 @@ public final class NetworkGateway {
                         while (addrs.hasMoreElements()) {
                             InetAddress addr = addrs.nextElement();
 
-                            if (!addr.isAnyLocalAddress()) {
-                                System.out.println(networkInterface.getDisplayName() + " / " + addr);
+                            if (!addr.isLoopbackAddress()) {
                                 ret.add(addr);
                             }
                         }
