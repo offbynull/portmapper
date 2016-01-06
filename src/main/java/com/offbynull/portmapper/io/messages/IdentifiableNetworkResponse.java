@@ -16,9 +16,16 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-public final class CreateUdpSocketNetworkResponse extends IdentifiableNetworkResponse {
+public abstract class IdentifiableNetworkResponse {
+    
+    private int id;
 
-    public CreateUdpSocketNetworkResponse(int id) {
-        super(id);
+    IdentifiableNetworkResponse(int id) {
+        this.id = id;
     }
+
+    public int getId() {
+        return id;
+    }
+
 }

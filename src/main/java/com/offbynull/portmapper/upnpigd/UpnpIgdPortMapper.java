@@ -28,12 +28,12 @@ import com.offbynull.portmapper.io.messages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
 import com.offbynull.portmapper.io.messages.NetworkResponse;
-import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkResponse;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceReference;
@@ -161,28 +161,28 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 UpnpIgdHttpRequest req;
                 if (sourceAddress instanceof Inet4Address) {
                     req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV4, null, 3, "ssdp:all");
-                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                    networkBus.send(new WriteUdpNetworkRequest(
                             id,
                             ProbeDeviceType.IPV4.getMulticastSocketAddress(),
                             req.dump()));
                 } else if (sourceAddress instanceof Inet6Address) {
                     req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_LINK_LOCAL, null, 3, "ssdp:all");
-                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                    networkBus.send(new WriteUdpNetworkRequest(
                             id,
                             ProbeDeviceType.IPV6_LINK_LOCAL.getMulticastSocketAddress(),
                             req.dump()));
                     req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_SITE_LOCAL, null, 3, "ssdp:all");
-                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                    networkBus.send(new WriteUdpNetworkRequest(
                             id,
                             ProbeDeviceType.IPV6_SITE_LOCAL.getMulticastSocketAddress(),
                             req.dump()));
                     req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_ORGANIZATION_LOCAL, null, 3, "ssdp:all");
-                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                    networkBus.send(new WriteUdpNetworkRequest(
                             id,
                             ProbeDeviceType.IPV6_ORGANIZATION_LOCAL.getMulticastSocketAddress(),
                             req.dump()));
                     req = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_GLOBAL, null, 3, "ssdp:all");
-                    networkBus.send(new WriteUdpBlockNetworkRequest(
+                    networkBus.send(new WriteUdpNetworkRequest(
                             id,
                             ProbeDeviceType.IPV6_GLOBAL.getMulticastSocketAddress(),
                             req.dump()));
@@ -205,14 +205,14 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             NetworkResponse netResp = (NetworkResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
             if (netResp == null) {
                 break;
-            } else if (!(netResp instanceof ReadUdpBlockNetworkResponse)) {
+            } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
                 // We only care about responses -- message could be successful write or error
                 continue;
             }
             
             System.out.println("Recved!");
             
-            ReadUdpBlockNetworkResponse readNetResp = (ReadUdpBlockNetworkResponse) netResp;
+            ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
             int id = readNetResp.getId();
 
             InetAddress sourceAddress = udpSocketIds.get(id);
@@ -282,16 +282,16 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 }
 
                 if (remainingDataLen > 0) {
-                    networkBus.send(new WriteTcpBlockNetworkRequest(id, data));
+                    networkBus.send(new WriteTcpNetworkRequest(id, data));
                 }
 
                 NetworkResponse resp = (NetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
 
-                if (resp instanceof WriteTcpBlockNetworkResponse) {
-                    WriteTcpBlockNetworkResponse writeResp = (WriteTcpBlockNetworkResponse) resp;
+                if (resp instanceof WriteTcpNetworkResponse) {
+                    WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) resp;
                     remainingDataLen -= writeResp.getAmountWritten();
-                } else if (resp instanceof ReadTcpBlockNetworkResponse) {
-                    ReadTcpBlockNetworkResponse readResp = (ReadTcpBlockNetworkResponse) resp;
+                } else if (resp instanceof ReadTcpNetworkNotification) {
+                    ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
                     queuedRespBytes.write(readResp.getData());
                 } else if (resp instanceof ErrorNetworkResponse) {
                     break;

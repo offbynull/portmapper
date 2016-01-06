@@ -16,23 +16,10 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-import java.util.Arrays;
+public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkResponse {
 
-public final class ReadTcpBlockNetworkResponse implements NetworkResponse {
-    private int id;
-    private byte[] data;
-
-    public ReadTcpBlockNetworkResponse(int id, byte[] data) {
-        this.id = id;
-        this.data = Arrays.copyOf(data, data.length);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public byte[] getData() {
-        return Arrays.copyOf(data, data.length);
+    public IdentifiableErrorNetworkResponse(int id) {
+        super(id);
     }
 
 }

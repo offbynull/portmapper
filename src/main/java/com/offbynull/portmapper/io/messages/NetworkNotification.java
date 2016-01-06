@@ -16,30 +16,6 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-
-public final class ReadUdpBlockNetworkResponse implements NetworkResponse {
-    private int id;
-    private InetSocketAddress socketAddress;
-    private byte[] data;
-
-    public ReadUdpBlockNetworkResponse(int id, InetSocketAddress socketAddress, byte[] data) {
-        this.id = id;
-        this.socketAddress = socketAddress;
-        this.data = Arrays.copyOf(data, data.length);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public InetSocketAddress getSocketAddress() {
-        return socketAddress;
-    }
-
-    public byte[] getData() {
-        return Arrays.copyOf(data, data.length);
-    }
-
+public interface NetworkNotification {
+    
 }

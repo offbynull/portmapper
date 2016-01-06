@@ -28,13 +28,16 @@ import com.offbynull.portmapper.io.messages.DestroySocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
+import com.offbynull.portmapper.io.messages.IdentifiableErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.KillNetworkRequest;
-import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteReadyTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteReadyUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkResponse;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -188,8 +191,10 @@ public final class NetworkGateway {
                     throw new RuntimeException(); // goes up the chain and shuts down the channel
                 } else if (buffer.remaining() > 0) {
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadTcpBlockNetworkResponse(id, bufferAsArray);
+                    Object readResp = new ReadTcpNetworkNotification(id, bufferAsArray);
                     responseBus.send(readResp);
+                } else if (readCount == 0) {
+                    // do nothing
                 } else {
                     throw new IllegalStateException();
                 }
@@ -200,18 +205,24 @@ public final class NetworkGateway {
 
                 // if OP_WRITE was set, WriteTcpBlockNetworkRequest is pending (we should have at least 1 outgoing buffer)
                 int writeCount = 0;
-                while (!outBuffers.isEmpty()) {
-                    ByteBuffer outBuffer = outBuffers.getFirst();
-                    
-                    writeCount += channel.write(outBuffer);
-                    if (outBuffer.remaining() > 0) {
-                        break; // not everything was written, which means we can't send anymore data until we get another OP_WRITE, so leave
+                if (outBuffers.isEmpty() && !entry.isNotifiedOfWritable()) { // if empty but not notified yet
+                    entry.setNotifiedOfWritable(true);
+                    entry.getResponseBus().send(new WriteReadyTcpNetworkNotification(id));
+                } else {
+                    while (!outBuffers.isEmpty()) {
+                        ByteBuffer outBuffer = outBuffers.getFirst();
+
+                        writeCount += channel.write(outBuffer);
+                        if (outBuffer.remaining() > 0) {
+                            // not everything was written, which means we can't send anymore data until we get another OP_WRITE, so leave
+                            break;
+                        }
+
+                        outBuffers.removeFirst();
+
+                        Object writeResp = new WriteTcpNetworkResponse(id, writeCount);
+                        responseBus.send(writeResp);
                     }
-                    
-                    outBuffers.removeFirst();
-                    
-                    Object writeResp = new WriteTcpBlockNetworkResponse(id, writeCount);
-                    responseBus.send(writeResp);
                 }
             }
         }
@@ -224,28 +235,36 @@ public final class NetworkGateway {
             if (selectionKey.isReadable()) {
                 buffer.clear();
                 InetSocketAddress incomingSocketAddress = (InetSocketAddress) channel.receive(buffer);
-                buffer.flip();
-
-                byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                Object readResp = new ReadUdpBlockNetworkResponse(id, incomingSocketAddress, bufferAsArray);
-                responseBus.send(readResp);
+                if (incomingSocketAddress != null) {
+                    buffer.flip();
+                    byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
+                    Object readResp = new ReadUdpNetworkNotification(id, incomingSocketAddress, bufferAsArray);
+                    responseBus.send(readResp);
+                }
             }
             
-            LinkedList<AddressedByteBuffer> outBuffers;
-            if (selectionKey.isWritable() && !(outBuffers = entry.getOutgoingBuffers()).isEmpty()) {
-                // technically if OP_WRITE was set, at least 1 outgoing buffer available -- but sometimes hit even if OP_WRITE not set
-                AddressedByteBuffer outBuffer = outBuffers.removeFirst();
+            if (selectionKey.isWritable()) {
+                LinkedList<AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
+                if (!outBuffers.isEmpty()) { // if not empty
+                    AddressedByteBuffer outBuffer = outBuffers.removeFirst();
 
-                int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddress());
+                    int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddress());
 
-                Object writeResp = new WriteUdpBlockNetworkResponse(id, writeCount);
-                responseBus.send(writeResp);
+                    Object writeResp = new WriteUdpNetworkResponse(id, writeCount);
+                    responseBus.send(writeResp);
+                } else if (!entry.isNotifiedOfWritable()) { // if empty but not notified yet
+                    entry.setNotifiedOfWritable(true);
+                    entry.getResponseBus().send(new WriteReadyUdpNetworkNotification(id));
+                }
             }
         }
 
         private void updateReadWriteSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
             int newKey = SelectionKey.OP_READ;
-            if (!entry.getOutgoingBuffers().isEmpty()) {
+            if (!entry.getOutgoingBuffers().isEmpty()) { // if not empty 
+                newKey |= SelectionKey.OP_WRITE;
+                entry.setNotifiedOfWritable(false);
+            } else if (!entry.isNotifiedOfWritable()) { // if is empty but not notified yet
                 newKey |= SelectionKey.OP_WRITE;
             }
 
@@ -328,15 +347,15 @@ public final class NetworkGateway {
                     responseBus.send(new DestroySocketNetworkResponse(id));
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new ErrorNetworkResponse());
+                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
                     }
                 }
-            } else if (msg instanceof WriteTcpBlockNetworkRequest) {
-                WriteTcpBlockNetworkRequest req = (WriteTcpBlockNetworkRequest) msg;
+            } else if (msg instanceof WriteTcpNetworkRequest) {
+                WriteTcpNetworkRequest req = (WriteTcpNetworkRequest) msg;
 
                 Bus responseBus = null;
+                int id = req.getId();
                 try {
-                    int id = req.getId();
                     TcpNetworkEntry entry = (TcpNetworkEntry) idMap.get(id);
 
                     responseBus = entry.getResponseBus();
@@ -349,15 +368,15 @@ public final class NetworkGateway {
                     updateReadWriteSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new ErrorNetworkResponse());
+                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
                     }
                 }
-            } else if (msg instanceof WriteUdpBlockNetworkRequest) {
-                WriteUdpBlockNetworkRequest req = (WriteUdpBlockNetworkRequest) msg;
+            } else if (msg instanceof WriteUdpNetworkRequest) {
+                WriteUdpNetworkRequest req = (WriteUdpNetworkRequest) msg;
 
                 Bus responseBus = null;
+                int id = req.getId();
                 try {
-                    int id = req.getId();
                     UdpNetworkEntry entry = (UdpNetworkEntry) idMap.get(id);
 
                     responseBus = entry.getResponseBus();
@@ -371,7 +390,7 @@ public final class NetworkGateway {
                     updateReadWriteSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new ErrorNetworkResponse());
+                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
                     }
                 }
             } else if (msg instanceof GetLocalIpAddressesRequest) {
@@ -405,9 +424,12 @@ public final class NetworkGateway {
 
         private void shutdownResources() {
             for (Entry<Channel, NetworkEntry<?>> entry : channelMap.entrySet()) {
+                Channel channel = entry.getKey();
+                NetworkEntry<?> networkEntry = entry.getValue();
                 try {
-                    entry.getValue().getResponseBus().send(new ErrorNetworkResponse());
-                    entry.getKey().close();
+                    int id = networkEntry.getId();
+                    networkEntry.getResponseBus().send(new IdentifiableErrorNetworkResponse(id));
+                    channel.close();
                 } catch (Exception e) {
                     // do nothing
                 }
@@ -429,7 +451,7 @@ public final class NetworkGateway {
             idMap.remove(id);
             
             try {
-                ne.getResponseBus().send(new ErrorNetworkResponse());
+                ne.getResponseBus().send(new IdentifiableErrorNetworkResponse(id));
                 channel.close();
             } catch (Exception e) {
                 // do nothing

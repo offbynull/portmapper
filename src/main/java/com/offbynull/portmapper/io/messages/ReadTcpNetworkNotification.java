@@ -18,17 +18,12 @@ package com.offbynull.portmapper.io.messages;
 
 import java.util.Arrays;
 
-public final class WriteTcpBlockNetworkRequest implements NetworkRequest {
-    private int id;
+public final class ReadTcpNetworkNotification extends IdentifiableNetworkNotification {
     private byte[] data;
 
-    public WriteTcpBlockNetworkRequest(int id, byte[] data) {
-        this.id = id;
+    public ReadTcpNetworkNotification(int id, byte[] data) {
+        super(id);
         this.data = Arrays.copyOf(data, data.length);
-    }
-
-    public int getId() {
-        return id;
     }
 
     public byte[] getData() {

@@ -52,12 +52,13 @@ public final class TcpServerEmulator implements Closeable {
                             
                             ByteBuffer response = helper.requestResponseMap.get(request);
                             if (response != null) {
+                                Thread.sleep(1000L); // sleep for 1 seconds before responding
                                 IOUtils.write(ByteBufferUtils.copyContentsToArray(response, false), os);
                             }
                             
                             os.flush();
                             
-                            Thread.sleep(2000L); // sleep for 2 seconds before forcing a close
+                            Thread.sleep(1000L); // sleep for 2 seconds before forcing a close
                             os.close();
                         }
                     }

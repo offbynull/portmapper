@@ -16,9 +16,25 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-public final class CreateUdpSocketNetworkResponse extends IdentifiableNetworkResponse {
+import java.net.InetSocketAddress;
+import java.util.Arrays;
 
-    public CreateUdpSocketNetworkResponse(int id) {
+public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotification {
+    private InetSocketAddress socketAddress;
+    private byte[] data;
+
+    public ReadUdpNetworkNotification(int id, InetSocketAddress socketAddress, byte[] data) {
         super(id);
+        this.socketAddress = socketAddress;
+        this.data = Arrays.copyOf(data, data.length);
     }
+
+    public InetSocketAddress getSocketAddress() {
+        return socketAddress;
+    }
+
+    public byte[] getData() {
+        return Arrays.copyOf(data, data.length);
+    }
+
 }

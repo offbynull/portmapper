@@ -16,9 +16,10 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-public final class CreateUdpSocketNetworkResponse extends IdentifiableNetworkResponse {
+public final class WriteReadyTcpNetworkNotification extends IdentifiableNetworkNotification {
 
-    public CreateUdpSocketNetworkResponse(int id) {
+    public WriteReadyTcpNetworkNotification(int id) {
         super(id);
     }
+
 }

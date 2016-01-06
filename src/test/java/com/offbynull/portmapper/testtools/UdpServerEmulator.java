@@ -44,6 +44,7 @@ public final class UdpServerEmulator implements Closeable {
                         ByteBuffer response = helper.requestResponseMap.get(request);
                         
                         if (response != null) {
+                            Thread.sleep(1000L);
                             response = response.asReadOnlyBuffer();
                             int rem = response.remaining();
                             response.get(buffer, 0, rem);
@@ -53,6 +54,8 @@ public final class UdpServerEmulator implements Closeable {
                     }
                 } catch (IOException ioe) {
                     // do nothing
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException(ie);
                 }
             }
         });

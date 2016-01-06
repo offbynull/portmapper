@@ -16,30 +16,16 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-
-public final class WriteUdpBlockNetworkRequest implements NetworkRequest {
+public abstract class IdentifiableNetworkRequest {
+    
     private int id;
-    private InetSocketAddress outgoingSocketAddress;
-    private byte[] data;
 
-    public WriteUdpBlockNetworkRequest(int id, InetSocketAddress outgoingSocketAddress, byte[] data) {
+    public IdentifiableNetworkRequest(int id) {
         this.id = id;
-        this.outgoingSocketAddress = outgoingSocketAddress;
-        this.data = Arrays.copyOf(data, data.length);
     }
 
     public int getId() {
         return id;
-    }
-
-    public InetSocketAddress getOutgoingSocketAddress() {
-        return outgoingSocketAddress;
-    }
-
-    public byte[] getData() {
-        return Arrays.copyOf(data, data.length);
     }
 
 }

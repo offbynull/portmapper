@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
 
-public final class GetLocalIpAddressesResponse {
+public final class GetLocalIpAddressesResponse implements NetworkResponse {
     private Set<InetAddress> localAddresses;
 
     public GetLocalIpAddressesResponse(Set<InetAddress> localAddresses) {

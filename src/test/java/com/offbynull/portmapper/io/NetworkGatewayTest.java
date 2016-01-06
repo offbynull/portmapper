@@ -9,12 +9,14 @@ import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.DestroySocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.DestroySocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.KillNetworkRequest;
-import com.offbynull.portmapper.io.messages.ReadTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.ReadUdpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteTcpBlockNetworkResponse;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteUdpBlockNetworkResponse;
+import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteReadyTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteReadyUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
+import com.offbynull.portmapper.io.messages.WriteUdpNetworkResponse;
 import com.offbynull.portmapper.testtools.TcpServerEmulator;
 import com.offbynull.portmapper.testtools.UdpServerEmulator;
 import java.io.ByteArrayOutputStream;
@@ -62,18 +64,21 @@ public class NetworkGatewayTest {
             id = resp1.getId();
 
 
-            fixtureBus.send(new WriteTcpBlockNetworkRequest(id, "hello".getBytes("UTF-8")));
+            
+            fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
             int remainingWriteBytes = 5;
             while (remainingWriteBytes > 0) {
-                WriteTcpBlockNetworkResponse writeResp = (WriteTcpBlockNetworkResponse) queue.take();
+                WriteReadyTcpNetworkNotification writeReady = (WriteReadyTcpNetworkNotification) queue.take();
+                WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) queue.take();
                 remainingWriteBytes -= writeResp.getAmountWritten();
             }
-
+            
+            WriteReadyTcpNetworkNotification writeReady = (WriteReadyTcpNetworkNotification) queue.take();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int remainingReadBytes = 7;
             while (remainingReadBytes > 0) {
-                ReadTcpBlockNetworkResponse readResp = (ReadTcpBlockNetworkResponse) queue.take();
+                ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) queue.take();
                 byte[] data = readResp.getData();
                 baos.write(data);
                 remainingReadBytes -= data.length;
@@ -106,17 +111,18 @@ public class NetworkGatewayTest {
             id = resp1.getId();
 
 
+            WriteReadyUdpNetworkNotification writeReadyResp = (WriteReadyUdpNetworkNotification) queue.take();
             
-            fixtureBus.send(new WriteUdpBlockNetworkRequest(id, new InetSocketAddress("127.0.0.1", 12345), "hello".getBytes("UTF-8")));
-            WriteUdpBlockNetworkResponse writeResp = (WriteUdpBlockNetworkResponse) queue.take();
+            fixtureBus.send(new WriteUdpNetworkRequest(id, new InetSocketAddress("127.0.0.1", 12345), "hello".getBytes("UTF-8")));
+            WriteUdpNetworkResponse writeResp = (WriteUdpNetworkResponse) queue.take();
 
 
+            WriteReadyUdpNetworkNotification writeReadyResp2 = (WriteReadyUdpNetworkNotification) queue.take();
             
-            ReadUdpBlockNetworkResponse readResp = (ReadUdpBlockNetworkResponse) queue.take();
+            ReadUdpNetworkNotification readResp = (ReadUdpNetworkNotification) queue.take();
             assertEquals("goodbye", new String(readResp.getData(), Charset.forName("UTF-8")));
+
             
-
-
             fixtureBus.send(new DestroySocketNetworkRequest(id));
             DestroySocketNetworkResponse destoryResp = (DestroySocketNetworkResponse) queue.take();
         } finally {

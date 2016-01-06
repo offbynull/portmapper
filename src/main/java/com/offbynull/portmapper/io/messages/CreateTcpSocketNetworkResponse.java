@@ -16,18 +16,9 @@
  */
 package com.offbynull.portmapper.io.messages;
 
-import org.apache.commons.lang3.Validate;
-
-public final class CreateTcpSocketNetworkResponse implements NetworkResponse {
-    private int id;
+public final class CreateTcpSocketNetworkResponse extends IdentifiableNetworkResponse {
 
     public CreateTcpSocketNetworkResponse(int id) {
-        Validate.notNull(id);
-        this.id = id;
+        super(id);
     }
-
-    public int getId() {
-        return id;
-    }
-
 }

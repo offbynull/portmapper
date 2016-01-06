@@ -2,18 +2,13 @@ package com.offbynull.portmapper.io.messages;
 
 import org.apache.commons.lang3.Validate;
 
-public final class WriteUdpBlockNetworkResponse implements NetworkResponse {
-    private int id;
+public final class WriteTcpNetworkResponse extends IdentifiableNetworkResponse {
     private int amountWritten;
 
-    public WriteUdpBlockNetworkResponse(int id, int amountWritten) {
+    public WriteTcpNetworkResponse(int id, int amountWritten) {
+        super(id);
         Validate.inclusiveBetween(0, Integer.MAX_VALUE, amountWritten);
-        this.id = id;
         this.amountWritten = amountWritten;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public int getAmountWritten() {
