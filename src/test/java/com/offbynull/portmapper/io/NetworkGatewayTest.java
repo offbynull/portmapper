@@ -11,8 +11,8 @@ import com.offbynull.portmapper.io.messages.DestroySocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.KillNetworkRequest;
 import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
-import com.offbynull.portmapper.io.messages.WriteReadyTcpNetworkNotification;
-import com.offbynull.portmapper.io.messages.WriteReadyUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteEmptyTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteEmptyUdpNetworkNotification;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
@@ -68,12 +68,12 @@ public class NetworkGatewayTest {
             fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
             int remainingWriteBytes = 5;
             while (remainingWriteBytes > 0) {
-                WriteReadyTcpNetworkNotification writeReady = (WriteReadyTcpNetworkNotification) queue.take();
+                WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
                 WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) queue.take();
                 remainingWriteBytes -= writeResp.getAmountWritten();
             }
             
-            WriteReadyTcpNetworkNotification writeReady = (WriteReadyTcpNetworkNotification) queue.take();
+            WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int remainingReadBytes = 7;
@@ -111,13 +111,13 @@ public class NetworkGatewayTest {
             id = resp1.getId();
 
 
-            WriteReadyUdpNetworkNotification writeReadyResp = (WriteReadyUdpNetworkNotification) queue.take();
+            WriteEmptyUdpNetworkNotification writeReadyResp = (WriteEmptyUdpNetworkNotification) queue.take();
             
             fixtureBus.send(new WriteUdpNetworkRequest(id, new InetSocketAddress("127.0.0.1", 12345), "hello".getBytes("UTF-8")));
             WriteUdpNetworkResponse writeResp = (WriteUdpNetworkResponse) queue.take();
 
 
-            WriteReadyUdpNetworkNotification writeReadyResp2 = (WriteReadyUdpNetworkNotification) queue.take();
+            WriteEmptyUdpNetworkNotification writeReadyResp2 = (WriteEmptyUdpNetworkNotification) queue.take();
             
             ReadUdpNetworkNotification readResp = (ReadUdpNetworkNotification) queue.take();
             assertEquals("goodbye", new String(readResp.getData(), Charset.forName("UTF-8")));

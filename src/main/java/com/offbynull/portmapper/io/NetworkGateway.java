@@ -19,6 +19,7 @@ package com.offbynull.portmapper.io;
 import com.offbynull.portmapper.common.Bus;
 import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.io.UdpNetworkEntry.AddressedByteBuffer;
+import com.offbynull.portmapper.io.messages.ConnectedTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkRequest;
@@ -32,8 +33,8 @@ import com.offbynull.portmapper.io.messages.IdentifiableErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.KillNetworkRequest;
 import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
-import com.offbynull.portmapper.io.messages.WriteReadyTcpNetworkNotification;
-import com.offbynull.portmapper.io.messages.WriteReadyUdpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteEmptyTcpNetworkNotification;
+import com.offbynull.portmapper.io.messages.WriteEmptyUdpNetworkNotification;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
@@ -172,7 +173,7 @@ public final class NetworkGateway {
                     boolean alreadyConnected = channel.isConnected();
                     boolean connected = channel.finishConnect();
                     if (!alreadyConnected && connected) {
-                        responseBus.send(new CreateTcpSocketNetworkResponse(id));
+                        responseBus.send(new ConnectedTcpNetworkResponse(id));
                     }
                 } catch (IOException ioe) {
                     // socket failed to connect
@@ -207,7 +208,7 @@ public final class NetworkGateway {
                 int writeCount = 0;
                 if (outBuffers.isEmpty() && !entry.isNotifiedOfWritable()) { // if empty but not notified yet
                     entry.setNotifiedOfWritable(true);
-                    entry.getResponseBus().send(new WriteReadyTcpNetworkNotification(id));
+                    entry.getResponseBus().send(new WriteEmptyTcpNetworkNotification(id));
                 } else {
                     while (!outBuffers.isEmpty()) {
                         ByteBuffer outBuffer = outBuffers.getFirst();
@@ -254,7 +255,7 @@ public final class NetworkGateway {
                     responseBus.send(writeResp);
                 } else if (!entry.isNotifiedOfWritable()) { // if empty but not notified yet
                     entry.setNotifiedOfWritable(true);
-                    entry.getResponseBus().send(new WriteReadyUdpNetworkNotification(id));
+                    entry.getResponseBus().send(new WriteEmptyUdpNetworkNotification(id));
                 }
             }
         }
@@ -324,7 +325,7 @@ public final class NetworkGateway {
                     
                     setSelectionKey(entry, channel, SelectionKey.OP_CONNECT);
 
-                    // no response -- we'll respond when connection succeeds
+                    responseBus.send(new CreateTcpSocketNetworkResponse(id));
                 } catch (RuntimeException re) {
                     responseBus.send(new ErrorNetworkResponse());
                 }

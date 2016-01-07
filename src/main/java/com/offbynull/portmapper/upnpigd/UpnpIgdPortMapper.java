@@ -19,6 +19,7 @@ package com.offbynull.portmapper.upnpigd;
 import com.offbynull.portmapper.PortMapper;
 import com.offbynull.portmapper.common.BasicBus;
 import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.io.messages.ConnectedTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkRequest;
@@ -27,13 +28,10 @@ import com.offbynull.portmapper.io.messages.DestroySocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
-import com.offbynull.portmapper.io.messages.NetworkResponse;
 import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
-import com.offbynull.portmapper.io.messages.WriteUdpNetworkResponse;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceReference;
@@ -52,6 +50,8 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,6 +59,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
@@ -76,68 +79,73 @@ abstract class UpnpIgdPortMapper implements PortMapper {
     private final Range<Long> externalPortRange;
     private final Range<Long> leaseDurationRange;
 
-    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
+    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException, IOException {
         Validate.notNull(networkBus);
 
-        Set<UpnpIgdPortMapper> ret = new HashSet<>();
-
+        
         // Probe for devices -- for each device found, query the device
-        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = probe(networkBus);
-        for (Entry<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeEntry : probeResponses.entrySet()) {
-            InetAddress sourceAddress = probeEntry.getKey();
-            ServiceDiscoveryUpnpIgdResponse discoveryResp = probeEntry.getValue();
+        Map<InetAddress, URL> probeResponses = discoverDevices(networkBus);
+        
+        
+        // Get root XMLs
+        Collection<HttpRequest> rootRequests = new ArrayList<>(probeResponses.size());
+        for (Entry<InetAddress, URL> entry : probeResponses.entrySet()) {
+            InetAddress sourceAddress = entry.getKey();
+            URL location = entry.getValue();
+            
+            HttpRequest req = new HttpRequest();
+            
+            req.parent = entry;
+            req.sourceAddress = sourceAddress;
+            req.location = location;
+            req.sendData = new RootUpnpIgdRequest(location.getAuthority(), location.getFile()).dump();
+            rootRequests.add(req);
+        }
+        queryHttp(networkBus, rootRequests);
+        
+        
+        // Extract service locations from root XMLs + get service descriptions
+        Collection<HttpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
+        for (HttpRequest rootRequest : rootRequests) {
             RootUpnpIgdResponse rootResp;
             try {
-                rootResp = queryDevice(networkBus, sourceAddress, discoveryResp.getLocation());
-            } catch (RuntimeException | IOException ioe) {
+                rootResp = new RootUpnpIgdResponse(rootRequest.location, rootRequest.respData);
+            } catch (IllegalArgumentException iae) {
+                // failed to parse, so skip to next
                 continue;
             }
-
-            // For each service found in the device -- query the service description
-            for (ServiceReference serviceRef : rootResp.getServices()) {
-                ServiceDescriptionUpnpIgdResponse descResp;
-                try {
-                    descResp = queryService(networkBus, sourceAddress, serviceRef.getScpdUrl());
-                } catch (RuntimeException | IOException ioe) {
-                    continue;
-                }
-
-                // Create a UPnP-IGD port mapper based on the type of service found (should almost always be either IPv4 portmapper or IPv6
-                // firewall, not both)
-                for (Entry<ServiceType, IdentifiedService> serviceEntry : descResp.getIdentifiedServices().entrySet()) {
-                    IdentifiedService identifiedService = serviceEntry.getValue();
-                    UpnpIgdPortMapper portMapper;
-                    switch (serviceEntry.getKey()) {
-                        case FIREWALL:
-                            portMapper = new FirewallUpnpIgdPortMapper(
-                                    sourceAddress,
-                                    serviceRef.getControlUrl(),
-                                    discoveryResp.getServer(),
-                                    serviceRef.getServiceType(),
-                                    identifiedService.getExternalPortRange(),
-                                    identifiedService.getLeaseDurationRange());
-                            break;
-                        case PORT_MAPPER:
-                            portMapper = new PortMapperUpnpIgdPortMapper(
-                                    sourceAddress,
-                                    serviceRef.getControlUrl(),
-                                    discoveryResp.getServer(),
-                                    serviceRef.getServiceType(),
-                                    identifiedService.getExternalPortRange(),
-                                    identifiedService.getLeaseDurationRange());
-                            break;
-                        default:
-                            throw new IllegalStateException(); // should never happen
-                    }
-                    ret.add(portMapper);
-                }
+            
+            for (ServiceReference serviceReference : rootResp.getServices()) {
+                URL scpdUrl = serviceReference.getScpdUrl();
+                
+                HttpRequest req = new HttpRequest();
+                req.parent = rootRequest;
+                req.sourceAddress = rootRequest.sourceAddress;
+                req.location = scpdUrl;
+                req.sendData = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()).dump();
             }
         }
-
+        queryHttp(networkBus, serviceDescRequests);
+        
+        
+        // Get service descriptions
+        Set<UpnpIgdPortMapper> ret = new HashSet<>();
+        for (HttpRequest serviceDescRequest : serviceDescRequests) {
+            ServiceDescriptionUpnpIgdResponse serviceDescResp;
+            try {
+                serviceDescResp = new ServiceDescriptionUpnpIgdResponse(serviceDescRequest.respData);
+            } catch (IllegalArgumentException iae) {
+                // failed to parse, so skip to next
+                continue;
+            }
+            
+            FILL ME IN
+        }
+        
         return ret;
     }
 
-    private static Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probe(Bus networkBus) throws InterruptedException {
+    private static Map<InetAddress, URL> discoverDevices(Bus networkBus) throws InterruptedException {
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
 
@@ -147,12 +155,12 @@ abstract class UpnpIgdPortMapper implements PortMapper {
 
         // Create UDP sockets and send discovery messages
         Map<Integer, InetAddress> udpSocketIds = new HashMap<>(); // id to src address
-        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = new HashMap<>(); // source address to response
+        Map<InetAddress, URL> probeResponses = new HashMap<>(); // source address to response
         for (InetAddress sourceAddress : localIpsResp.getLocalAddresses()) {
             System.out.println("sending from " + sourceAddress);
             try {
                 networkBus.send(new CreateUdpSocketNetworkRequest(selfBus, sourceAddress));
-                NetworkResponse createResp = (NetworkResponse) queue.take();
+                Object createResp = queue.take();
 
                 int id = ((CreateUdpSocketNetworkResponse) createResp).getId();
 
@@ -202,23 +210,22 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 break;
             }
 
-            NetworkResponse netResp = (NetworkResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+            Object netResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
             if (netResp == null) {
                 break;
             } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
                 // We only care about responses -- message could be successful write or error
                 continue;
             }
-            
-            System.out.println("Recved!");
-            
+
             ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
             int id = readNetResp.getId();
 
-            InetAddress sourceAddress = udpSocketIds.get(id);
             try {
                 ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(readNetResp.getData());
-                probeResponses.put(sourceAddress, resp);
+                InetAddress sourceAddress = udpSocketIds.get(id);
+                URL location = resp.getLocation();
+                probeResponses.put(sourceAddress, location);
             } catch (IllegalArgumentException iae) {
                 // if invalid, do nothing -- just skip over
             }
@@ -233,87 +240,118 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         return probeResponses;
     }
 
-    private static RootUpnpIgdResponse queryDevice(Bus networkBus, InetAddress sourceAddress, URL location)
-            throws UnknownHostException, IOException, InterruptedException {
-        InetAddress destinationAddress = InetAddress.getByName(location.getHost());
-        int destinationPort = location.getPort();
-
-        RootUpnpIgdRequest req = new RootUpnpIgdRequest(location.getAuthority(), location.getFile());
-        byte[] reqData = req.dump();
-
-        byte[] respData = tcpRequest(networkBus, sourceAddress, destinationAddress, destinationPort, reqData);
-
-        return new RootUpnpIgdResponse(location, respData);
+    private static final class HttpRequest {
+        private Object parent;
+        private InetAddress sourceAddress;
+        private URL location;
+        private byte[] sendData;
+        private byte[] respData;
     }
+    
+    private static void queryHttp(Bus networkBus, Collection<HttpRequest> reqs) throws InterruptedException, UnknownHostException,
+            IOException {
 
-    private static ServiceDescriptionUpnpIgdResponse queryService(Bus networkBus, InetAddress sourceAddress, URL scpdUrl)
-            throws UnknownHostException, IOException, InterruptedException {
-        InetAddress destinationAddress = InetAddress.getByName(scpdUrl.getHost());
-        int destinationPort = scpdUrl.getPort();
-
-        ServiceDescriptionUpnpIgdRequest req = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile());
-        byte[] reqData = req.dump();
-
-        byte[] respData = tcpRequest(networkBus, sourceAddress, destinationAddress, destinationPort, reqData);
-
-        return new ServiceDescriptionUpnpIgdResponse(respData);
-    }
-
-    protected static byte[] tcpRequest(Bus networkBus, InetAddress sourceAddress, InetAddress destinationAddress, int destinationPort,
-            byte[] data) throws IOException, InterruptedException {
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
 
-        // Create TCP socket
-        networkBus.send(new CreateTcpSocketNetworkRequest(selfBus, sourceAddress, destinationAddress, destinationPort));
-        CreateTcpSocketNetworkResponse createResp = (CreateTcpSocketNetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
-        int id = createResp.getId();
-
-        // Write request, and save any data that comes in
-        ByteArrayOutputStream queuedRespBytes = new ByteArrayOutputStream();
-        try {
-            int remainingDataLen = data.length;
-
-            long remainingTime = System.currentTimeMillis() + 10000L;
-            while (true) {
-                long sleepTime = remainingTime - System.currentTimeMillis();
-                if (sleepTime < 0L) {
-                    break;
-                }
-
-                if (remainingDataLen > 0) {
-                    networkBus.send(new WriteTcpNetworkRequest(id, data));
-                }
-
-                NetworkResponse resp = (NetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
-
-                if (resp instanceof WriteTcpNetworkResponse) {
-                    WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) resp;
-                    remainingDataLen -= writeResp.getAmountWritten();
-                } else if (resp instanceof ReadTcpNetworkNotification) {
-                    ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
-                    queuedRespBytes.write(readResp.getData());
-                } else if (resp instanceof ErrorNetworkResponse) {
-                    break;
-                }
+        long remainingTime = System.currentTimeMillis() + 10000L;
+        
+        
+        // Create sockets
+        Map<Integer, HttpRequest> sockets = new HashMap<>();
+        for (HttpRequest req : reqs) {
+            long sleepTime = remainingTime - System.currentTimeMillis();
+            if (sleepTime < 0L) {
+                break;
             }
-        } finally {
-            networkBus.send(new DestroySocketNetworkRequest(id));
+            
+            if (!"http".equalsIgnoreCase(req.location.getProtocol())) {
+                // not http -- is it https? we don't support that yet
+                // TODO LOG SOMETHING HERE
+                continue;
+            }
+
+            InetAddress destinationAddress = InetAddress.getByName(req.location.getHost());
+            int destinationPort = req.location.getPort();
+
+            networkBus.send(new CreateTcpSocketNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
+            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+
+            if (resp instanceof CreateTcpSocketNetworkResponse) {
+                CreateTcpSocketNetworkResponse createResp = (CreateTcpSocketNetworkResponse) resp;
+                int id = createResp.getId();
+
+                sockets.put(id, req);
+            } else if (resp instanceof ErrorNetworkResponse) {
+                // there was an error creating the socket -- it could be anything that caused this (e.g. an interface not enabled for
+                // writing), so just ignore this socket and move on
+            } else {
+                throw new IllegalStateException("" + resp); // should never happen
+            }
         }
 
-        // don't bother reading the destroysocket response, the queue being responded to is being thrown away
-        return queuedRespBytes.toByteArray();
+        
+        // Handle connections
+        Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
+        while (true) {
+            long sleepTime = remainingTime - System.currentTimeMillis();
+            if (sleepTime < 0L) {
+                break;
+            }
+
+            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+
+            if (resp instanceof ConnectedTcpNetworkResponse) {
+                // On connect, create nessecary buffers and push out request
+                ConnectedTcpNetworkResponse connectResp = (ConnectedTcpNetworkResponse) resp;
+                int id = connectResp.getId();
+
+                Validate.validState(!readBuffers.containsKey(id)); // sanity check -- should never happen
+                readBuffers.put(id, new ByteArrayOutputStream());
+                HttpRequest req = sockets.get(id);
+                Validate.validState(req != null); // sanity check -- should never happen
+                
+                networkBus.send(new WriteTcpNetworkRequest(id, req.sendData));
+            } else if (resp instanceof ReadTcpNetworkNotification) {
+                // On read, put in to readBuffer
+                ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
+                int id = readResp.getId();
+                
+                ByteArrayOutputStream baos = readBuffers.get(id);
+                Validate.validState(baos != null); // sanity check -- should never happen
+                baos.write(readResp.getData());
+            }
+        }
+        
+        
+        // Issue socket closes
+        for (int id : sockets.keySet()) {
+            networkBus.send(new DestroySocketNetworkRequest(id));
+        }
+        
+        
+        // Process responses
+        MultiValuedMap<Entry<InetAddress, URL>, byte[]> responses = new ArrayListValuedHashMap<>();
+        for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
+            int id = entry.getKey();
+            HttpRequest req = sockets.get(id);
+            
+            Validate.validState(req != null); // sanity check
+
+            byte[] respData = entry.getValue().toByteArray();
+            req.respData = respData;
+        }
     }
 
-    protected UpnpIgdPortMapper(InetAddress selfAddress, URL controlUrl, String serverName, String serviceType,
+    protected UpnpIgdPortMapper(InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
-        Validate.notNull(selfAddress);
+        Validate.notNull(internalAddress);
         Validate.notNull(controlUrl);
 //        Validate.notNull(serverName); // can be null
         Validate.notNull(serviceType);
         Validate.notNull(externalPortRange);
         Validate.notNull(leaseDurationRange);
-        this.internalAddress = selfAddress;
+        this.internalAddress = internalAddress;
         this.controlUrl = controlUrl;
         this.serverName = serverName;
         this.serviceType = serviceType;
