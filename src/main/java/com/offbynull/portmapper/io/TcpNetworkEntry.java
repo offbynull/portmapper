@@ -22,6 +22,7 @@ import java.nio.channels.Channel;
 import java.util.LinkedList;
 
 final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
+    private boolean connecting = true;
     private LinkedList<ByteBuffer> outgoingBuffers;
 
     public TcpNetworkEntry(int id, Channel channel, Bus responseBus) {
@@ -33,4 +34,13 @@ final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
     public LinkedList<ByteBuffer> getOutgoingBuffers() {
         return outgoingBuffers;
     }
+
+    public boolean isConnecting() {
+        return connecting;
+    }
+
+    public void setConnecting(boolean connecting) {
+        this.connecting = connecting;
+    }
+    
 }

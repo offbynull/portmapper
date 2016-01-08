@@ -142,7 +142,7 @@ public final class NetworkGateway {
                                 throw new IllegalStateException(); // should never happen
                             }
 
-                            updateReadWriteSelectionKey(entry, (AbstractSelectableChannel) channel);
+                            updateSelectionKey(entry, (AbstractSelectableChannel) channel);
                         } catch (SocketException | RuntimeException e) {
                             shutdownResource(channel);
                         }
@@ -173,6 +173,7 @@ public final class NetworkGateway {
                     boolean alreadyConnected = channel.isConnected();
                     boolean connected = channel.finishConnect();
                     if (!alreadyConnected && connected) {
+                        entry.setConnecting(false);
                         responseBus.send(new ConnectedTcpNetworkResponse(id));
                     }
                 } catch (IOException ioe) {
@@ -260,8 +261,13 @@ public final class NetworkGateway {
             }
         }
 
-        private void updateReadWriteSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
-            int newKey = SelectionKey.OP_READ;
+        private void updateSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
+            int newKey = SelectionKey.OP_READ; // always read
+            
+            if (entry instanceof TcpNetworkEntry && ((TcpNetworkEntry) entry).isConnecting()) { // if connecting (tcp-only)
+                newKey |= SelectionKey.OP_CONNECT;
+            }
+            
             if (!entry.getOutgoingBuffers().isEmpty()) { // if not empty 
                 newKey |= SelectionKey.OP_WRITE;
                 entry.setNotifiedOfWritable(false);
@@ -272,14 +278,6 @@ public final class NetworkGateway {
             if (newKey != entry.getSelectionKey()) {
                 entry.setSelectionKey(newKey);
                 channel.register(selector, newKey); // register new key if different -- calling register may have performance issues?
-            }
-        }
-
-        private void setSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel, int selectionKey)
-                throws ClosedChannelException {
-            if (selectionKey != entry.getSelectionKey()) {
-                entry.setSelectionKey(selectionKey);
-                channel.register(selector, selectionKey); // register new key if different -- calling register may have performance issues?
             }
         }
 
@@ -301,7 +299,7 @@ public final class NetworkGateway {
                     
                     responseBus.send(new CreateUdpSocketNetworkResponse(id));
                     
-                    updateReadWriteSelectionKey(entry, channel);
+                    updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     responseBus.send(new ErrorNetworkResponse());
                 }
@@ -323,7 +321,8 @@ public final class NetworkGateway {
                     idMap.put(id, entry);
                     channelMap.put(channel, entry);
                     
-                    setSelectionKey(entry, channel, SelectionKey.OP_CONNECT);
+                    entry.setConnecting(true);
+                    updateSelectionKey(entry, channel);
 
                     responseBus.send(new CreateTcpSocketNetworkResponse(id));
                 } catch (RuntimeException re) {
@@ -368,7 +367,7 @@ public final class NetworkGateway {
                     }
                     
                     AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
-                    updateReadWriteSelectionKey(entry, channel);
+                    updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new IdentifiableErrorNetworkResponse(id));
@@ -390,7 +389,7 @@ public final class NetworkGateway {
                     outBuffers.add(new AddressedByteBuffer(writeBuffer, writeAddress));
                     
                     AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
-                    updateReadWriteSelectionKey(entry, channel);
+                    updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
                         responseBus.send(new IdentifiableErrorNetworkResponse(id));

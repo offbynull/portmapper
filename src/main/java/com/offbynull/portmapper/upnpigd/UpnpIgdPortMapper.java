@@ -19,7 +19,6 @@ package com.offbynull.portmapper.upnpigd;
 import com.offbynull.portmapper.PortMapper;
 import com.offbynull.portmapper.common.BasicBus;
 import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.io.messages.ConnectedTcpNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.CreateTcpSocketNetworkResponse;
 import com.offbynull.portmapper.io.messages.CreateUdpSocketNetworkRequest;
@@ -63,9 +62,7 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
@@ -179,7 +176,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 serviceDescRequests.add(req);
             }
         }
-        performHttpRequests(networkBus, serviceDescRequests, 10000L);
+        performHttpRequests(networkBus, serviceDescRequests, 20000L);
 
         // Get service descriptions
         Set<UpnpIgdPortMapper> ret = new HashSet<>();
