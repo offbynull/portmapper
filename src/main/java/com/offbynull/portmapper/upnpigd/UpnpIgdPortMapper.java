@@ -51,9 +51,11 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -61,7 +63,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
@@ -84,21 +85,25 @@ abstract class UpnpIgdPortMapper implements PortMapper {
 
         
         // Probe for devices -- for each device found, query the device
-        Map<InetAddress, URL> probeResponses = discoverDevices(networkBus);
+        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = discoverDevices(networkBus);
         
         
         // Get root XMLs
         Collection<HttpRequest> rootRequests = new ArrayList<>(probeResponses.size());
-        for (Entry<InetAddress, URL> entry : probeResponses.entrySet()) {
-            InetAddress sourceAddress = entry.getKey();
-            URL location = entry.getValue();
-            
+        for (Entry<InetAddress, ServiceDiscoveryUpnpIgdResponse> entry : probeResponses.entrySet()) {
             HttpRequest req = new HttpRequest();
             
-            req.parent = entry;
-            req.sourceAddress = sourceAddress;
-            req.location = location;
-            req.sendData = new RootUpnpIgdRequest(location.getAuthority(), location.getFile()).dump();
+            ProbeResult other = new ProbeResult();
+            other.source = entry.getKey();
+            other.location = entry.getValue().getLocation();
+            other.serverName = entry.getValue().getServer();
+            other.serviceType = entry.getValue().getServiceType();
+            
+            req.other = other;
+            req.sourceAddress = other.source;
+            req.location = other.location;
+            req.sendValue = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
+            req.sendData = ((RootUpnpIgdRequest) req.sendValue).dump();
             rootRequests.add(req);
         }
         queryHttp(networkBus, rootRequests);
@@ -110,6 +115,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             RootUpnpIgdResponse rootResp;
             try {
                 rootResp = new RootUpnpIgdResponse(rootRequest.location, rootRequest.respData);
+                rootRequest.respValue = rootResp;
             } catch (IllegalArgumentException iae) {
                 // failed to parse, so skip to next
                 continue;
@@ -118,11 +124,17 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             for (ServiceReference serviceReference : rootResp.getServices()) {
                 URL scpdUrl = serviceReference.getScpdUrl();
                 
+                RootRequestResult other = new RootRequestResult();
+                other.probeResult = (ProbeResult) rootRequest.other;
+                other.serviceReference = serviceReference;
+                
                 HttpRequest req = new HttpRequest();
-                req.parent = rootRequest;
+                req.other = other;
                 req.sourceAddress = rootRequest.sourceAddress;
                 req.location = scpdUrl;
-                req.sendData = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()).dump();
+                req.sendValue = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()); 
+                req.sendData = ((ServiceDescriptionUpnpIgdRequest) req.sendValue).dump();
+                serviceDescRequests.add(req);
             }
         }
         queryHttp(networkBus, serviceDescRequests);
@@ -134,18 +146,47 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             ServiceDescriptionUpnpIgdResponse serviceDescResp;
             try {
                 serviceDescResp = new ServiceDescriptionUpnpIgdResponse(serviceDescRequest.respData);
+                serviceDescRequest.respValue = serviceDescResp;
             } catch (IllegalArgumentException iae) {
                 // failed to parse, so skip to next
                 continue;
             }
             
-            FILL ME IN
+            RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
+            for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
+                ServiceType serviceType = e.getKey();
+                IdentifiedService identifiedService = e.getValue();
+                
+                UpnpIgdPortMapper upnpIgdPortMapper;
+                switch (serviceType) {
+                    case PORT_MAPPER:
+                        upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
+                                serviceDescRequest.sourceAddress,
+                                rootReqRes.serviceReference.getControlUrl(),
+                                rootReqRes.probeResult.serverName,
+                                rootReqRes.probeResult.serviceType,
+                                identifiedService.getExternalPortRange(),
+                                identifiedService.getLeaseDurationRange());
+                        break;
+                    case FIREWALL:
+                        upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
+                                serviceDescRequest.sourceAddress,
+                                rootReqRes.serviceReference.getControlUrl(),
+                                rootReqRes.probeResult.serverName,
+                                rootReqRes.probeResult.serviceType,
+                                identifiedService.getExternalPortRange(),
+                                identifiedService.getLeaseDurationRange());
+                        break;
+                    default:
+                        throw new IllegalStateException(); // should never happen
+                }
+            }
         }
         
         return ret;
     }
 
-    private static Map<InetAddress, URL> discoverDevices(Bus networkBus) throws InterruptedException {
+    private static Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> discoverDevices(Bus networkBus) throws InterruptedException {
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
 
@@ -155,7 +196,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
 
         // Create UDP sockets and send discovery messages
         Map<Integer, InetAddress> udpSocketIds = new HashMap<>(); // id to src address
-        Map<InetAddress, URL> probeResponses = new HashMap<>(); // source address to response
+        Map<InetAddress, ServiceDiscoveryUpnpIgdResponse> probeResponses = new HashMap<>(); // source address to response
         for (InetAddress sourceAddress : localIpsResp.getLocalAddresses()) {
             System.out.println("sending from " + sourceAddress);
             try {
@@ -224,8 +265,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             try {
                 ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(readNetResp.getData());
                 InetAddress sourceAddress = udpSocketIds.get(id);
-                URL location = resp.getLocation();
-                probeResponses.put(sourceAddress, location);
+                probeResponses.put(sourceAddress, resp);
             } catch (IllegalArgumentException iae) {
                 // if invalid, do nothing -- just skip over
             }
@@ -240,12 +280,26 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         return probeResponses;
     }
 
+    private static final class ProbeResult {
+        private InetAddress source;
+        private URL location;
+        private String serverName;
+        private String serviceType;
+    }
+
+    private static final class RootRequestResult {
+        private ProbeResult probeResult;
+        private ServiceReference serviceReference;
+    }
+    
     private static final class HttpRequest {
-        private Object parent;
+        private Object other;
         private InetAddress sourceAddress;
         private URL location;
         private byte[] sendData;
+        private Object sendValue;
         private byte[] respData;
+        private Object respValue;
     }
     
     private static void queryHttp(Bus networkBus, Collection<HttpRequest> reqs) throws InterruptedException, UnknownHostException,
