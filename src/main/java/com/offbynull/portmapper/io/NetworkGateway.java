@@ -363,7 +363,9 @@ public final class NetworkGateway {
 
                     LinkedList<ByteBuffer> outBuffers = entry.getOutgoingBuffers();
                     ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
-                    outBuffers.add(writeBuffer);
+                    if (writeBuffer.hasRemaining()) { // only add if it has content -- adding empty is worthless because this is a stream
+                        outBuffers.add(writeBuffer);
+                    }
                     
                     AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
                     updateReadWriteSelectionKey(entry, channel);
