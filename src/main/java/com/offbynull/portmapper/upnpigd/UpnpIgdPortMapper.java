@@ -135,7 +135,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         for (HttpRequest rootRequest : rootRequests) {
             try {
                 RootUpnpIgdResponse rootResp = new RootUpnpIgdResponse(rootRequest.location, rootRequest.respData);
-                
+
                 for (ServiceReference serviceReference : rootResp.getServices()) {
                     URL scpdUrl = serviceReference.getScpdUrl();
 
@@ -154,14 +154,14 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 // failed to parse, so skip to next
             }
         }
-        performHttpRequests(networkBus, serviceDescRequests, 20000L);
+        performHttpRequests(networkBus, serviceDescRequests, 5000L);
 
         // Get service descriptions
         Set<UpnpIgdPortMapper> ret = new HashSet<>();
         for (HttpRequest serviceDescRequest : serviceDescRequests) {
             try {
                 ServiceDescriptionUpnpIgdResponse serviceDescResp = new ServiceDescriptionUpnpIgdResponse(serviceDescRequest.respData);
-                
+
                 RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
                 for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
                     ServiceType serviceType = e.getKey();
@@ -254,4 +254,12 @@ abstract class UpnpIgdPortMapper implements PortMapper {
     protected final Range<Long> getLeaseDurationRange() {
         return leaseDurationRange;
     }
+
+    @Override
+    public String toString() {
+        return "UpnpIgdPortMapper{" + "internalAddress=" + internalAddress + ", controlUrl=" + controlUrl + ", serverName=" + serverName
+                + ", serviceType=" + serviceType + ", externalPortRange=" + externalPortRange + ", leaseDurationRange=" + leaseDurationRange
+                + '}';
+    }
+
 }

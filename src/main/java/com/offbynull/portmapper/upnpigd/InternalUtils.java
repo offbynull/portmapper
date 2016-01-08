@@ -26,6 +26,7 @@ import com.offbynull.portmapper.io.messages.DestroySocketNetworkRequest;
 import com.offbynull.portmapper.io.messages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesRequest;
 import com.offbynull.portmapper.io.messages.GetLocalIpAddressesResponse;
+import com.offbynull.portmapper.io.messages.IdentifiableErrorNetworkResponse;
 import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
@@ -38,6 +39,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -91,16 +93,23 @@ final class InternalUtils {
             int id;
             while (true) {
                 long sleepTime = endCreateTime - System.currentTimeMillis();
-                Validate.validState(sleepTime > 0, "Failed to create all TCP sockets in time");
+                if (sleepTime <= 0L) {
+                    break next;
+                }
 
-                Object createResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (createResp instanceof ErrorNetworkResponse) {
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                if (resp instanceof ErrorNetworkResponse) {
                     // create socket failed, so skip this request
                     continue next;
-                } else if (createResp instanceof CreateTcpSocketNetworkResponse) {
+                } else if (resp instanceof CreateTcpSocketNetworkResponse) {
                     // create socket success
-                    id = ((CreateTcpSocketNetworkResponse) createResp).getId();
+                    id = ((CreateTcpSocketNetworkResponse) resp).getId();
                     break;
+                } else if (resp instanceof IdentifiableErrorNetworkResponse) {
+                    // likely one of the previously created sockets failed to connect -- remove the previously added socket and move on
+                    int removeId = ((IdentifiableErrorNetworkResponse) resp).getId();
+                    sockets.remove(removeId);
+                    readBuffers.remove(removeId);
                 }
 
                 // unrecognized response/notification, keep reading from queue until we have something we recognize
@@ -115,8 +124,8 @@ final class InternalUtils {
 
         // Read data from sockets
         long remainingTime = System.currentTimeMillis() + timeout;
-        
-        while (true) {
+        Set<Integer> activeSocketIds = new HashSet<>(sockets.keySet());
+        while (!activeSocketIds.isEmpty()) {
             long sleepTime = remainingTime - System.currentTimeMillis();
             if (sleepTime <= 0L) {
                 break;
@@ -132,6 +141,12 @@ final class InternalUtils {
                 ByteArrayOutputStream baos = readBuffers.get(id);
                 Validate.validState(baos != null); // sanity check -- should never happen
                 baos.write(readResp.getData());
+            } else if (resp instanceof IdentifiableErrorNetworkResponse) {
+                // On error, remove socket from active set (server likely closed the socket)
+                IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
+                int id = errorResp.getId();
+                
+                activeSocketIds.remove(id);
             }
         }
 
@@ -148,7 +163,9 @@ final class InternalUtils {
             HttpRequest req = sockets.get(id);
 
             byte[] respData = entry.getValue().toByteArray();
-            req.respData = respData;
+            if (respData.length > 0) {
+                req.respData = respData;
+            }
         }
     }
 
