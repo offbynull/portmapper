@@ -105,57 +105,53 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         }
         performUdpQueries(networkBus, discoveryRequests, new LinkedList<>(Arrays.asList(1000L, 1000L, 1000L, 1000L, 1000L)));
 
-
         // Get root XMLs
         Collection<HttpRequest> rootRequests = new ArrayList<>(discoveryRequests.size());
         for (UdpRequest discoveryReq : discoveryRequests) {
-            ServiceDiscoveryUpnpIgdResponse discoveryResp;
             try {
-                discoveryResp = new ServiceDiscoveryUpnpIgdResponse(discoveryReq.respData);
+                ServiceDiscoveryUpnpIgdResponse discoveryResp = new ServiceDiscoveryUpnpIgdResponse(discoveryReq.respData);
+
+                HttpRequest req = new HttpRequest();
+
+                ProbeResult other = new ProbeResult();
+                other.source = discoveryReq.sourceAddress;
+                other.location = discoveryResp.getLocation();
+                other.serverName = discoveryResp.getServer();
+                other.serviceType = discoveryResp.getServiceType();
+
+                req.other = other;
+                req.sourceAddress = other.source;
+                req.location = other.location;
+                req.sendData = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile()).dump();
+                rootRequests.add(req);
             } catch (RuntimeException iae) {
                 // failed to parse, so skip to next
-                continue;
             }
-            HttpRequest req = new HttpRequest();
-
-            ProbeResult other = new ProbeResult();
-            other.source = discoveryReq.sourceAddress;
-            other.location = discoveryResp.getLocation();
-            other.serverName = discoveryResp.getServer();
-            other.serviceType = discoveryResp.getServiceType();
-
-            req.other = other;
-            req.sourceAddress = other.source;
-            req.location = other.location;
-            req.sendData = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile()).dump();
-            rootRequests.add(req);
         }
         performHttpRequests(networkBus, rootRequests, 5000L);
 
         // Extract service locations from root XMLs + get service descriptions
         Collection<HttpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
         for (HttpRequest rootRequest : rootRequests) {
-            RootUpnpIgdResponse rootResp;
             try {
-                rootResp = new RootUpnpIgdResponse(rootRequest.location, rootRequest.respData);
+                RootUpnpIgdResponse rootResp = new RootUpnpIgdResponse(rootRequest.location, rootRequest.respData);
+                
+                for (ServiceReference serviceReference : rootResp.getServices()) {
+                    URL scpdUrl = serviceReference.getScpdUrl();
+
+                    RootRequestResult other = new RootRequestResult();
+                    other.probeResult = (ProbeResult) rootRequest.other;
+                    other.serviceReference = serviceReference;
+
+                    HttpRequest req = new HttpRequest();
+                    req.other = other;
+                    req.sourceAddress = rootRequest.sourceAddress;
+                    req.location = scpdUrl;
+                    req.sendData = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()).dump();
+                    serviceDescRequests.add(req);
+                }
             } catch (RuntimeException iae) {
                 // failed to parse, so skip to next
-                continue;
-            }
-
-            for (ServiceReference serviceReference : rootResp.getServices()) {
-                URL scpdUrl = serviceReference.getScpdUrl();
-
-                RootRequestResult other = new RootRequestResult();
-                other.probeResult = (ProbeResult) rootRequest.other;
-                other.serviceReference = serviceReference;
-
-                HttpRequest req = new HttpRequest();
-                req.other = other;
-                req.sourceAddress = rootRequest.sourceAddress;
-                req.location = scpdUrl;
-                req.sendData = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()).dump();
-                serviceDescRequests.add(req);
             }
         }
         performHttpRequests(networkBus, serviceDescRequests, 20000L);
@@ -163,50 +159,47 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         // Get service descriptions
         Set<UpnpIgdPortMapper> ret = new HashSet<>();
         for (HttpRequest serviceDescRequest : serviceDescRequests) {
-            ServiceDescriptionUpnpIgdResponse serviceDescResp;
             try {
-                serviceDescResp = new ServiceDescriptionUpnpIgdResponse(serviceDescRequest.respData);
+                ServiceDescriptionUpnpIgdResponse serviceDescResp = new ServiceDescriptionUpnpIgdResponse(serviceDescRequest.respData);
+                
+                RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
+                for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
+                    ServiceType serviceType = e.getKey();
+                    IdentifiedService identifiedService = e.getValue();
+
+                    UpnpIgdPortMapper upnpIgdPortMapper;
+                    switch (serviceType) {
+                        case PORT_MAPPER:
+                            upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
+                                    serviceDescRequest.sourceAddress,
+                                    rootReqRes.serviceReference.getControlUrl(),
+                                    rootReqRes.probeResult.serverName,
+                                    rootReqRes.probeResult.serviceType,
+                                    identifiedService.getExternalPortRange(),
+                                    identifiedService.getLeaseDurationRange());
+                            break;
+                        case FIREWALL:
+                            upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
+                                    serviceDescRequest.sourceAddress,
+                                    rootReqRes.serviceReference.getControlUrl(),
+                                    rootReqRes.probeResult.serverName,
+                                    rootReqRes.probeResult.serviceType,
+                                    identifiedService.getExternalPortRange(),
+                                    identifiedService.getLeaseDurationRange());
+                            break;
+                        default:
+                            throw new IllegalStateException(); // should never happen
+                    }
+
+                    ret.add(upnpIgdPortMapper);
+                }
             } catch (RuntimeException iae) {
                 // failed to parse, so skip to next
-                continue;
-            }
-
-            RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
-            for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
-                ServiceType serviceType = e.getKey();
-                IdentifiedService identifiedService = e.getValue();
-
-                UpnpIgdPortMapper upnpIgdPortMapper;
-                switch (serviceType) {
-                    case PORT_MAPPER:
-                        upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
-                                serviceDescRequest.sourceAddress,
-                                rootReqRes.serviceReference.getControlUrl(),
-                                rootReqRes.probeResult.serverName,
-                                rootReqRes.probeResult.serviceType,
-                                identifiedService.getExternalPortRange(),
-                                identifiedService.getLeaseDurationRange());
-                        break;
-                    case FIREWALL:
-                        upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
-                                serviceDescRequest.sourceAddress,
-                                rootReqRes.serviceReference.getControlUrl(),
-                                rootReqRes.probeResult.serverName,
-                                rootReqRes.probeResult.serviceType,
-                                identifiedService.getExternalPortRange(),
-                                identifiedService.getLeaseDurationRange());
-                        break;
-                    default:
-                        throw new IllegalStateException(); // should never happen
-                }
-
-                ret.add(upnpIgdPortMapper);
             }
         }
 
         return ret;
     }
-
 
     private static final class ProbeResult {
 
