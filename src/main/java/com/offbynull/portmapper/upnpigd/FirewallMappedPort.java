@@ -37,7 +37,7 @@ final class FirewallMappedPort implements MappedPort {
         Validate.inclusiveBetween(1, 65535, externalPort);
         Validate.notNull(externalAddress);
         Validate.notNull(portType);
-        Validate.inclusiveBetween(0L, Long.MAX_VALUE, duration);
+        Validate.inclusiveBetween(1L, Long.MAX_VALUE, duration);
         this.key = key;
         this.internalPort = internalPort;
         this.externalPort = externalPort;
