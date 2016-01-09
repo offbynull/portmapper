@@ -1,7 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
-import com.offbynull.portmapper.upnpigd.externalmessages.AddPinholeUpnpIgdRequest;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -18,24 +16,24 @@ public class AddPinholeUpnpIgdRequestTest {
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPinhole\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
-                + "Content-Length: 458\r\n"
+                + "SOAPAction: service:type#AddPinhole\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Length: 464\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
                 + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
                 + "<soap:Body>\r\n"
                 + "<u:AddPinhole xmlns:u=\"service:type\">\r\n"
-                + "<RemoteHost>1.2.3.4</RemoteHost>\r\n"
+                + "<RemoteHost>::ffff:102:304</RemoteHost>\r\n"
                 + "<RemotePort>15</RemotePort>\r\n"
-                + "<InternalClient>5.6.7.8</InternalClient>\r\n"
+                + "<InternalClient>::ffff:506:708</InternalClient>\r\n"
                 + "<InternalPort>12345</InternalPort>\r\n"
                 + "<Protocol>6</Protocol>\r\n"
-                + "<LeaseDuration>1000</LeaseDuration>\r\n"
+                + "<LeaseTime>1000</LeaseTime>\r\n"
                 + "</u:AddPinhole>\r\n"
                 + "</soap:Body>\r\n"
                 + "</soap:Envelope>\r\n",
@@ -51,13 +49,13 @@ public class AddPinholeUpnpIgdRequestTest {
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPinhole\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
-                + "Content-Length: 515\r\n"
+                + "SOAPAction: service:type#AddPinhole\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Length: 507\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
                 + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
@@ -68,11 +66,12 @@ public class AddPinholeUpnpIgdRequestTest {
                 + "<InternalClient>fffe:fdfc:fbfa:f9f8:f7f6:f5f4:f3f2:f1f0</InternalClient>\r\n"
                 + "<InternalPort>12345</InternalPort>\r\n"
                 + "<Protocol>17</Protocol>\r\n"
-                + "<LeaseDuration>1000</LeaseDuration>\r\n"
+                + "<LeaseTime>1000</LeaseTime>\r\n"
                 + "</u:AddPinhole>\r\n"
                 + "</soap:Body>\r\n"
                 + "</soap:Envelope>\r\n",
-                bufferText);
+                bufferText
+        );
     }
 
     @Test
@@ -82,13 +81,13 @@ public class AddPinholeUpnpIgdRequestTest {
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPinhole\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
-                + "Content-Length: 440\r\n"
+                + "SOAPAction: service:type#AddPinhole\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Length: 432\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
                 + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
@@ -99,7 +98,7 @@ public class AddPinholeUpnpIgdRequestTest {
                 + "<InternalClient></InternalClient>\r\n"
                 + "<InternalPort>0</InternalPort>\r\n"
                 + "<Protocol>17</Protocol>\r\n"
-                + "<LeaseDuration>1000</LeaseDuration>\r\n"
+                + "<LeaseTime>1000</LeaseTime>\r\n"
                 + "</u:AddPinhole>\r\n"
                 + "</soap:Body>\r\n"
                 + "</soap:Envelope>\r\n",

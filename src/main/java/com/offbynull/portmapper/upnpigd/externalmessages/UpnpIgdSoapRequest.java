@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -54,7 +54,7 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         Validate.notNull(serviceType);
         Validate.notNull(actionName);
 
-        Map<String, String> ret = new HashMap<>();
+        Map<String, String> ret = new LinkedHashMap<>();
 
         // content-length is added by parent class
         ret.put("Host", host);

@@ -42,9 +42,9 @@ final class App {
             Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkGateway.getBus());
             
             for (UpnpIgdPortMapper mapper : mappers) {
-                MappedPort mappedPort = mapper.mapPort(PortType.UDP, 10102, 10102, 1L);
+                MappedPort mappedPort = mapper.mapPort(PortType.UDP, 10102, 10102, 5L);
                 System.out.println("Created " + mappedPort);
-                mappedPort = mapper.refreshPort(mappedPort, 1L);
+                mappedPort = mapper.refreshPort(mappedPort, 5L);
                 System.out.println("Refreshed " + mappedPort);
                 mapper.unmapPort(mappedPort);
                 System.out.println("Destroy");

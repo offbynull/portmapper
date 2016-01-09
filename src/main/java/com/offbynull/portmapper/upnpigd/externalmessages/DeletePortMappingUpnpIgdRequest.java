@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
 import java.net.InetAddress;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
@@ -53,7 +53,7 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
             int externalPort,
             Protocol protocol) {
         
-        Map<String, String> ret = new HashMap<>();
+        Map<String, String> ret = new LinkedHashMap<>();
         
         if (remoteHost == null) {
             ret.put("NewRemoteHost", "");

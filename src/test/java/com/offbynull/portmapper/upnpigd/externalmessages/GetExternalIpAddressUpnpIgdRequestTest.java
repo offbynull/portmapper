@@ -13,12 +13,12 @@ public class GetExternalIpAddressUpnpIgdRequestTest {
 
         System.out.println(bufferText);
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#GetExternalIPAddress\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
+                + "SOAPAction: service:type#GetExternalIPAddress\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
                 + "Content-Length: 276\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"

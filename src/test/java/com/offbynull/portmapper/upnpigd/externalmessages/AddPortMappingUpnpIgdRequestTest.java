@@ -1,7 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
-import com.offbynull.portmapper.upnpigd.externalmessages.AddPortMappingUpnpIgdRequest;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -16,12 +14,12 @@ public class AddPortMappingUpnpIgdRequestTest {
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPortMapping\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
+                + "SOAPAction: service:type#AddPortMapping\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
                 + "Content-Length: 597\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
@@ -55,12 +53,12 @@ public class AddPortMappingUpnpIgdRequestTest {
 
         System.out.println(bufferText);
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPortMapping\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
+                + "SOAPAction: service:type#AddPortMapping\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
                 + "Content-Length: 653\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
@@ -89,12 +87,12 @@ public class AddPortMappingUpnpIgdRequestTest {
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
-                + "SOAPAction: service:type#AddPortMapping\r\n"
-                + "Cache-Control: no-cache\r\n"
-                + "Connection: Close\r\n"
                 + "Host: fake\r\n"
-                + "Pragma: no-cache\r\n"
                 + "Content-Type: text/xml\r\n"
+                + "SOAPAction: service:type#AddPortMapping\r\n"
+                + "Connection: Close\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Pragma: no-cache\r\n"
                 + "Content-Length: 586\r\n"
                 + "\r\n"
                 + "<?xml version=\"1.0\"?>\r\n"
