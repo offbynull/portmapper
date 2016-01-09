@@ -35,10 +35,10 @@ public final class MappedPort {
      * Constructs a {@link MappedPort} object.
      * @param internalPort internal port
      * @param externalPort external port
-     * @param externalAddress external address
+     * @param externalAddress external address (may be {@code null} if underlying mapper doesn't support getting external IP)
      * @param portType port type
      * @param duration mapping lifetime
-     * @throws NullPointerException if any argument is {@code null}
+     * @throws NullPointerException if any argument other than {@code externalAddress} is {@code null}
      * @throws IllegalArgumentException if any numeric argument is non-positive, or if {@code internalPort > 65535 || externalPort > 65535}
      */
     public MappedPort(int internalPort, int externalPort, InetAddress externalAddress, PortType portType, long duration) {

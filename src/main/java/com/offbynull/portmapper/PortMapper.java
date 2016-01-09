@@ -26,14 +26,15 @@ public interface PortMapper {
      * Map a port. Mapping the same port multiple times has undefined behaviour.
      * @param portType port type
      * @param internalPort internal port
+     * @param externalPort external port
      * @param lifetime number of seconds to acquire mapping for (may be reduced or extended depending on server and/or client)
      * @return object that describes mapping
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is non-positive, or if {@code internalPort > 65535}
+     * @throws IllegalArgumentException if any numeric argument is {@code <= 0}, or if {@code internalPort > 65535 || externalPort > 65535}
      * @throws IllegalStateException if the port could not be mapped for any reason
      * @throws InterruptedException if thread was interrupted
      */
-    MappedPort mapPort(PortType portType, int internalPort, long lifetime) throws InterruptedException;
+    MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException;
     
     /**
      * Unmap a port. Unmapping the same port multiple times or unmapping a port that hasn't been mapped yet has undefined behaviour.

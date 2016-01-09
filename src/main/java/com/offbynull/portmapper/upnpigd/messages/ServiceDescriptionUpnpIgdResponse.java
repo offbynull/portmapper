@@ -270,6 +270,10 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         private IdentifiedService(Range<Long> leaseDurationRange, Range<Long> externalPortRange) {
             Validate.notNull(leaseDurationRange);
             Validate.notNull(externalPortRange);
+            Validate.isTrue(leaseDurationRange.getMinimum() >= 0L);
+            Validate.isTrue(leaseDurationRange.getMaximum() <= 0xFFFFFFFFL);
+            Validate.isTrue(externalPortRange.getMinimum() >= 0L);
+            Validate.isTrue(externalPortRange.getMaximum() <= 0xFFFFL);
             this.leaseDurationRange = leaseDurationRange;
             this.externalPortRange = externalPortRange;
         }

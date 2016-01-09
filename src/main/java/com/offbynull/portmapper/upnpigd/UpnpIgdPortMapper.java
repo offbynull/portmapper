@@ -56,12 +56,70 @@ import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpResponse;
  */
 abstract class UpnpIgdPortMapper implements PortMapper {
 
+    private final Bus networkBus;
     private final InetAddress internalAddress;
     private final URL controlUrl;
     private final String serverName;
     private final String serviceType;
     private final Range<Long> externalPortRange;
     private final Range<Long> leaseDurationRange;
+
+    protected UpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
+            Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
+        Validate.notNull(networkBus);
+        Validate.notNull(internalAddress);
+        Validate.notNull(controlUrl);
+//        Validate.notNull(serverName); // can be null
+        Validate.notNull(serviceType);
+        Validate.notNull(externalPortRange);
+        Validate.notNull(leaseDurationRange);
+        Validate.isTrue(leaseDurationRange.getMinimum() >= 0L);
+        Validate.isTrue(leaseDurationRange.getMaximum() <= 0xFFFFFFFFL);
+        Validate.isTrue(externalPortRange.getMinimum() >= 0L);
+        Validate.isTrue(externalPortRange.getMaximum() <= 0xFFFFL);
+        this.networkBus = networkBus;
+        this.internalAddress = internalAddress;
+        this.controlUrl = controlUrl;
+        this.serverName = serverName;
+        this.serviceType = serviceType;
+        this.externalPortRange = externalPortRange;
+        this.leaseDurationRange = leaseDurationRange;
+    }
+
+    protected final Bus getNetworkBus() {
+        return networkBus;
+    }
+
+    protected final InetAddress getInternalAddress() {
+        return internalAddress;
+    }
+
+    protected final URL getControlUrl() {
+        return controlUrl;
+    }
+
+    protected final String getServerName() {
+        return serverName;
+    }
+
+    protected final String getServiceType() {
+        return serviceType;
+    }
+
+    protected final Range<Long> getExternalPortRange() {
+        return externalPortRange;
+    }
+
+    protected final Range<Long> getLeaseDurationRange() {
+        return leaseDurationRange;
+    }
+
+    @Override
+    public String toString() {
+        return "UpnpIgdPortMapper{" + "internalAddress=" + internalAddress + ", controlUrl=" + controlUrl + ", serverName=" + serverName
+                + ", serviceType=" + serviceType + ", externalPortRange=" + externalPortRange + ", leaseDurationRange=" + leaseDurationRange
+                + '}';
+    }
 
     public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException, IOException {
         Validate.notNull(networkBus);
@@ -129,7 +187,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 req.sourceAddress = other.source;
                 req.location = other.location;
                 req.respCreator = new RootUpnpIgdResponseCreator(other.location);
-                req.sendData = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
+                req.sendMsg = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
                 rootRequests.add(req);
             } catch (RuntimeException iae) {
                 // failed to parse, so skip to next
@@ -141,7 +199,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         Collection<HttpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
         for (HttpRequest rootRequest : rootRequests) {
             try {
-                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.respData;
+                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.respMsg;
 
                 for (ServiceReference serviceReference : rootResp.getServices()) {
                     URL scpdUrl = serviceReference.getScpdUrl();
@@ -155,7 +213,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                     req.sourceAddress = rootRequest.sourceAddress;
                     req.location = scpdUrl;
                     req.respCreator = new ServiceDescriptionUpnpIgdResponseCreator();
-                    req.sendData = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile());
+                    req.sendMsg = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile());
                     serviceDescRequests.add(req);
                 }
             } catch (RuntimeException iae) {
@@ -168,7 +226,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         Set<UpnpIgdPortMapper> ret = new HashSet<>();
         for (HttpRequest serviceDescRequest : serviceDescRequests) {
             try {
-                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.respData;
+                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.respMsg;
 
                 RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
                 for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
@@ -179,6 +237,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                     switch (serviceType) {
                         case PORT_MAPPER:
                             upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
+                                    networkBus,
                                     serviceDescRequest.sourceAddress,
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
@@ -188,6 +247,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                             break;
                         case FIREWALL:
                             upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
+                                    networkBus,
                                     serviceDescRequest.sourceAddress,
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
@@ -224,25 +284,27 @@ abstract class UpnpIgdPortMapper implements PortMapper {
     }
 
     private static final class ServiceDiscoveryUpnpIgdResponseCreator implements ResponseCreator {
+
         @Override
         public UpnpIgdHttpResponse create(byte[] buffer) {
             return new ServiceDiscoveryUpnpIgdResponse(buffer);
         }
     }
-    
+
     private static final class RootUpnpIgdResponseCreator implements ResponseCreator {
+
         private URL baseUrl;
 
         public RootUpnpIgdResponseCreator(URL baseUrl) {
             this.baseUrl = baseUrl;
         }
-        
+
         @Override
         public UpnpIgdHttpResponse create(byte[] buffer) {
             return new RootUpnpIgdResponse(baseUrl, buffer);
         }
     }
-    
+
     private static final class ServiceDescriptionUpnpIgdResponseCreator implements ResponseCreator {
 
         @Override
@@ -250,52 +312,4 @@ abstract class UpnpIgdPortMapper implements PortMapper {
             return new ServiceDescriptionUpnpIgdResponse(buffer);
         }
     }
-    
-    protected UpnpIgdPortMapper(InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
-            Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
-        Validate.notNull(internalAddress);
-        Validate.notNull(controlUrl);
-//        Validate.notNull(serverName); // can be null
-        Validate.notNull(serviceType);
-        Validate.notNull(externalPortRange);
-        Validate.notNull(leaseDurationRange);
-        this.internalAddress = internalAddress;
-        this.controlUrl = controlUrl;
-        this.serverName = serverName;
-        this.serviceType = serviceType;
-        this.externalPortRange = externalPortRange;
-        this.leaseDurationRange = leaseDurationRange;
-    }
-
-    protected final InetAddress getInternalAddress() {
-        return internalAddress;
-    }
-
-    protected final URL getControlUrl() {
-        return controlUrl;
-    }
-
-    protected final String getServerName() {
-        return serverName;
-    }
-
-    protected final String getServiceType() {
-        return serviceType;
-    }
-
-    protected final Range<Long> getExternalPortRange() {
-        return externalPortRange;
-    }
-
-    protected final Range<Long> getLeaseDurationRange() {
-        return leaseDurationRange;
-    }
-
-    @Override
-    public String toString() {
-        return "UpnpIgdPortMapper{" + "internalAddress=" + internalAddress + ", controlUrl=" + controlUrl + ", serverName=" + serverName
-                + ", serviceType=" + serviceType + ", externalPortRange=" + externalPortRange + ", leaseDurationRange=" + leaseDurationRange
-                + '}';
-    }
-
 }

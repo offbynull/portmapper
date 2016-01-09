@@ -18,19 +18,21 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.common.Bus;
 import java.net.InetAddress;
 import java.net.URL;
 import org.apache.commons.lang3.Range;
 
 public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
-    FirewallUpnpIgdPortMapper(InetAddress selfAddress, URL controlUrl, String serverName, String serviceType,
+    public FirewallUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
-        super(selfAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
+        super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
     }
 
+
     @Override
-    public MappedPort mapPort(PortType portType, int internalPort, long lifetime) throws InterruptedException {
+    public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

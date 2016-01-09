@@ -169,7 +169,7 @@ final class InternalUtils {
                 // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
                 sockets.put(id, req);
                 readBuffers.put(id, new ByteArrayOutputStream());
-                networkBus.send(new WriteTcpNetworkRequest(id, req.sendData.dump()));
+                networkBus.send(new WriteTcpNetworkRequest(id, req.sendMsg.dump()));
             }
 
 
@@ -216,7 +216,7 @@ final class InternalUtils {
 
                 byte[] respData = entry.getValue().toByteArray();
                 try {
-                    req.respData = req.respCreator.create(respData);
+                    req.respMsg = req.respCreator.create(respData);
                     remainingReqs.remove(req);
                 } catch (RuntimeException e) {
                     // do nothing
@@ -339,8 +339,8 @@ final class InternalUtils {
         Object other;
         InetAddress sourceAddress;
         URL location;
-        UpnpIgdHttpRequest sendData;
-        UpnpIgdHttpResponse respData;
+        UpnpIgdHttpRequest sendMsg;
+        UpnpIgdHttpResponse respMsg;
         ResponseCreator respCreator;
     }
 

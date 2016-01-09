@@ -18,30 +18,200 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.upnpigd.InternalUtils.HttpRequest;
+import com.offbynull.portmapper.upnpigd.InternalUtils.ResponseCreator;
+import static com.offbynull.portmapper.upnpigd.InternalUtils.performHttpRequests;
+import com.offbynull.portmapper.upnpigd.messages.AddPortMappingUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.AddPortMappingUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.DeletePortMappingUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.DeletePortMappingUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.GetExternalIpAddressUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.messages.GetExternalIpAddressUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.messages.Protocol;
+import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpResponse;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Collections;
 import org.apache.commons.lang3.Range;
+import org.apache.commons.lang3.Validate;
 
 public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
-    PortMapperUpnpIgdPortMapper(InetAddress selfAddress, URL controlUrl, String serverName, String serviceType,
+    public PortMapperUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
-        super(selfAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
+        super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
     }
 
+
     @Override
-    public MappedPort mapPort(PortType portType, int internalPort, long lifetime) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        Validate.notNull(portType);
+        Validate.inclusiveBetween(1, 65535, internalPort);
+        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
+
+        Bus networkBus = getNetworkBus();
+        URL controlUrl = getControlUrl();
+        String serviceType = getServiceType();
+        InetAddress internalAddress = getInternalAddress();
+        
+        
+        
+        //
+        // GET EXTERNAL IP
+        //
+        HttpRequest externalIpHttpRequest = new HttpRequest();
+        externalIpHttpRequest.location = controlUrl;
+        externalIpHttpRequest.sourceAddress = internalAddress;
+        externalIpHttpRequest.sendMsg = new GetExternalIpAddressUpnpIgdRequest(
+                controlUrl.getAuthority(),
+                controlUrl.getFile(),
+                serviceType);
+        externalIpHttpRequest.respCreator = new ResponseCreator() {
+            @Override
+            public UpnpIgdHttpResponse create(byte[] buffer) {
+                return new GetExternalIpAddressUpnpIgdResponse(buffer);
+            }
+        };
+        
+        try {
+            performHttpRequests(
+                    networkBus,
+                    Collections.singleton(externalIpHttpRequest),
+                    5000L, 5000L, 5000L);
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+        
+        if (externalIpHttpRequest.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to mapping");
+        }
+        
+        InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.respMsg).getIpAddress();
+        
+        
+        
+        //
+        // PERFORM MAPPING
+        //
+        Protocol protocol;
+        switch (portType) {
+            case TCP:
+                protocol = Protocol.TCP;
+                break;
+            case UDP:
+                protocol = Protocol.UDP;
+                break;
+            default:
+                throw new IllegalStateException(); // shuold never happend
+        }
+        Range<Long> externalPortRange = getExternalPortRange();
+        Range<Long> leaseDurationRange = getLeaseDurationRange();
+        long leaseDuration;
+        if (leaseDurationRange.isBefore(lifetime)) {
+            leaseDuration = leaseDurationRange.getMaximum();
+        } else if (leaseDurationRange.isAfter(lifetime)) {
+            leaseDuration = leaseDurationRange.getMinimum();
+        } else {
+            leaseDuration = lifetime;
+        }
+        
+        Validate.validState(externalPortRange.contains((long) externalPort),
+                "Router reports external port mappings as %s", externalPortRange);
+        
+        HttpRequest mapHttpRequest = new HttpRequest();
+        mapHttpRequest.location = controlUrl;
+        mapHttpRequest.sourceAddress = internalAddress;
+        mapHttpRequest.sendMsg = new AddPortMappingUpnpIgdRequest(
+                controlUrl.getAuthority(),
+                controlUrl.getFile(),
+                serviceType,
+                null,
+                externalPort,
+                protocol,
+                internalPort,
+                internalAddress,
+                true,
+                "",
+                leaseDuration);
+        mapHttpRequest.respCreator = new ResponseCreator() {
+            @Override
+            public UpnpIgdHttpResponse create(byte[] buffer) {
+                return new AddPortMappingUpnpIgdResponse(buffer);
+            }
+        };
+        
+        try {
+            performHttpRequests(
+                    networkBus,
+                    Collections.singleton(mapHttpRequest),
+                    5000L, 5000L, 5000L);
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+        
+        if (mapHttpRequest.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to mapping");
+        }
+        
+        
+        
+        // RETURN
+        return new MappedPort(internalPort, externalPort, externalAddress, portType, leaseDuration);
     }
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Validate.notNull(mappedPort);
+
+        Bus networkBus = getNetworkBus();
+        URL controlUrl = getControlUrl();
+        String serviceType = getServiceType();
+        Protocol protocol;
+        switch (mappedPort.getPortType()) {
+            case TCP:
+                protocol = Protocol.TCP;
+                break;
+            case UDP:
+                protocol = Protocol.UDP;
+                break;
+            default:
+                throw new IllegalStateException(); // shuold never happend
+        }
+        int externalPort = mappedPort.getExternalPort();
+        InetAddress internalAddress = getInternalAddress();
+        
+        HttpRequest httpRequest = new HttpRequest();
+        httpRequest.location = controlUrl;
+        httpRequest.sourceAddress = internalAddress;
+        httpRequest.sendMsg = new DeletePortMappingUpnpIgdRequest(
+                controlUrl.getAuthority(),
+                controlUrl.getFile(),
+                serviceType,
+                null,
+                externalPort,
+                protocol);
+        httpRequest.respCreator = new ResponseCreator() {
+            @Override
+            public UpnpIgdHttpResponse create(byte[] buffer) {
+                return new DeletePortMappingUpnpIgdResponse(buffer);
+            }
+        };
+        
+        try {
+            performHttpRequests(
+                    networkBus,
+                    Collections.singleton(httpRequest),
+                    5000L, 5000L, 5000L);
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
     }
 
     @Override
