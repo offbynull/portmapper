@@ -155,9 +155,12 @@ public final class NetworkGateway {
                         processMessage(msg);
                     }
                 }
+            } catch (KillRequestException kre) {
+                // do nothing
             } catch (Exception e) {
+                throw new RuntimeException(e); // rethrow exception
+            } finally {
                 shutdownResources();
-                throw new RuntimeException(e);
             }
         }
 
@@ -420,7 +423,7 @@ public final class NetworkGateway {
                     }
                 }
             } else if (msg instanceof KillNetworkRequest) {
-                throw new RuntimeException("Kill requested");
+                throw new KillRequestException();
             }
         }
 
@@ -459,5 +462,10 @@ public final class NetworkGateway {
                 // do nothing
             }
         }
+    }
+    
+    private static final class KillRequestException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        
     }
 }
