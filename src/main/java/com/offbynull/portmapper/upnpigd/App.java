@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.io.NetworkGateway;
-import com.offbynull.portmapper.io.messages.KillNetworkRequest;
+import com.offbynull.portmapper.io.internalmessages.KillNetworkRequest;
 import java.util.Set;
 
 /**

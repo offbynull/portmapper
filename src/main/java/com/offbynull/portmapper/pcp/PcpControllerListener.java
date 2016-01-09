@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.pcp;
 
-import com.offbynull.portmapper.pcp.messages.PcpResponse;
+import com.offbynull.portmapper.pcp.externalmessages.PcpResponse;
 import com.offbynull.portmapper.common.CommunicationType;
 
 /**

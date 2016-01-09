@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.natpmp;
 
-import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
 
 /**
  * An interface that gets notified of NAT-PMP events.

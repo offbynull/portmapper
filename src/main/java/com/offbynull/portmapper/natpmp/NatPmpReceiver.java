@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.natpmp;
 
 import com.offbynull.portmapper.common.ByteBufferUtils;
-import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;

@@ -1,8 +1,8 @@
 package com.offbynull.portmapper.natpmp;
 
-import com.offbynull.portmapper.natpmp.messages.ExternalAddressNatPmpResponse;
-import com.offbynull.portmapper.natpmp.messages.TcpMappingNatPmpResponse;
-import com.offbynull.portmapper.natpmp.messages.UdpMappingNatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.TcpMappingNatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpResponse;
 import com.offbynull.portmapper.common.ResponseException;
 import com.offbynull.portmapper.testtools.UdpServerEmulator;
 import java.net.InetAddress;

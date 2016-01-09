@@ -1,0 +1,104 @@
+package com.offbynull.portmapper.upnpigd.externalmessages;
+
+import com.offbynull.portmapper.upnpigd.externalmessages.GetSpecificPortMappingEntryUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
+import java.net.InetAddress;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+public class GetSpecificPortMappingEntryUpnpIgdRequestTest {
+
+    @Test
+    public void mustGenerateTcpRequest() throws Exception {
+        GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, Protocol.TCP);
+        String bufferText = new String(req.dump(), "US-ASCII");
+
+        assertEquals("POST /controllink HTTP/1.1\r\n"
+                + "SOAPAction: service:type#GetSpecificPortMappingEntry\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Connection: Close\r\n"
+                + "Host: fake\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Type: text/xml\r\n"
+                + "Content-Length: 401\r\n"
+                + "\r\n"
+                + "<?xml version=\"1.0\"?>\r\n"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
+                + "<soap:Body>\r\n"
+                + "<u:GetSpecificPortMappingEntry xmlns:u=\"service:type\">\r\n"
+                + "<NewRemoteHost>1.2.3.4</NewRemoteHost>\r\n"
+                + "<NewProtocol>TCP</NewProtocol>\r\n"
+                + "<NewExternalPort>15</NewExternalPort>\r\n"
+                + "</u:GetSpecificPortMappingEntry>\r\n"
+                + "</soap:Body>\r\n"
+                + "</soap:Envelope>\r\n",
+                bufferText);
+    }
+
+    @Test
+    public void mustGenerateUdpRequest() throws Exception {
+        // NOTE: technically port mapping services should not be dealing with IPv6 (only the firewall supports IPv6) -- but allow it anyways
+        // because some routers may not follow the spec
+        GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), 20000,
+                Protocol.UDP);
+        String bufferText = new String(req.dump(), "US-ASCII");
+
+        assertEquals("POST /controllink HTTP/1.1\r\n"
+                + "SOAPAction: service:type#GetSpecificPortMappingEntry\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Connection: Close\r\n"
+                + "Host: fake\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Type: text/xml\r\n"
+                + "Content-Length: 428\r\n"
+                + "\r\n"
+                + "<?xml version=\"1.0\"?>\r\n"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
+                + "<soap:Body>\r\n"
+                + "<u:GetSpecificPortMappingEntry xmlns:u=\"service:type\">\r\n"
+                + "<NewRemoteHost>102:304:506:708:90a:b0c:d0e:f10</NewRemoteHost>\r\n"
+                + "<NewProtocol>UDP</NewProtocol>\r\n"
+                + "<NewExternalPort>20000</NewExternalPort>\r\n"
+                + "</u:GetSpecificPortMappingEntry>\r\n"
+                + "</soap:Body>\r\n"
+                + "</soap:Envelope>\r\n",
+                bufferText);
+    }
+
+    @Test
+    public void mustGenerateRequestWithWildcardAddress() throws Exception {
+        GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
+                "service:type", null, 15, Protocol.TCP);
+        String bufferText = new String(req.dump(), "US-ASCII");
+
+        assertEquals("POST /controllink HTTP/1.1\r\n"
+                + "SOAPAction: service:type#GetSpecificPortMappingEntry\r\n"
+                + "Cache-Control: no-cache\r\n"
+                + "Connection: Close\r\n"
+                + "Host: fake\r\n"
+                + "Pragma: no-cache\r\n"
+                + "Content-Type: text/xml\r\n"
+                + "Content-Length: 394\r\n"
+                + "\r\n"
+                + "<?xml version=\"1.0\"?>\r\n"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
+                + "<soap:Body>\r\n"
+                + "<u:GetSpecificPortMappingEntry xmlns:u=\"service:type\">\r\n"
+                + "<NewRemoteHost></NewRemoteHost>\r\n"
+                + "<NewProtocol>TCP</NewProtocol>\r\n"
+                + "<NewExternalPort>15</NewExternalPort>\r\n"
+                + "</u:GetSpecificPortMappingEntry>\r\n"
+                + "</soap:Body>\r\n"
+                + "</soap:Envelope>\r\n",
+                bufferText);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void mustFailToGenerateWhenPortIsOutOfRange() throws Exception {
+        GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 5555555, Protocol.UDP);
+    }
+
+}

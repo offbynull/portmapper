@@ -23,16 +23,16 @@ import com.offbynull.portmapper.upnpigd.InternalUtils.ResponseCreator;
 import com.offbynull.portmapper.upnpigd.InternalUtils.UdpRequest;
 import static com.offbynull.portmapper.upnpigd.InternalUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.upnpigd.InternalUtils.performBatchedHttpRequests;
-import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdRequest;
-import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse;
-import com.offbynull.portmapper.upnpigd.messages.RootUpnpIgdResponse.ServiceReference;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdRequest;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse.IdentifiedService;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDescriptionUpnpIgdResponse.ServiceType;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdRequest;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
-import com.offbynull.portmapper.upnpigd.messages.ServiceDiscoveryUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdResponse.ServiceReference;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.IdentifiedService;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdResponse;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -47,7 +47,7 @@ import java.util.Set;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 import static com.offbynull.portmapper.upnpigd.InternalUtils.performUdpRequests;
-import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpResponse;
+import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
 
 /**
  * UPNP-IGD {@link PortMapper} implementation.

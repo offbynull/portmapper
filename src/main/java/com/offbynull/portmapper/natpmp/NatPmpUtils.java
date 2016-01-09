@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.natpmp;
 
 import static com.offbynull.portmapper.natpmp.NatPmpResultCode.SUCCESS;
-import com.offbynull.portmapper.natpmp.messages.NatPmpResponse;
+import com.offbynull.portmapper.natpmp.externalmessages.NatPmpResponse;
 
 /**
  * NAT-PMP Utilities.
