@@ -241,7 +241,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                                     serviceDescRequest.sourceAddress,
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
-                                    rootReqRes.probeResult.serviceType,
+                                    rootReqRes.serviceReference.getServiceType(),
                                     identifiedService.getExternalPortRange(),
                                     identifiedService.getLeaseDurationRange());
                             break;
@@ -251,7 +251,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                                     serviceDescRequest.sourceAddress,
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
-                                    rootReqRes.probeResult.serviceType,
+                                    rootReqRes.serviceReference.getServiceType(),
                                     identifiedService.getExternalPortRange(),
                                     identifiedService.getLeaseDurationRange());
                             break;

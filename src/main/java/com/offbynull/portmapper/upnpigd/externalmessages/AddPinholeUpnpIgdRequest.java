@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.common.NetworkUtils;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -67,7 +68,7 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
         if (remoteHost == null) {
             ret.put("RemoteHost", "");
         } else {
-            ret.put("RemoteHost", remoteHost.getHostAddress());
+            ret.put("RemoteHost", NetworkUtils.toIpv6AddressString(remoteHost));
         }
         
         Validate.inclusiveBetween(0, 65535, externalPort);
@@ -76,7 +77,7 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
         if (internalClient == null) {
             ret.put("InternalClient", "");
         } else {
-            ret.put("InternalClient", internalClient.getHostAddress());
+            ret.put("InternalClient", NetworkUtils.toIpv6AddressString(internalClient));
         }
 
         Validate.inclusiveBetween(0, 65535, internalPort);

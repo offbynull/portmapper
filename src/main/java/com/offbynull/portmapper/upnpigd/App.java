@@ -16,9 +16,10 @@
  */
 package com.offbynull.portmapper.upnpigd;
 
+import com.offbynull.portmapper.MappedPort;
+import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.io.NetworkGateway;
 import com.offbynull.portmapper.io.internalmessages.KillNetworkRequest;
-import java.net.InetAddress;
 import java.util.Set;
 
 /**
@@ -39,6 +40,15 @@ final class App {
         NetworkGateway networkGateway = NetworkGateway.create();
         try {
             Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkGateway.getBus());
+            
+            for (UpnpIgdPortMapper mapper : mappers) {
+                MappedPort mappedPort = mapper.mapPort(PortType.UDP, 10102, 10102, 1L);
+                System.out.println("Created " + mappedPort);
+                mappedPort = mapper.refreshPort(mappedPort, 1L);
+                System.out.println("Refreshed " + mappedPort);
+                mapper.unmapPort(mappedPort);
+                System.out.println("Destroy");
+            }
             System.out.println(mappers);
         } finally {
             networkGateway.getBus().send(new KillNetworkRequest());
