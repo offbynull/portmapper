@@ -40,7 +40,7 @@ final class App {
         NetworkGateway networkGateway = NetworkGateway.create();
         try {
             Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkGateway.getBus());
-            
+            System.out.println(mappers);
             for (UpnpIgdPortMapper mapper : mappers) {
                 MappedPort mappedPort = mapper.mapPort(PortType.UDP, 10102, 10102, 5L);
                 System.out.println("Created " + mappedPort);

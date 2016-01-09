@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.Collections;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
@@ -95,6 +96,9 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         }
         
         InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.respMsg).getIpAddress();
+
+
+
         
         int reservedExternalPort;
         if (hasAddAnyPortMappingMethod) {
@@ -102,6 +106,9 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         } else {
             reservedExternalPort = oldMapPort(portType, internalPort, externalPort, lifetime);
         }
+        
+        
+        
         
         return new PortMapperMappedPort(internalPort, reservedExternalPort, externalAddress, portType, lifetime);
     }
@@ -187,73 +194,81 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         String serviceType = getServiceType();
         InetAddress internalAddress = getInternalAddress();
         
-
-        //
-        // PERFORM MAPPING
-        //
-        Protocol protocol;
-        switch (portType) {
-            case TCP:
-                protocol = Protocol.TCP;
-                break;
-            case UDP:
-                protocol = Protocol.UDP;
-                break;
-            default:
-                throw new IllegalStateException(); // shuold never happend
-        }
-        Range<Long> externalPortRange = getExternalPortRange();
-        Range<Long> leaseDurationRange = getLeaseDurationRange();
-        long leaseDuration;
-        if (leaseDurationRange.isBefore(lifetime)) {
-            leaseDuration = leaseDurationRange.getMaximum();
-        } else if (leaseDurationRange.isAfter(lifetime)) {
-            leaseDuration = leaseDurationRange.getMinimum();
-        } else {
-            leaseDuration = lifetime;
-        }
-        
-        Validate.validState(externalPortRange.contains((long) externalPort),
-                "Router reports external port mappings as %s", externalPortRange);
-        
-        HttpRequest mapHttpRequest = new HttpRequest();
-        mapHttpRequest.location = controlUrl;
-        mapHttpRequest.sourceAddress = internalAddress;
-        mapHttpRequest.sendMsg = new AddPortMappingUpnpIgdRequest(
-                controlUrl.getAuthority(),
-                controlUrl.getFile(),
-                serviceType,
-                null,
-                externalPort,
-                protocol,
-                internalPort,
-                internalAddress,
-                true,
-                "",
-                leaseDuration);
-        mapHttpRequest.respCreator = new ResponseCreator() {
-            @Override
-            public UpnpIgdHttpResponse create(byte[] buffer) {
-                return new AddPortMappingUpnpIgdResponse(buffer);
+        // attempt to map 5 times -- first attempt should be 3 tries to map the externalPort passed in... anything after that is 1 attempt
+        // to map a randomized externalPort
+        long[] retryDurations = new long[] { 5000L, 5000L, 5000L };
+        for (int i = 0; i < 5; i++) {
+            Protocol protocol;
+            switch (portType) {
+                case TCP:
+                    protocol = Protocol.TCP;
+                    break;
+                case UDP:
+                    protocol = Protocol.UDP;
+                    break;
+                default:
+                    throw new IllegalStateException(); // shuold never happend
             }
-        };
-        
-        try {
-            performHttpRequests(
-                    networkBus,
-                    Collections.singleton(mapHttpRequest),
-                    5000L, 5000L, 5000L);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
+            Range<Long> externalPortRange = getExternalPortRange();
+            Range<Long> leaseDurationRange = getLeaseDurationRange();
+            long leaseDuration;
+            if (leaseDurationRange.isBefore(lifetime)) {
+                leaseDuration = leaseDurationRange.getMaximum();
+            } else if (leaseDurationRange.isAfter(lifetime)) {
+                leaseDuration = leaseDurationRange.getMinimum();
+            } else {
+                leaseDuration = lifetime;
+            }
+
+            Validate.validState(externalPortRange.contains((long) externalPort),
+                    "Router reports external port mappings as %s", externalPortRange);
+
+            HttpRequest mapHttpRequest = new HttpRequest();
+            mapHttpRequest.location = controlUrl;
+            mapHttpRequest.sourceAddress = internalAddress;
+            mapHttpRequest.sendMsg = new AddPortMappingUpnpIgdRequest(
+                    controlUrl.getAuthority(),
+                    controlUrl.getFile(),
+                    serviceType,
+                    null,
+                    externalPort,
+                    protocol,
+                    internalPort,
+                    internalAddress,
+                    true,
+                    "",
+                    leaseDuration);
+            mapHttpRequest.respCreator = new ResponseCreator() {
+                @Override
+                public UpnpIgdHttpResponse create(byte[] buffer) {
+                    return new AddPortMappingUpnpIgdResponse(buffer);
+                }
+            };
+
+            try {
+                performHttpRequests(
+                        networkBus,
+                        Collections.singleton(mapHttpRequest),
+                        retryDurations);
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
+            }
+
+            if (mapHttpRequest.respMsg != null) {
+                // server responded, so we're good to go
+                return externalPort;
+            }
+            
+            // choose another external port for next try -- next try only make 1 attempt
+            retryDurations = new long[] { 5000L };
+            externalPort = RandomUtils.nextInt(
+                    externalPortRange.getMinimum().intValue(), // should never be < 1
+                    externalPortRange.getMaximum().intValue() + 1); // should never be > 65535
         }
         
-        if (mapHttpRequest.respMsg == null) {
-            throw new IllegalStateException("No response/invalid response to mapping");
-        }
         
         
-        
-        return externalPort;
+        throw new IllegalStateException();
     }
 
     @Override
