@@ -31,6 +31,8 @@ import com.offbynull.portmapper.io.messages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.messages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.messages.WriteTcpNetworkRequest;
 import com.offbynull.portmapper.io.messages.WriteUdpNetworkRequest;
+import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpRequest;
+import com.offbynull.portmapper.upnpigd.messages.UpnpIgdHttpResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -41,13 +43,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.Validate;
 
 final class InternalUtils {
@@ -65,111 +70,162 @@ final class InternalUtils {
         
         return localIpsResp.getLocalAddresses();
     }
-
-    static void performHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long timeout) throws InterruptedException,
-            UnknownHostException, IOException {
-
-        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-        Bus selfBus = new BasicBus(queue);
-        
-
-        // Create sockets
-        Map<Integer, HttpRequest> sockets = new HashMap<>();
-        Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
-        long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
-        next:
+    
+    // avoids flooding a single server with a bunch of requests -- does requests to each server in batches of no more than 3
+    static void performBatchedHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations)
+            throws InterruptedException, IOException {
+        ArrayListValuedHashMap<String, HttpRequest> ret = new ArrayListValuedHashMap<>();
         for (HttpRequest req : reqs) {
-            if (!"http".equalsIgnoreCase(req.location.getProtocol())) {
-                // not http -- is it https? we don't support that yet
-                // TODO LOG SOMETHING HERE
-                continue;
+            String authority = req.location.getAuthority();
+            ret.put(authority, req);
+        }
+        
+        List<List<HttpRequest>> batches = new LinkedList<>();
+        int counter = 0;
+        while (true) {
+            List<HttpRequest> batch = new LinkedList<>();
+            int start = counter * 3;
+            int end = (counter + 1) * 3;
+            
+            for (String serverAddress : ret.keySet()) {
+                List<HttpRequest> serverRequests = ret.get(serverAddress);
+                if (start >= serverRequests.size()) {
+                    continue;
+                }
+                
+                int size = serverRequests.size();
+                int actualEnd = Math.min(end, size);
+                
+                batch.addAll(serverRequests.subList(start, actualEnd));
+            }
+            
+            if (batch.isEmpty()) {
+                break;
+            }
+            
+            batches.add(batch);
+            counter++;
+        }
+        
+        for (List<HttpRequest> batch : batches) {
+            performHttpRequests(networkBus, batch, attemptDurations);
+        }
+    }
+    
+    static void performHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations) throws InterruptedException,
+            UnknownHostException, IOException {
+        
+        Queue<Long> remainingAttemptDurations = new LinkedList<>();
+        for (long attemptDuration : attemptDurations) {
+            remainingAttemptDurations.add(attemptDuration);
+        }
+        Set<HttpRequest> remainingReqs = new HashSet<>(reqs);
+        while (!remainingAttemptDurations.isEmpty()) {
+            LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+            Bus selfBus = new BasicBus(queue);
+
+            // Create sockets
+            Map<Integer, HttpRequest> sockets = new HashMap<>();
+            Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
+            long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
+            next:
+            for (HttpRequest req : remainingReqs) {
+                if (!"http".equalsIgnoreCase(req.location.getProtocol())) {
+                    // not http -- is it https? we don't support that yet
+                    // TODO LOG SOMETHING HERE
+                    continue;
+                }
+
+                InetAddress destinationAddress = InetAddress.getByName(req.location.getHost());
+                int destinationPort = req.location.getPort();
+
+                networkBus.send(new CreateTcpSocketNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
+
+                int id;
+                while (true) {
+                    long sleepTime = endCreateTime - System.currentTimeMillis();
+                    if (sleepTime <= 0L) {
+                        break next;
+                    }
+
+                    Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                    if (resp instanceof ErrorNetworkResponse) {
+                        // create socket failed, so skip this request
+                        continue next;
+                    } else if (resp instanceof CreateTcpSocketNetworkResponse) {
+                        // create socket success
+                        id = ((CreateTcpSocketNetworkResponse) resp).getId();
+                        break;
+                    } else if (resp instanceof IdentifiableErrorNetworkResponse) {
+                        // likely one of the previously created sockets failed to connect -- remove the previously added socket and move on
+                        int removeId = ((IdentifiableErrorNetworkResponse) resp).getId();
+                        sockets.remove(removeId);
+                        readBuffers.remove(removeId);
+                    }
+
+                    // unrecognized response/notification, keep reading from queue until we have something we recognize
+                }
+
+                // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
+                sockets.put(id, req);
+                readBuffers.put(id, new ByteArrayOutputStream());
+                networkBus.send(new WriteTcpNetworkRequest(id, req.sendData.dump()));
             }
 
-            InetAddress destinationAddress = InetAddress.getByName(req.location.getHost());
-            int destinationPort = req.location.getPort();
 
-            networkBus.send(new CreateTcpSocketNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
-            
-            int id;
-            while (true) {
-                long sleepTime = endCreateTime - System.currentTimeMillis();
+            // Read data from sockets
+            long timeout = remainingAttemptDurations.poll();
+            long endTime = System.currentTimeMillis() + timeout;
+            Set<Integer> activeSocketIds = new HashSet<>(sockets.keySet());
+            while (!activeSocketIds.isEmpty()) {
+                long sleepTime = endTime - System.currentTimeMillis();
                 if (sleepTime <= 0L) {
-                    break next;
+                    break;
                 }
 
                 Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (resp instanceof ErrorNetworkResponse) {
-                    // create socket failed, so skip this request
-                    continue next;
-                } else if (resp instanceof CreateTcpSocketNetworkResponse) {
-                    // create socket success
-                    id = ((CreateTcpSocketNetworkResponse) resp).getId();
-                    break;
+
+                if (resp instanceof ReadTcpNetworkNotification) {
+                    // On read, put in to readBuffer
+                    ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
+                    int id = readResp.getId();
+
+                    ByteArrayOutputStream baos = readBuffers.get(id);
+                    Validate.validState(baos != null); // sanity check -- should never happen
+                    baos.write(readResp.getData());
                 } else if (resp instanceof IdentifiableErrorNetworkResponse) {
-                    // likely one of the previously created sockets failed to connect -- remove the previously added socket and move on
-                    int removeId = ((IdentifiableErrorNetworkResponse) resp).getId();
-                    sockets.remove(removeId);
-                    readBuffers.remove(removeId);
+                    // On error, remove socket from active set (server likely closed the socket)
+                    IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
+                    int id = errorResp.getId();
+
+                    activeSocketIds.remove(id);
                 }
-
-                // unrecognized response/notification, keep reading from queue until we have something we recognize
             }
 
-            // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
-            sockets.put(id, req);
-            readBuffers.put(id, new ByteArrayOutputStream());
-            networkBus.send(new WriteTcpNetworkRequest(id, req.sendData));
-        }
 
-
-        // Read data from sockets
-        long remainingTime = System.currentTimeMillis() + timeout;
-        Set<Integer> activeSocketIds = new HashSet<>(sockets.keySet());
-        while (!activeSocketIds.isEmpty()) {
-            long sleepTime = remainingTime - System.currentTimeMillis();
-            if (sleepTime <= 0L) {
-                break;
+            // Issue socket closes
+            for (int id : sockets.keySet()) {
+                networkBus.send(new DestroySocketNetworkRequest(id));
             }
 
-            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
 
-            if (resp instanceof ReadTcpNetworkNotification) {
-                // On read, put in to readBuffer
-                ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
-                int id = readResp.getId();
+            // Process responses
+            for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
+                int id = entry.getKey();
+                HttpRequest req = sockets.get(id);
 
-                ByteArrayOutputStream baos = readBuffers.get(id);
-                Validate.validState(baos != null); // sanity check -- should never happen
-                baos.write(readResp.getData());
-            } else if (resp instanceof IdentifiableErrorNetworkResponse) {
-                // On error, remove socket from active set (server likely closed the socket)
-                IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
-                int id = errorResp.getId();
-                
-                activeSocketIds.remove(id);
-            }
-        }
-
-
-        // Issue socket closes
-        for (int id : sockets.keySet()) {
-            networkBus.send(new DestroySocketNetworkRequest(id));
-        }
-
-
-        // Process responses
-        for (Map.Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
-            int id = entry.getKey();
-            HttpRequest req = sockets.get(id);
-
-            byte[] respData = entry.getValue().toByteArray();
-            if (respData.length > 0) {
-                req.respData = respData;
+                byte[] respData = entry.getValue().toByteArray();
+                try {
+                    req.respData = req.respCreator.create(respData);
+                    remainingReqs.remove(req);
+                } catch (RuntimeException e) {
+                    // do nothing
+                }
             }
         }
     }
 
-    static void performUdpQueries(Bus networkBus, Collection<UdpRequest> reqs, Queue<Long> retryDurations)
+    static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, long ... attemptDurations)
             throws InterruptedException {
         
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
@@ -213,24 +269,27 @@ final class InternalUtils {
 
         
         // Send requests
-        Queue<Long> remainingRetryDurations = new LinkedList<>(retryDurations);
-        while (!idToRequest.isEmpty() && !remainingRetryDurations.isEmpty()) {
+        Queue<Long> remainingAttemptDurations = new LinkedList<>();
+        for (long attemptDuration : attemptDurations) {
+            remainingAttemptDurations.add(attemptDuration);
+        }
+        while (!idToRequest.isEmpty() && !remainingAttemptDurations.isEmpty()) {
             // Send requests to whoever hasn't responded yet
             for (UdpRequest req : idToRequest.values()) {
                 int id = addressToId.get(req.sourceAddress);
 
                 try {
-                    networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendData));
+                    networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
                 } catch (RuntimeException re) {
                     // do nothing -- just skip
                 }
             }
 
             // Wait for responses
-            long retryTime = remainingRetryDurations.poll();
-            long remainingTime = System.currentTimeMillis() + retryTime;
+            long timeout = remainingAttemptDurations.poll();
+            long endTime = System.currentTimeMillis() + timeout;
             while (true) {
-                long sleepTime = remainingTime - System.currentTimeMillis();
+                long sleepTime = endTime - System.currentTimeMillis();
                 if (sleepTime <= 0L) {
                     break;
                 }
@@ -258,8 +317,13 @@ final class InternalUtils {
 //                    // skip if we're recving from someone other than who we sent to
 //                    continue;
 //                }
-                req.respData = readNetResp.getData();
-                idToRequest.remove(id);
+                byte[] respData = readNetResp.getData();
+                try {
+                    req.respMsg = req.respCreator.create(respData);
+                    idToRequest.remove(id);
+                } catch (RuntimeException e) {
+                    // do nothing
+                }
             }
         }
 
@@ -272,20 +336,24 @@ final class InternalUtils {
     
     
     static final class HttpRequest {
-
         Object other;
         InetAddress sourceAddress;
         URL location;
-        byte[] sendData;
-        byte[] respData;
+        UpnpIgdHttpRequest sendData;
+        UpnpIgdHttpResponse respData;
+        ResponseCreator respCreator;
     }
 
     static final class UdpRequest {
-
         Object other;
         InetAddress sourceAddress;
         InetSocketAddress destinationSocketAddress;
-        byte[] sendData;
-        byte[] respData;
+        UpnpIgdHttpRequest sendMsg;
+        UpnpIgdHttpResponse respMsg;
+        ResponseCreator respCreator;
+    }
+    
+    interface ResponseCreator {
+        UpnpIgdHttpResponse create(byte[] buffer);
     }
 }
