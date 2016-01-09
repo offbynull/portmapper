@@ -68,6 +68,27 @@ public final class NetworkUtils {
     }
     
     /**
+     * Gets the address as an IPv6 address string. If {@code address} is a {@link Inet4Address}, it'll be converted to an IPv4 mapped to
+     * IPv5 address. If {@code address} is a {@link Inet6Address}, it'll return {@code address.getHostAddress()}.
+     * <p>
+     * This method is required because Java prevents you from creating an 'IPv4 mapped to IPv6' address as an {@link Inet6Address}.
+     * @param address address to convert to string
+     * @return address as an IPv6 address string
+     */
+    public static String toIpv6AddressString(InetAddress address) {
+        if (address instanceof Inet4Address) {
+            byte[] bytes = address.getAddress();
+            int block1 = ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff);
+            int block2 = ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff);
+            return "::ffff:" + Integer.toHexString(block1) + ":" + Integer.toHexString(block2);
+        } else if (address instanceof Inet6Address) {
+            return address.getHostAddress();
+        } else {
+            throw new IllegalStateException(); // should never happen
+        }
+    }
+    
+    /**
      * Convert a IP address to an IPv6 address and dump as a byte array. If the input is IPv4 it'll be converted to an IPv4-to-IPv6 address.
      * Otherwise, the IPv6 address will be dumped as-is.
      * @param address address to convert to a ipv6 byte array

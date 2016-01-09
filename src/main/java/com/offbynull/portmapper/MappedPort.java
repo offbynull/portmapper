@@ -17,88 +17,40 @@
 package com.offbynull.portmapper;
 
 import java.net.InetAddress;
-import org.apache.commons.lang3.Validate;
 
 /**
- * Describes a mapped port.
+ * Represents a mapped port.
  * @author Kasra Faghihi
  */
-public final class MappedPort {
-
-    private int internalPort;
-    private int externalPort;
-    private InetAddress externalAddress;
-    private PortType portType;
-    private long lifetime;
-
-    /**
-     * Constructs a {@link MappedPort} object.
-     * @param internalPort internal port
-     * @param externalPort external port
-     * @param externalAddress external address (may be {@code null} if underlying mapper doesn't support getting external IP)
-     * @param portType port type
-     * @param duration mapping lifetime
-     * @throws NullPointerException if any argument other than {@code externalAddress} is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is non-positive, or if {@code internalPort > 65535 || externalPort > 65535}
-     */
-    public MappedPort(int internalPort, int externalPort, InetAddress externalAddress, PortType portType, long duration) {
-        Validate.inclusiveBetween(1, 65535, internalPort);
-        Validate.inclusiveBetween(1, 65535, externalPort);
-        Validate.notNull(externalAddress);
-        Validate.notNull(portType);
-        Validate.inclusiveBetween(0L, Long.MAX_VALUE, duration);
-
-        this.internalPort = internalPort;
-        this.externalPort = externalPort;
-        this.externalAddress = externalAddress;
-        this.portType = portType;
-        this.lifetime = duration;
-    }
+public interface MappedPort {
 
     /**
      * Get internal port.
      * @return internal port
      */
-    public int getInternalPort() {
-        return internalPort;
-    }
+    int getInternalPort();
 
     /**
      * Get external port.
      * @return external port
      */
-    public int getExternalPort() {
-        return externalPort;
-    }
+    int getExternalPort();
 
     /**
-     * Get external address.
-     * @return external address
+     * Get external address (optional).
+     * @return external address ({@code null} if underlying protocol doesn't support getting the external address)
      */
-    public InetAddress getExternalAddress() {
-        return externalAddress;
-    }
+    InetAddress getExternalAddress();
     
     /**
      * Get port type.
      * @return port type
      */
-    public PortType getPortType() {
-        return portType;
-    }
+    PortType getPortType();
 
     /**
      * Get mapping lifetime.
      * @return mapping lifetime
      */
-    public long getLifetime() {
-        return lifetime;
-    }
-
-    @Override
-    public String toString() {
-        return "MappedPort{" + "internalPort=" + internalPort + ", externalPort=" + externalPort + ", externalAddress=" + externalAddress 
-                + ", portType=" + portType + ", lifetime=" + lifetime + '}';
-    }
-    
+    long getLifetime();
 }

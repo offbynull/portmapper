@@ -40,6 +40,7 @@ public interface PortMapper {
      * Unmap a port. Unmapping the same port multiple times or unmapping a port that hasn't been mapped yet has undefined behaviour.
      * @param mappedPort mapped port details
      * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if {@code mappedPort} is not the expected type for this mapper
      * @throws IllegalStateException if the port could not be unmapped for any reason
      * @throws InterruptedException if thread was interrupted
      */
@@ -51,7 +52,8 @@ public interface PortMapper {
      * @param lifetime number of seconds to acquire mapping for (may be reduced or extended depending on server and/or client)
      * @return object that describes the refreshed mapping
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if any numeric argument is non-positive
+     * @throws IllegalArgumentException if any numeric argument is non-positive, or if {@code mappedPort} is not the expected type for this
+     * mapper
      * @throws IllegalStateException if the port could not be refreshed to the same external IP/port for whatever reason
      * @throws InterruptedException if thread was interrupted
      */

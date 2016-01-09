@@ -85,7 +85,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         }
         
         if (externalIpHttpRequest.respMsg == null) {
-            throw new IllegalStateException("No response/invalid response to mapping");
+            throw new IllegalStateException("No response/invalid response to getting external IP");
         }
         
         InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.respMsg).getIpAddress();
@@ -158,12 +158,13 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         
         // RETURN
-        return new MappedPort(internalPort, externalPort, externalAddress, portType, leaseDuration);
+        return new PortMapperMappedPort(internalPort, externalPort, externalAddress, portType, leaseDuration);
     }
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
         Validate.notNull(mappedPort);
+        Validate.isTrue(mappedPort instanceof PortMapperMappedPort);
 
         Bus networkBus = getNetworkBus();
         URL controlUrl = getControlUrl();
@@ -207,10 +208,17 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
+        
+        if (httpRequest.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to unmapping");
+        }
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        Validate.notNull(mappedPort);
+        Validate.isTrue(mappedPort instanceof PortMapperMappedPort);
+        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
         return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
     }
 
