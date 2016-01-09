@@ -319,7 +319,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     @Override
     public String toString() {
-        return "PortMapperUpnpIgdPortMapper{super=" + super.toString() + '}';
+        return "PortMapperUpnpIgdPortMapper{super=" + super.toString() + ", hasAddAnyPortMappingMethod=" + hasAddAnyPortMappingMethod + '}';
     }
-    
+
 }
