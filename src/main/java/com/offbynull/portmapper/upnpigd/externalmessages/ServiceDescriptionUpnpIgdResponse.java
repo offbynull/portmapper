@@ -57,9 +57,13 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         
         Map<ServiceType, IdentifiedService> descs = new HashMap<>();
 
-        IdentifiedService portMappingDescription = getAsPortMappingService(content);
-        if (portMappingDescription != null) {
-            descs.put(ServiceType.PORT_MAPPER, portMappingDescription);
+        // check for new portmapper version first -- if we checked for the old one first it would pass even if its the new one because the
+        // new version contains all the old version methods
+        IdentifiedService portMappingDescription;
+        if ((portMappingDescription = getAsNewPortMappingService(content)) != null) {
+            descs.put(ServiceType.NEW_PORT_MAPPER, portMappingDescription);
+        } else if ((portMappingDescription = getAsOldPortMappingService(content)) != null) {
+            descs.put(ServiceType.OLD_PORT_MAPPER, portMappingDescription);
         }
         
         IdentifiedService firewallDescription = getAsFirewallService(content);
@@ -84,7 +88,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         return identifiedServices;
     }
 
-    private static IdentifiedService getAsPortMappingService(String content) {
+    private static IdentifiedService getAsOldPortMappingService(String content) {
         List<String> actionBlocks = TextUtils.findAllBlocks(content, "<action>", "</action>", true);
         List<String> stateVarBlocks = TextUtils.findAllBlocks(content, "<stateVariable>", "</stateVariable>", true);
 
@@ -105,6 +109,34 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
                 Range.between(0L, 65535L)); // based on docs
         Range<Long> leaseTimeRange = getAllowedValueRange(
                 addMappingActionBlock,
+                stateVarBlocks,
+                "NewLeaseDuration",
+                Range.between(1L, 604800L)); // based on docs
+        
+        return new IdentifiedService(leaseTimeRange, externalPortRange);
+    }
+
+    private static IdentifiedService getAsNewPortMappingService(String content) {
+        List<String> actionBlocks = TextUtils.findAllBlocks(content, "<action>", "</action>", true);
+        List<String> stateVarBlocks = TextUtils.findAllBlocks(content, "<stateVariable>", "</stateVariable>", true);
+
+        String getExtIpActionBlock = searchBlocksForTag(actionBlocks, "name", "GetExternalIPAddress");
+        String getMappingActionBlock = searchBlocksForTag(actionBlocks, "name", "GetSpecificPortMappingEntry");
+        String deleteMappingActionBlock = searchBlocksForTag(actionBlocks, "name", "DeletePortMapping");
+        String addAnyMappingActionBlock = searchBlocksForTag(actionBlocks, "name", "AddAnyPortMapping");
+        
+        if (getExtIpActionBlock == null || getMappingActionBlock == null || deleteMappingActionBlock == null
+                || addAnyMappingActionBlock == null) {
+            return null;
+        }
+        
+        Range<Long> externalPortRange = getAllowedValueRange(
+                addAnyMappingActionBlock,
+                stateVarBlocks,
+                "NewExternalPort",
+                Range.between(0L, 65535L)); // based on docs
+        Range<Long> leaseTimeRange = getAllowedValueRange(
+                addAnyMappingActionBlock,
                 stateVarBlocks,
                 "NewLeaseDuration",
                 Range.between(1L, 604800L)); // based on docs
@@ -330,9 +362,13 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
      */
     public enum ServiceType {
         /**
-         * Port mapper service.
+         * Old port mapper service (does not feature AddAnyPortMapping method).
          */
-        PORT_MAPPER, // ipv4 only according to docs
+        OLD_PORT_MAPPER, // ipv4 only according to docs
+        /**
+         * Old port mapper service (features AddAnyPortMapping method).
+         */
+        NEW_PORT_MAPPER, // ipv4 only according to docs
         /**
          * Firewall service.
          */

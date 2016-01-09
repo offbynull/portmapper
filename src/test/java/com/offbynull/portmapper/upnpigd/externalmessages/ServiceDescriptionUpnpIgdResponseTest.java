@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.IdentifiedService;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType;
 import java.util.Map;

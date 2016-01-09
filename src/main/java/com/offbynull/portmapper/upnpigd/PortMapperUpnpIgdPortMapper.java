@@ -22,6 +22,8 @@ import com.offbynull.portmapper.common.Bus;
 import com.offbynull.portmapper.upnpigd.InternalUtils.HttpRequest;
 import com.offbynull.portmapper.upnpigd.InternalUtils.ResponseCreator;
 import static com.offbynull.portmapper.upnpigd.InternalUtils.performHttpRequests;
+import com.offbynull.portmapper.upnpigd.externalmessages.AddAnyPortMappingUpnpIgdRequest;
+import com.offbynull.portmapper.upnpigd.externalmessages.AddAnyPortMappingUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.AddPortMappingUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.AddPortMappingUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.DeletePortMappingUpnpIgdRequest;
@@ -39,9 +41,13 @@ import org.apache.commons.lang3.Validate;
 
 public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
+    private final boolean hasAddAnyPortMappingMethod;
+    
     public PortMapperUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
-            Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
+            Range<Long> externalPortRange, Range<Long> leaseDurationRange, boolean hasAddAnyPortMappingMethod) {
         super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
+        
+        this.hasAddAnyPortMappingMethod = hasAddAnyPortMappingMethod;
     }
 
 
@@ -90,8 +96,98 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.respMsg).getIpAddress();
         
+        int reservedExternalPort;
+        if (hasAddAnyPortMappingMethod) {
+            reservedExternalPort = newMapPort(portType, internalPort, externalPort, lifetime);
+        } else {
+            reservedExternalPort = oldMapPort(portType, internalPort, externalPort, lifetime);
+        }
+        
+        return new PortMapperMappedPort(internalPort, reservedExternalPort, externalAddress, portType, lifetime);
+    }
+    
+    private int newMapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        Bus networkBus = getNetworkBus();
+        URL controlUrl = getControlUrl();
+        String serviceType = getServiceType();
+        InetAddress internalAddress = getInternalAddress();
+        
+
+        //
+        // PERFORM MAPPING
+        //
+        Protocol protocol;
+        switch (portType) {
+            case TCP:
+                protocol = Protocol.TCP;
+                break;
+            case UDP:
+                protocol = Protocol.UDP;
+                break;
+            default:
+                throw new IllegalStateException(); // shuold never happend
+        }
+        Range<Long> externalPortRange = getExternalPortRange();
+        Range<Long> leaseDurationRange = getLeaseDurationRange();
+        long leaseDuration;
+        if (leaseDurationRange.isBefore(lifetime)) {
+            leaseDuration = leaseDurationRange.getMaximum();
+        } else if (leaseDurationRange.isAfter(lifetime)) {
+            leaseDuration = leaseDurationRange.getMinimum();
+        } else {
+            leaseDuration = lifetime;
+        }
+        
+        Validate.validState(externalPortRange.contains((long) externalPort),
+                "Router reports external port mappings as %s", externalPortRange);
+        
+        HttpRequest mapHttpRequest = new HttpRequest();
+        mapHttpRequest.location = controlUrl;
+        mapHttpRequest.sourceAddress = internalAddress;
+        mapHttpRequest.sendMsg = new AddAnyPortMappingUpnpIgdRequest(
+                controlUrl.getAuthority(),
+                controlUrl.getFile(),
+                serviceType,
+                null,
+                externalPort,
+                protocol,
+                internalPort,
+                internalAddress,
+                true,
+                "",
+                leaseDuration);
+        mapHttpRequest.respCreator = new ResponseCreator() {
+            @Override
+            public UpnpIgdHttpResponse create(byte[] buffer) {
+                return new AddAnyPortMappingUpnpIgdResponse(buffer);
+            }
+        };
+        
+        try {
+            performHttpRequests(
+                    networkBus,
+                    Collections.singleton(mapHttpRequest),
+                    5000L, 5000L, 5000L);
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+        
+        if (mapHttpRequest.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to mapping");
+        }
         
         
+        
+        return ((AddAnyPortMappingUpnpIgdResponse) mapHttpRequest.respMsg).getReservedPort();
+    }
+    
+    private int oldMapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        Bus networkBus = getNetworkBus();
+        URL controlUrl = getControlUrl();
+        String serviceType = getServiceType();
+        InetAddress internalAddress = getInternalAddress();
+        
+
         //
         // PERFORM MAPPING
         //
@@ -157,8 +253,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         
         
-        // RETURN
-        return new PortMapperMappedPort(internalPort, externalPort, externalAddress, portType, leaseDuration);
+        return externalPort;
     }
 
     @Override

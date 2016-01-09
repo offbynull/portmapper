@@ -29,7 +29,6 @@ import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdResponse.Ser
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.IdentifiedService;
-import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdResponse;
@@ -47,6 +46,10 @@ import java.util.Set;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 import static com.offbynull.portmapper.upnpigd.InternalUtils.performUdpRequests;
+import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType;
+import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.FIREWALL;
+import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.OLD_PORT_MAPPER;
+import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.NEW_PORT_MAPPER;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
 
 /**
@@ -181,7 +184,6 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                 other.source = discoveryReq.sourceAddress;
                 other.location = discoveryResp.getLocation();
                 other.serverName = discoveryResp.getServer();
-                other.serviceType = discoveryResp.getServiceType();
 
                 req.other = other;
                 req.sourceAddress = other.source;
@@ -235,7 +237,7 @@ abstract class UpnpIgdPortMapper implements PortMapper {
 
                     UpnpIgdPortMapper upnpIgdPortMapper;
                     switch (serviceType) {
-                        case PORT_MAPPER:
+                        case OLD_PORT_MAPPER:
                             upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
                                     networkBus,
                                     serviceDescRequest.sourceAddress,
@@ -243,7 +245,19 @@ abstract class UpnpIgdPortMapper implements PortMapper {
                                     rootReqRes.probeResult.serverName,
                                     rootReqRes.serviceReference.getServiceType(),
                                     identifiedService.getExternalPortRange(),
-                                    identifiedService.getLeaseDurationRange());
+                                    identifiedService.getLeaseDurationRange(),
+                                    false);
+                            break;
+                        case NEW_PORT_MAPPER:
+                            upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
+                                    networkBus,
+                                    serviceDescRequest.sourceAddress,
+                                    rootReqRes.serviceReference.getControlUrl(),
+                                    rootReqRes.probeResult.serverName,
+                                    rootReqRes.serviceReference.getServiceType(),
+                                    identifiedService.getExternalPortRange(),
+                                    identifiedService.getLeaseDurationRange(),
+                                    true);
                             break;
                         case FIREWALL:
                             upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
@@ -274,7 +288,6 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         private InetAddress source;
         private URL location;
         private String serverName;
-        private String serviceType;
     }
 
     private static final class RootRequestResult {
