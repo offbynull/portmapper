@@ -46,7 +46,7 @@ final class FirewallMappedPort implements MappedPort {
         this.lifetime = duration;
     }
 
-    public String getKey() {
+    String getKey() {
         return key;
     }
 

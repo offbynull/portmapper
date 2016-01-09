@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +15,8 @@
  * License along with this library.
  */
 package com.offbynull.portmapper;
+
+import java.net.InetAddress;
 
 /**
  * Interface for port mapping.
@@ -59,4 +61,10 @@ public interface PortMapper {
      * @throws InterruptedException if thread was interrupted
      */
     MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException;
+    
+    /**
+     * Get the source address used by this port mapper. Use the source IP to figure out which interface the gateway was found on.
+     * @return source address
+     */
+    InetAddress getSourceAddress();
 }

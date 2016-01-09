@@ -36,8 +36,29 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Port mapper implementation that interfaces with a UPnP-IGD IPv6 firewall service.
+ * <p>
+ * Note that this port mapper doesn't care what the service type is. So long as the service type exposes AddPinhole, DeletePinhole, and
+ * RefreshPinhole actions (and defines them as they're defined in WANIPv6FirewallControl:1), this port mapper will be able to call those
+ * actions to expose ports.
+ * @author Kasra Faghihi
+ */
 public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
+    /**
+     * Constructs a {@link FirewallUpnpIgdPortMapper} object
+     * @param networkBus bus to network component
+     * @param internalAddress local address accessing gateway device
+     * @param controlUrl service control URL
+     * @param serverName server name (can be {@code null}
+     * @param serviceType service type
+     * @param externalPortRange external port range
+     * @param leaseDurationRange lease duration range
+     * @throws NullPointerException if any argument other than {@code severName} is {@code null}
+     * @throws IllegalArgumentException if {@code 0 > leaseDurationRange > 0xFFFFFFFFL || 0 > externalPortRange > 0xFFFFL} (note that
+     * a 0 lease duration means either default value or infinite, and a 0 external port means wildcard)
+     */
     public FirewallUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
         super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);

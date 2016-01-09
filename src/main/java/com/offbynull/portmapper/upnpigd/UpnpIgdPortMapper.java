@@ -283,6 +283,12 @@ abstract class UpnpIgdPortMapper implements PortMapper {
         return ret;
     }
 
+
+    @Override
+    public final InetAddress getSourceAddress() {
+        return internalAddress;
+    }
+
     private static final class ProbeResult {
 
         private InetAddress source;

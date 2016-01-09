@@ -40,10 +40,33 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Port mapper implementation that interfaces with a UPnP-IGD IPv4 port mapping service (both 1.0 and 2.0 variants).
+ * <p>
+ * Note that this port mapper doesn't care what the service type is. So long as the service type exposes GetExternalIPAddress,
+ * GetSpecificPortMappingEntry, DeletePortMapping, and AddPortMapping/AddAnyPortMapping actions (and defines them as they're defined in
+ * typical profiles that support port mapping -- such as WANIPConnection:1), this port mapper will be able to call those actions to expose
+ * ports.
+ * @author Kasra Faghihi
+ */
 public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     private final boolean hasAddAnyPortMappingMethod;
     
+    /**
+     * Constructs a {@link PortMapperUpnpIgdPortMapper} object
+     * @param networkBus bus to network component
+     * @param internalAddress local address accessing gateway device
+     * @param controlUrl service control URL
+     * @param serverName server name (can be {@code null}
+     * @param serviceType service type
+     * @param externalPortRange external port range
+     * @param leaseDurationRange lease duration range
+     * @param hasAddAnyPortMappingMethod {@code true} if AddAnyPortMapping action is available, otherwise {@code false}
+     * @throws NullPointerException if any argument other than {@code severName} is {@code null}
+     * @throws IllegalArgumentException if {@code 0 > leaseDurationRange > 0xFFFFFFFFL || 0 > externalPortRange > 0xFFFFL} (note that
+     * a 0 lease duration means either default value or infinite, and a 0 external port means wildcard)
+     */
     public PortMapperUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange, boolean hasAddAnyPortMappingMethod) {
         super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
