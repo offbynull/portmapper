@@ -18,8 +18,8 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.io.IoGateway;
-import com.offbynull.portmapper.io.internalmessages.KillIoRequest;
+import com.offbynull.portmapper.io.network.NetworkGateway;
+import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import java.util.Set;
 
 /**
@@ -37,7 +37,7 @@ final class App {
      * @throws Throwable on error
      */
     public static void main(String []args) throws Throwable {
-        IoGateway networkGateway = IoGateway.create();
+        NetworkGateway networkGateway = NetworkGateway.create();
         try {
             Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkGateway.getBus());
             System.out.println(mappers);
@@ -51,7 +51,7 @@ final class App {
             }
             System.out.println(mappers);
         } finally {
-            networkGateway.getBus().send(new KillIoRequest());
+            networkGateway.getBus().send(new KillNetworkRequest());
             networkGateway.join();
         }
     }

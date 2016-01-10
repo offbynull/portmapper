@@ -18,19 +18,19 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.common.BasicBus;
 import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpIoRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpIoResponse;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpIoRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpIoResponse;
-import com.offbynull.portmapper.io.internalmessages.DestroyResourceIoRequest;
-import com.offbynull.portmapper.io.internalmessages.ErrorIoResponse;
-import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoRequest;
-import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoResponse;
-import com.offbynull.portmapper.io.internalmessages.IdentifiableErrorIoResponse;
-import com.offbynull.portmapper.io.internalmessages.ReadTcpIoNotification;
-import com.offbynull.portmapper.io.internalmessages.ReadUdpIoNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteTcpIoRequest;
-import com.offbynull.portmapper.io.internalmessages.WriteUdpIoRequest;
+import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.ErrorNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.ReadTcpNetworkNotification;
+import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
+import com.offbynull.portmapper.io.network.internalmessages.WriteTcpNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.WriteUdpNetworkRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
 import java.io.ByteArrayOutputStream;
@@ -65,8 +65,8 @@ final class InternalUtils {
         Bus selfBus = new BasicBus(queue);
 
         // Get local IP addresses
-        networkBus.send(new GetLocalIpAddressesIoRequest(selfBus));
-        GetLocalIpAddressesIoResponse localIpsResp = (GetLocalIpAddressesIoResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
+        networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
+        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
         
         return localIpsResp.getLocalAddresses();
     }
@@ -139,7 +139,7 @@ final class InternalUtils {
                 InetAddress destinationAddress = InetAddress.getByName(req.location.getHost());
                 int destinationPort = req.location.getPort();
 
-                networkBus.send(new CreateTcpIoRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
+                networkBus.send(new CreateTcpNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
 
                 int id;
                 while (true) {
@@ -149,16 +149,16 @@ final class InternalUtils {
                     }
 
                     Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                    if (resp instanceof ErrorIoResponse) {
+                    if (resp instanceof ErrorNetworkResponse) {
                         // create socket failed, so skip this request
                         continue next;
-                    } else if (resp instanceof CreateTcpIoResponse) {
+                    } else if (resp instanceof CreateTcpNetworkResponse) {
                         // create socket success
-                        id = ((CreateTcpIoResponse) resp).getId();
+                        id = ((CreateTcpNetworkResponse) resp).getId();
                         break;
-                    } else if (resp instanceof IdentifiableErrorIoResponse) {
+                    } else if (resp instanceof IdentifiableErrorNetworkResponse) {
                         // likely one of the previously created sockets failed to connect -- remove the previously added socket and move on
-                        int removeId = ((IdentifiableErrorIoResponse) resp).getId();
+                        int removeId = ((IdentifiableErrorNetworkResponse) resp).getId();
                         sockets.remove(removeId);
                         readBuffers.remove(removeId);
                     }
@@ -169,7 +169,7 @@ final class InternalUtils {
                 // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
                 sockets.put(id, req);
                 readBuffers.put(id, new ByteArrayOutputStream());
-                networkBus.send(new WriteTcpIoRequest(id, req.sendMsg.dump()));
+                networkBus.send(new WriteTcpNetworkRequest(id, req.sendMsg.dump()));
             }
 
 
@@ -185,17 +185,17 @@ final class InternalUtils {
 
                 Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
 
-                if (resp instanceof ReadTcpIoNotification) {
+                if (resp instanceof ReadTcpNetworkNotification) {
                     // On read, put in to readBuffer
-                    ReadTcpIoNotification readResp = (ReadTcpIoNotification) resp;
+                    ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
                     int id = readResp.getId();
 
                     ByteArrayOutputStream baos = readBuffers.get(id);
                     Validate.validState(baos != null); // sanity check -- should never happen
                     baos.write(readResp.getData());
-                } else if (resp instanceof IdentifiableErrorIoResponse) {
+                } else if (resp instanceof IdentifiableErrorNetworkResponse) {
                     // On error, remove socket from active set (server likely closed the socket)
-                    IdentifiableErrorIoResponse errorResp = (IdentifiableErrorIoResponse) resp;
+                    IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
                     int id = errorResp.getId();
 
                     activeSocketIds.remove(id);
@@ -205,7 +205,7 @@ final class InternalUtils {
 
             // Issue socket closes
             for (int id : sockets.keySet()) {
-                networkBus.send(new DestroyResourceIoRequest(id));
+                networkBus.send(new CloseNetworkRequest(id));
             }
 
 
@@ -243,7 +243,7 @@ final class InternalUtils {
                 continue;
             }
 
-            networkBus.send(new CreateUdpIoRequest(selfBus, req.sourceAddress));
+            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.sourceAddress));
 
             Object createResp;
             while (true) {
@@ -251,10 +251,10 @@ final class InternalUtils {
                 Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
 
                 createResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (createResp instanceof ErrorIoResponse) {
+                if (createResp instanceof ErrorNetworkResponse) {
                     // create socket failed, so skip this request
                     continue next;
-                } else if (createResp instanceof CreateUdpIoResponse) {
+                } else if (createResp instanceof CreateUdpNetworkResponse) {
                     // create socket success, store the udp socket info
                     break;
                 }
@@ -262,7 +262,7 @@ final class InternalUtils {
                 // unrecognized response/notification, keep reading from queue until we have something we recognize
             }
 
-            int id = ((CreateUdpIoResponse) createResp).getId();
+            int id = ((CreateUdpNetworkResponse) createResp).getId();
             addressToId.put(req.sourceAddress, id);
             idToRequest.put(id, req);
         }
@@ -279,7 +279,7 @@ final class InternalUtils {
                 int id = addressToId.get(req.sourceAddress);
 
                 try {
-                    networkBus.send(new WriteUdpIoRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
+                    networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
                 } catch (RuntimeException re) {
                     // do nothing -- just skip
                 }
@@ -298,12 +298,12 @@ final class InternalUtils {
                 if (netResp == null) {
                     // timed out
                     continue;
-                } else if (!(netResp instanceof ReadUdpIoNotification)) {
+                } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
                     // got a response but it wasn't a read
                     continue;
                 }
 
-                ReadUdpIoNotification readNetResp = (ReadUdpIoNotification) netResp;
+                ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
                 int id = readNetResp.getId();
 
                 UdpRequest req = idToRequest.get(id);
@@ -330,7 +330,7 @@ final class InternalUtils {
         
         // Destroy UDP sockets
         for (int id : addressToId.values()) {
-            networkBus.send(new DestroyResourceIoRequest(id));
+            networkBus.send(new CloseNetworkRequest(id));
         }
     }
     
