@@ -17,34 +17,32 @@
 package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
-import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
 
 import org.apache.commons.lang3.Validate;
 
-final class ProcessShutdownRunnable implements Runnable {
+final class ProcessExitRunnable implements Runnable {
 
     private final int id;
     private final Process process;
-    private final Bus directOutputBus;
+    private final Bus processBus;
 
-    public ProcessShutdownRunnable(int id, Process process, Bus directOutputBus) {
+    public ProcessExitRunnable(int id, Process process, Bus processBus) {
         Validate.notNull(process);
-        Validate.notNull(directOutputBus);
+        Validate.notNull(processBus);
         
         this.id = id;
         this.process = process;
-        this.directOutputBus = directOutputBus;
+        this.processBus = processBus;
     }
     
     @Override
     public void run() {
         try {
             int exitCode = process.waitFor();
-            directOutputBus.send(new ExitProcessNotification(exitCode, id));
+            processBus.send(new TerminatedMessage(exitCode, id));
         } catch (InterruptedException ioe) {
             process.destroy();
-            directOutputBus.send(new IdentifiableErrorNetworkResponse(id));
+            processBus.send(new TerminatedMessage(null, id));
         }
     }
     

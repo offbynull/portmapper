@@ -24,6 +24,9 @@ import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.CloseProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.ErrorProcessResponse;
+import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.ReadType;
+import com.offbynull.portmapper.io.process.internalmessages.WriteEmptyProcessNotification;
 import com.offbynull.portmapper.io.process.internalmessages.WriteProcessRequest;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -83,11 +86,13 @@ final class ProcessRunnable implements Runnable {
                 
                 int id = nextId++;
                 
-                ProcessShutdownRunnable exitRunnable = new ProcessShutdownRunnable(id, process, responseBus);
+                ProcessExitRunnable exitRunnable = new ProcessExitRunnable(id, process, responseBus);
                 Thread exitThread = new Thread(exitRunnable);
-                ProcessReaderRunnable stdoutRunnable = new ProcessReaderRunnable(id, process.getInputStream(), responseBus);
+                ProcessReaderRunnable stdoutRunnable = new ProcessReaderRunnable(id, process.getInputStream(), responseBus,
+                        ReadType.STDOUT);
                 Thread stdoutThread = new Thread(stdoutRunnable);
-                ProcessReaderRunnable stderrRunnable = new ProcessReaderRunnable(id, process.getErrorStream(), responseBus);
+                ProcessReaderRunnable stderrRunnable = new ProcessReaderRunnable(id, process.getErrorStream(), responseBus,
+                        ReadType.STDERR);
                 Thread stderrThread = new Thread(stderrRunnable);
                 ProcessWriterRunnable stdinRunnable = new ProcessWriterRunnable(id, process.getOutputStream(), responseBus);
                 Thread stdinThread = new Thread(stdinRunnable);
@@ -109,27 +114,55 @@ final class ProcessRunnable implements Runnable {
             }
         } else if (msg instanceof CloseProcessRequest) {
             CloseProcessRequest req = (CloseProcessRequest) msg;
-            Bus responseBus = null;
-            Process process = null;
+            int id = req.getId();
+            ProcessEntry entry = idMap.get(id);
+            if (entry != null) {
+                entry.getProcess().destroy();
+                // what happens next is that the thread responsible for checking the process state will find out that it died, then send a
+                // "TerminatedMessage" back to this gateway to initiate cleanup
+            }
+        } else if (msg instanceof TerminatedMessage) {
+            // sent internally once process exits -- not by user
+            TerminatedMessage req = (TerminatedMessage) msg;
             int id = req.getId();
             try {
                 ProcessEntry entry = idMap.remove(id);
                 if (entry != null) {
-                    responseBus = entry.getResponseBus();
-                    process = entry.getProcess();
+                    Bus responseBus = entry.getResponseBus();
                     entry.getProcess().destroy();
                     entry.getStdoutThread().interrupt();
                     entry.getStderrThread().interrupt();
                     entry.getStdinThread().interrupt();
-                    // entry.getExitThread().join(); // exit thread should already detect that process died and close -- will send out msg
-                                                     // notifying that process ended
+                    entry.getExitThread().interrupt();
+                    
+                    Integer exitCode = req.getExitCode();
+                    
+                    if (exitCode == null) {
+                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                    } else {
+                        responseBus.send(new ExitProcessNotification(exitCode, id));
+                    }
                 }
             } catch (RuntimeException re) {
-                if (process != null) {
-                    process.destroy();
-                } else if (responseBus != null) {
-                    responseBus.send(new IdentifiableErrorNetworkResponse(id));
-                }
+                // do nothing, process should alreayd be dead at this point
+            }
+        } else if (msg instanceof WriteEmptyMessage) {
+            // sent internally once process has nothing else to write out
+            WriteEmptyMessage req = (WriteEmptyMessage) msg;
+            int id = req.getId();
+            ProcessEntry entry = idMap.remove(id);
+            if (entry != null) {
+                Bus responseBus = entry.getResponseBus();
+                responseBus.send(new WriteEmptyProcessNotification(id));
+            }
+        } else if (msg instanceof ReadMessage) {
+            // sent internally once process has read something in
+            WriteEmptyMessage req = (WriteEmptyMessage) msg;
+            int id = req.getId();
+            ProcessEntry entry = idMap.remove(id);
+            if (entry != null) {
+                Bus responseBus = entry.getResponseBus();
+                responseBus.send(new WriteEmptyProcessNotification(id));
             }
         } else if (msg instanceof WriteProcessRequest) {
             WriteProcessRequest req = (WriteProcessRequest) msg;

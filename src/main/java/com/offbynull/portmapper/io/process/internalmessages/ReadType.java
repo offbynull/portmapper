@@ -18,7 +18,7 @@ package com.offbynull.portmapper.io.process.internalmessages;
 
 import com.offbynull.portmapper.io.network.internalmessages.*;
 
-public enum WriteType {
+public enum ReadType {
     STDOUT,
     STDERR
 }

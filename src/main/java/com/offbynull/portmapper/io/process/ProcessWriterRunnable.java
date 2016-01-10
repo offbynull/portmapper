@@ -32,17 +32,17 @@ final class ProcessWriterRunnable implements Runnable {
     private final OutputStream outputStream;
     private final LinkedBlockingQueue<Object> localInputBusQueue;
     private final Bus localInputBus;
-    private final Bus directOutputBus;
+    private final Bus processBus;
 
-    public ProcessWriterRunnable(int id, OutputStream outputStream, Bus directOutputBus) {
+    public ProcessWriterRunnable(int id, OutputStream outputStream, Bus processBus) {
         Validate.notNull(outputStream);
-        Validate.notNull(directOutputBus);
+        Validate.notNull(processBus);
         
         this.id = id;
         this.outputStream = outputStream;
         this.localInputBusQueue = new LinkedBlockingQueue<>();
         this.localInputBus = new BasicBus(localInputBusQueue);
-        this.directOutputBus = directOutputBus;
+        this.processBus = processBus;
     }
 
     public Bus getLocalInputBus() {
@@ -55,7 +55,7 @@ final class ProcessWriterRunnable implements Runnable {
             while (true) {
                 ByteBuffer sendBuffer = (ByteBuffer) localInputBusQueue.poll();
                 if (sendBuffer == null) {
-                    directOutputBus.send(new WriteEmptyProcessNotification(id));
+                    processBus.send(new WriteEmptyMessage(id));
                     sendBuffer = (ByteBuffer) localInputBusQueue.take();
                 }
                 byte[] buffer = ByteBufferUtils.copyContentsToArray(sendBuffer);

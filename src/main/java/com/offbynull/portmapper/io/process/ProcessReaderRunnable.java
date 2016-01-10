@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.ReadType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -27,15 +27,18 @@ final class ProcessReaderRunnable implements Runnable {
 
     private int id;
     private final InputStream inputStream;
-    private final Bus directOutputBus;
+    private final Bus processBus;
+    private final ReadType readType;
 
-    public ProcessReaderRunnable(int id, InputStream inputStream, Bus directOutputBus) {
+    public ProcessReaderRunnable(int id, InputStream inputStream, Bus processBus, ReadType readType) {
         Validate.notNull(inputStream);
-        Validate.notNull(directOutputBus);
+        Validate.notNull(processBus);
+        Validate.notNull(readType);
         
         this.id = id;
         this.inputStream = inputStream;
-        this.directOutputBus = directOutputBus;
+        this.processBus = processBus;
+        this.readType = readType;
     }
     
     @Override
@@ -48,7 +51,7 @@ final class ProcessReaderRunnable implements Runnable {
                     break;
                 }
                 
-                directOutputBus.send(new ReadProcessNotification(id, Arrays.copyOf(buffer, count)));
+                processBus.send(new ReadMessage(id, Arrays.copyOf(buffer, count), readType));
             }
         } catch (IOException ioe) {
             // do nothing

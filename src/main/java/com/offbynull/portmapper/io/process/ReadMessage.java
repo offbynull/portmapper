@@ -14,21 +14,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.io.process.internalmessages;
+package com.offbynull.portmapper.io.process;
 
+import com.offbynull.portmapper.io.process.internalmessages.ReadType;
 import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
-public final class ReadProcessNotification extends IdentifiableProcessNotification {
+
+final class ReadMessage {
+
+    private int id;
     private byte[] data;
     private ReadType readType;
-
-    public ReadProcessNotification(int id, byte[] data, ReadType readType) {
-        super(id);
+    
+    public ReadMessage(int id, byte[] data, ReadType readType) {
         Validate.notNull(data);
-        Validate.notNull(readType);
+        this.id = id;
         this.data = Arrays.copyOf(data, data.length);
         this.readType = readType;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public byte[] getData() {
