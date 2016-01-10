@@ -6,8 +6,8 @@ import com.offbynull.portmapper.io.internalmessages.CreateTcpIoRequest;
 import com.offbynull.portmapper.io.internalmessages.CreateTcpIoResponse;
 import com.offbynull.portmapper.io.internalmessages.CreateUdpIoRequest;
 import com.offbynull.portmapper.io.internalmessages.CreateUdpIoResponse;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketIoRequest;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketIoResponse;
+import com.offbynull.portmapper.io.internalmessages.DestroyResourceIoRequest;
+import com.offbynull.portmapper.io.internalmessages.DestroyResourceIoResponse;
 import com.offbynull.portmapper.io.internalmessages.KillIoRequest;
 import com.offbynull.portmapper.io.internalmessages.ReadTcpIoNotification;
 import com.offbynull.portmapper.io.internalmessages.ReadUdpIoNotification;
@@ -31,12 +31,12 @@ import org.junit.Test;
 
 public class NetworkGatewayTest {
 
-    private NetworkGateway fixture;
+    private IoGateway fixture;
     private Bus fixtureBus;
 
     @Before
     public void before() {
-        fixture = NetworkGateway.create();
+        fixture = IoGateway.create();
         fixtureBus = fixture.getBus();
     }
 
@@ -86,8 +86,8 @@ public class NetworkGatewayTest {
             assertEquals("goodbye", new String(baos.toByteArray(), Charset.forName("UTF-8")));
 
 
-            fixtureBus.send(new DestroySocketIoRequest(id));
-            DestroySocketIoResponse destoryResp = (DestroySocketIoResponse) queue.take();
+            fixtureBus.send(new DestroyResourceIoRequest(id));
+            DestroyResourceIoResponse destoryResp = (DestroyResourceIoResponse) queue.take();
         } finally {
             emulator.close();
         }
@@ -123,8 +123,8 @@ public class NetworkGatewayTest {
             assertEquals("goodbye", new String(readResp.getData(), Charset.forName("UTF-8")));
 
             
-            fixtureBus.send(new DestroySocketIoRequest(id));
-            DestroySocketIoResponse destoryResp = (DestroySocketIoResponse) queue.take();
+            fixtureBus.send(new DestroyResourceIoRequest(id));
+            DestroyResourceIoResponse destoryResp = (DestroyResourceIoResponse) queue.take();
         } finally {
             emulator.close();
         }

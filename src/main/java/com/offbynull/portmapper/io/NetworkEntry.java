@@ -21,34 +21,23 @@ import java.nio.channels.Channel;
 import java.util.LinkedList;
 import org.apache.commons.lang3.Validate;
 
-abstract class NetworkEntry<B> {
-    private int id;
+abstract class NetworkEntry<B> extends IoEntry {
     private Channel channel;
-    private Bus responseBus;
     private int selectionKey;
     private boolean notifiedOfWritable;
 
     public NetworkEntry(int id, Channel channel, Bus responseBus) {
-        Validate.notNull(channel);
-        Validate.notNull(responseBus);
+        super(id, responseBus);
         
-        this.id = id;
+        Validate.notNull(channel);
+        
         this.channel = channel;
-        this.responseBus = responseBus;
         this.selectionKey = 0;
         this.notifiedOfWritable = false;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public Channel getChannel() {
         return channel;
-    }
-
-    public Bus getResponseBus() {
-        return responseBus;
     }
 
     public int getSelectionKey() {

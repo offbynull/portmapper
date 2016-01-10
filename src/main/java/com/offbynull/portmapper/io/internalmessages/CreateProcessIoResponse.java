@@ -16,10 +16,9 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class DestroySocketIoResponse extends IdentifiableIoResponse {
+public final class CreateProcessIoResponse extends IdentifiableIoResponse {
 
-    public DestroySocketIoResponse(int id) {
+    public CreateProcessIoResponse(int id) {
         super(id);
     }
-
 }

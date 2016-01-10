@@ -16,15 +16,18 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class DestroySocketIoRequest implements IoRequest {
-    private int id;
+import java.util.Arrays;
 
-    public DestroySocketIoRequest(int id) {
-        this.id = id;
+public final class ReadProcessIoNotification extends IdentifiableIoNotification {
+    private byte[] data;
+
+    public ReadProcessIoNotification(int id, byte[] data) {
+        super(id);
+        this.data = Arrays.copyOf(data, data.length);
     }
 
-    public int getId() {
-        return id;
+    public byte[] getData() {
+        return Arrays.copyOf(data, data.length);
     }
 
 }

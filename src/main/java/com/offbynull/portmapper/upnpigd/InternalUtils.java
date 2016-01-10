@@ -22,7 +22,7 @@ import com.offbynull.portmapper.io.internalmessages.CreateTcpIoRequest;
 import com.offbynull.portmapper.io.internalmessages.CreateTcpIoResponse;
 import com.offbynull.portmapper.io.internalmessages.CreateUdpIoRequest;
 import com.offbynull.portmapper.io.internalmessages.CreateUdpIoResponse;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketIoRequest;
+import com.offbynull.portmapper.io.internalmessages.DestroyResourceIoRequest;
 import com.offbynull.portmapper.io.internalmessages.ErrorIoResponse;
 import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoRequest;
 import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoResponse;
@@ -205,7 +205,7 @@ final class InternalUtils {
 
             // Issue socket closes
             for (int id : sockets.keySet()) {
-                networkBus.send(new DestroySocketIoRequest(id));
+                networkBus.send(new DestroyResourceIoRequest(id));
             }
 
 
@@ -330,7 +330,7 @@ final class InternalUtils {
         
         // Destroy UDP sockets
         for (int id : addressToId.values()) {
-            networkBus.send(new DestroySocketIoRequest(id));
+            networkBus.send(new DestroyResourceIoRequest(id));
         }
     }
     
