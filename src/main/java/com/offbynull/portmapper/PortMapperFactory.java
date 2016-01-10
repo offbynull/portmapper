@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,20 +16,16 @@
  */
 package com.offbynull.portmapper;
 
-import com.offbynull.portmapper.natpmp.DiscoveredNatPmpDevice;
-import com.offbynull.portmapper.natpmp.NatPmpDiscovery;
+import com.offbynull.portmapper.common.Bus;
 import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
-import com.offbynull.portmapper.pcp.DiscoveredPcpDevice;
-import com.offbynull.portmapper.pcp.PcpDiscovery;
 import com.offbynull.portmapper.pcp.PcpPortMapper;
-import com.offbynull.portmapper.upnpigd.UpnpIgdDiscovery;
 import com.offbynull.portmapper.upnpigd.UpnpIgdPortMapper;
-import com.offbynull.portmapper.upnpigd.UpnpIgdService;
-import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.lang3.Validate;
 
 /**
- * Port mapper factory that attempts to find a router that has PCP, NAT-PMP, or UPNP-IGD enabled.
+ * Port mapper factory that attempts to find all port mappers.
  * @author Kasra Faghihi
  */
 public final class PortMapperFactory {
@@ -38,32 +34,21 @@ public final class PortMapperFactory {
     }
     
     /**
-     * Searches for a PCP, NAT-PMP, or UPNP-IGD enabled router. Returns the first router that's found.
-     * @param listener port mapping event listener
+     * Searches for all PCP, NAT-PMP, or UPNP-IGD enabled routers on all available interfaces.
      * @return port mapper
-     * @throws IllegalStateException if no router is found
+     * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
-     * @throws IOException if IO error occurs
      */
-    public static PortMapper create(PortMapperEventListener listener) throws InterruptedException, IOException {
-//        Set<DiscoveredPcpDevice> pcpDevices = PcpDiscovery.discover();
-//        if (!pcpDevices.isEmpty()) {
-//            DiscoveredPcpDevice device = pcpDevices.iterator().next();
-//            return new PcpPortMapper(device.getGatewayAddress(), device.getLocalAddress(), true, listener);
-//        }
-//        
-//        Set<DiscoveredNatPmpDevice> natPmpDevices = NatPmpDiscovery.discover();
-//        if (!natPmpDevices.isEmpty()) {
-//            DiscoveredNatPmpDevice device = natPmpDevices.iterator().next();
-//            return new NatPmpPortMapper(device.getGatewayAddress(), listener);
-//        }
-//        
-//        Set<UpnpIgdService> upnpIgdService = UpnpIgdDiscovery.discover();
-//        if (!upnpIgdService.isEmpty()) {
-//            UpnpIgdService service = upnpIgdService.iterator().next();
-//            return new UpnpIgdPortMapper(service, listener);
-//        }
-//        
-        throw new IllegalStateException();
+    public static Set<PortMapper> create(Bus networkBus, Bus processBus) throws InterruptedException {
+        Validate.notNull(networkBus);
+        Validate.notNull(processBus);
+        
+        Set<PortMapper> ret = new HashSet<>();
+        
+        ret.addAll(UpnpIgdPortMapper.identify(networkBus));
+        ret.addAll(NatPmpPortMapper.identify(networkBus, processBus));
+        ret.addAll(PcpPortMapper.identify(networkBus, processBus));
+        
+        return ret;
     }
 }

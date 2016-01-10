@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Kasra Faghihi, All rights reserved.
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,10 +18,33 @@ package com.offbynull.portmapper.pcp;
 
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortMapperEventListener;
 import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.common.TextUtils;
+import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
+import static com.offbynull.portmapper.pcp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
+import com.offbynull.portmapper.pcp.InternalUtils.ProcessRequest;
+import com.offbynull.portmapper.pcp.InternalUtils.ResponseCreator;
+import com.offbynull.portmapper.pcp.InternalUtils.UdpRequest;
+import static com.offbynull.portmapper.pcp.InternalUtils.calculateRetryTimes;
+import static com.offbynull.portmapper.pcp.InternalUtils.convertToAddressSet;
+import static com.offbynull.portmapper.pcp.InternalUtils.getLocalIpAddresses;
+import static com.offbynull.portmapper.pcp.InternalUtils.performProcessRequests;
+import static com.offbynull.portmapper.pcp.InternalUtils.performUdpRequests;
+import com.offbynull.portmapper.pcp.externalmessages.MapPcpRequest;
+import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
+import com.offbynull.portmapper.pcp.externalmessages.PcpResponse;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -30,167 +53,192 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class PcpPortMapper implements PortMapper {
+    
+    private static final int PORT = 5351;
+    private static final InetAddress ZERO_IPV6;;
+    private static final InetAddress ZERO_IPV4;
+    static {
+        try {
+            ZERO_IPV6 = InetAddress.getByName("::");
+            ZERO_IPV4 = InetAddress.getByName("0.0.0.0");
+        } catch (UnknownHostException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+    
+    private Bus networkBus;
+    private InetAddress internalAddress;
+    private InetAddress gatewayAddress;
+    private Random random;
 
-    private PcpController controller;
-    private boolean preferIpv6External;
-    private volatile boolean closed;
+    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException, IOException {
+        // Perform NETSTAT command
+        ProcessRequest netstateReq = new ProcessRequest();
+        
+        netstateReq.executable = "netstat";
+        netstateReq.parameters = new String[] { "-rn" };
+        netstateReq.sendData = new byte[0];
+        
+        List<ProcessRequest> procReqs = Arrays.asList(netstateReq);
+
+        performProcessRequests(processBus, procReqs);
+        
+        
+        // Aggregate results
+        Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
+        
+        String netstatOutput = new String(netstateReq.recvData, "US-ASCII");
+        List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(netstatOutput);
+        List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(netstatOutput);
+        
+        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
+        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+        
+        
+        // Query -- send each query to every interface
+        List<UdpRequest> udpReqs = new LinkedList<>();
+        
+        Set<InetAddress> sourceAddresses = getLocalIpAddresses(networkBus);
+        for (InetAddress sourceAddress : sourceAddresses) {
+            for (InetAddress gatewayAddress : potentialGatewayAddresses) {
+                UdpRequest udpReq = new UdpRequest();
+                udpReq.sourceAddress = sourceAddress;
+                udpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
+                // Send a map pcp request to identify PCP-enabled routers...
+                // Should get back an error, but this should be fine because all we're looking for is a response (doesn't matter if it's
+                // an error response or not). Also, we need to pass in MAP because Apple's bullshit routers give back NATPMP responses when
+                // you pass in a PCP ANNOUNCE message.
+                udpReq.sendMsg = new MapPcpRequest(new byte[12], 0, 0, 0, ZERO_IPV6, 0L, ZERO_IPV4);
+                udpReq.respCreator = new ResponseCreator() {
+                    @Override
+                    public PcpResponse create(byte[] buffer) {
+                        // so long as version is 2, we can assume that this is a PCP router's response
+                        if (buffer.length < 4 || buffer[0] != 2) {
+                            throw new IllegalArgumentException();
+                        }
+
+                        MapPcpResponse resp = new MapPcpResponse(buffer);
+                        return resp;
+                    }
+                };
+                
+                udpReqs.add(udpReq);
+            }
+        }
+        
+        performUdpRequests(networkBus, udpReqs, 1000L, 1000L, 1000L, 1000L, 1000L); // don't do standard natpmp/pcp retries -- just
+                                                                                    // attempting to discover
+        
+        
+        // Create mappers and returns
+        Set<NatPmpPortMapper> mappers = new HashSet<>();
+        for (UdpRequest udpReq : udpReqs) {
+            if (udpReq.respMsg != null) {
+                NatPmpPortMapper portMapper = new NatPmpPortMapper(
+                        networkBus,
+                        udpReq.sourceAddress,
+                        udpReq.destinationSocketAddress.getAddress());
+                mappers.add(portMapper);
+            }
+        }
+        
+        return mappers;
+    }
 
     /**
      * Constructs a {@link PcpPortMapper} object.
+     * @param networkBus bus to network component
+     * @param internalAddress local address accessing gateway device
      * @param gatewayAddress gateway address
-     * @param selfAddress address of this machine on the interface that can talk to the router/gateway
-     * @param preferIpv6External if this mapper should tell the router to give it a ipv6 address when asking the router to map a new port
-     * @param listener event listener
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws IOException if problems initializing UDP channels
+     * @throws NullPointerException if any argument other than {@code severName} is {@code null}
      */
-    public PcpPortMapper(InetAddress gatewayAddress, InetAddress selfAddress, boolean preferIpv6External,
-            final PortMapperEventListener listener) throws IOException {
+    public PcpPortMapper(Bus networkBus, InetAddress internalAddress, InetAddress gatewayAddress) {
+        Validate.notNull(networkBus);
+        Validate.notNull(internalAddress);
         Validate.notNull(gatewayAddress);
-        Validate.notNull(selfAddress);
-        Validate.notNull(listener);
 
-        this.preferIpv6External = preferIpv6External;
-
-//        controller = new PcpController(new Random(), gatewayAddress, selfAddress, new PcpControllerListener() {
-//
-//            private boolean lastAvailable;
-//            private long lastEpoch;
-//            private long lastRecvTime;
-//
-//            @Override
-//            public void incomingResponse(CommunicationType type, PcpResponse response) {
-//                if (closed) {
-//                    return;
-//                }
-//
-//                if (type == CommunicationType.MULTICAST && response instanceof AnnouncePcpResponse) {
-//                    listener.resetRequired("Mappings may have been lost via device reset and/or external IP change.");
-//                    return;
-//                }
-//                
-//                // As described in section 8.5 of the RFC
-//                if (!lastAvailable) {
-//                    lastRecvTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-//                    lastEpoch = response.getEpochTime();
-//                    lastAvailable = true;
-//                } else {
-//                    long recvTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-//                    long epoch = response.getEpochTime();
-//                    
-//                    if (epoch < lastEpoch - 1) {
-//                        listener.resetRequired("Mappings may have been lost via device reset.");
-//                        return;
-//                    }
-//
-//                    long clientDelta = Math.max(0L, recvTime - lastRecvTime); // max just in case
-//                    long serverDelta = epoch - lastEpoch;
-//                    
-//                    if (clientDelta + 2L < serverDelta - serverDelta / 16
-//                            || serverDelta + 2L < clientDelta - clientDelta / 16) {
-//                        listener.resetRequired("Mappings may have been lost via device reset.");
-//                        return;
-//                    }
-//                    
-//                    lastRecvTime = recvTime;
-//                    lastEpoch = epoch;
-//                }                
-//            }
-//        });
+        this.random = new Random();
+        this.networkBus = networkBus;
+        this.internalAddress = internalAddress;
+        this.gatewayAddress = gatewayAddress;
     }
 
+
     @Override
-    public MappedPort mapPort(PortType portType, int internalPort, long lifetime) throws InterruptedException {
-//        Validate.validState(!closed);
-//        Validate.notNull(portType);
-//        Validate.inclusiveBetween(1, 65535, internalPort);
-//        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
-//
-//        lifetime = Math.min(lifetime, (long) Integer.MAX_VALUE); // cap lifetime
-//
-//        InetAddress externalAddress;
-//        try {
-//            if (preferIpv6External) {
-//                externalAddress = InetAddress.getByName("::");
-//            } else {
-//                externalAddress = InetAddress.getByName("::ffff:0:0"); // NOPMD
-//            }
-//        } catch (UnknownHostException uhe) {
-//            throw new IllegalStateException(uhe);
-//        }
-//
-//        try {
-//            MapPcpResponse resp = controller.requestMapOperation(4, portType, internalPort, 0, externalAddress, lifetime);
-//
-//            return new MappedPort(resp.getInternalPort(), resp.getAssignedExternalPort(), resp.getAssignedExternalIpAddress(),
-//                    PortType.fromIanaNumber(resp.getProtocol()), resp.getLifetime());
-//        } catch (RuntimeException re) {
-//            throw new IllegalStateException(re);
-//        }
-        return null;
+    public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        //
+        // PERFORM MAPPING
+        //
+        UdpRequest mapIpReq = new UdpRequest();
+        mapIpReq.sourceAddress = internalAddress;
+        mapIpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
+        mapIpReq.sendMsg = new MapPcpRequest(nextNonce(), portType.getProtocolNumber(), internalPort, externalPort, ZERO_IPV6, lifetime,
+                internalAddress);
+        mapIpReq.respCreator = new ResponseCreator() {
+            @Override
+            public PcpResponse create(byte[] buffer) {
+                MapPcpResponse resp = new MapPcpResponse(buffer);
+                if (resp.getResultCode() != PcpResultCode.SUCCESS.ordinal()) {
+                    throw new IllegalArgumentException();
+                }
+                return resp;
+            }
+        };
+        
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+
+        if (mapIpReq.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to mapping port");
+        }
+        
+        MapPcpResponse mappingResp = ((MapPcpResponse) mapIpReq.respMsg);
+        
+        
+        
+        return new PcpMappedPort(mappingResp.getInternalPort(), mappingResp.getAssignedExternalPort(),
+                mappingResp.getAssignedExternalIpAddress(), portType, mappingResp.getLifetime());
     }
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
-//        Validate.validState(!closed);
-//        Validate.notNull(mappedPort);
-//
-//        InetAddress externalAddress;
-//        try {
-//            externalAddress = InetAddress.getByName("::");
-//        } catch (UnknownHostException uhe) {
-//            throw new IllegalStateException(uhe);
-//        }
-//
-//        try {
-//            controller.requestMapOperation(4, mappedPort.getPortType(), mappedPort.getInternalPort(), 0, externalAddress, 0L);
-//        } catch (RuntimeException re) {
-//            throw new IllegalStateException(re);
-//        }
+        int internalPort = mappedPort.getInternalPort();
+        
+        UdpRequest mapIpReq = new UdpRequest();
+        mapIpReq.sourceAddress = internalAddress;
+        mapIpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
+        mapIpReq.sendMsg = new MapPcpRequest(nextNonce(), mappedPort.getPortType().getProtocolNumber(), internalPort, 0, ZERO_IPV6, 0L,
+                internalAddress);
+        mapIpReq.respCreator = new ResponseCreator() {
+            @Override
+            public PcpResponse create(byte[] buffer) {
+                MapPcpResponse resp = new MapPcpResponse(buffer);
+                if (resp.getResultCode() != PcpResultCode.SUCCESS.ordinal()) {
+                    throw new IllegalArgumentException();
+                }
+                return resp;
+            }
+        };
+        
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+
+        if (mapIpReq.respMsg == null) {
+            throw new IllegalStateException("No response/invalid response to mapping port");
+        }
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
-//        Validate.validState(!closed);
-//        Validate.notNull(mappedPort);
-//        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
-//        
-//        lifetime = Math.min(lifetime, (long) Integer.MAX_VALUE); // cap lifetime
-//        
-//        MappedPort newMappedPort;
-//        try {
-//            MapPcpResponse resp = controller.requestMapOperation(4, mappedPort.getPortType(), mappedPort.getInternalPort(),
-//                    mappedPort.getExternalPort(), mappedPort.getExternalAddress(), lifetime); //, new PreferFailurePcpOption());
-//            // Preferfailurd does not work on Apple Airport Extreme :( unsupp_option.
-//
-//            newMappedPort = new MappedPort(resp.getInternalPort(), resp.getAssignedExternalPort(),
-//                    resp.getAssignedExternalIpAddress(), PortType.fromIanaNumber(resp.getProtocol()), resp.getLifetime());
-//        } catch (RuntimeException re) {
-//            throw new IllegalStateException(re);
-//        }
-//        
-//        try {
-//            Validate.isTrue(mappedPort.getExternalAddress().equals(mappedPort.getExternalAddress()), "External address changed");
-//            Validate.isTrue(mappedPort.getInternalPort() == mappedPort.getInternalPort(), "External port changed");
-//        } catch (IllegalStateException ise) {
-//            // port has been mapped to different external ip and/or port, unmap and return error
-//            try {
-//                unmapPort(mappedPort);
-//            } catch (RuntimeException re) { // NOPMD
-//                // do nothing
-//            }
-//            
-//            throw ise;
-//        }
-//
-//
-//        return newMappedPort;
-        return null;
+        return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
     }
-    
+
     @Override
-    public void close() throws IOException {
-//        closed = true;
-//        controller.close();
+    public InetAddress getSourceAddress() {
+        return internalAddress;
+    }
+
+    private byte[] nextNonce() {
+        byte[] mappingNonce = new byte[12];
+        random.nextBytes(mappingNonce);
+        return mappingNonce;
     }
 }

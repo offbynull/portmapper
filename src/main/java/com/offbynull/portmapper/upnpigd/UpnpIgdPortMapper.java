@@ -57,7 +57,7 @@ import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
  *
  * @author Kasra Faghihi
  */
-abstract class UpnpIgdPortMapper implements PortMapper {
+public abstract class UpnpIgdPortMapper implements PortMapper {
 
     private final Bus networkBus;
     private final InetAddress internalAddress;

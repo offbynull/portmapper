@@ -107,7 +107,7 @@ public final class MapPcpRequest extends PcpRequest {
      * @param internalPort internal port ({@code 0} is valid, see Javadoc header)
      * @param suggestedExternalPort suggested external port ({@code 0} for no preference)
      * @param suggestedExternalIpAddress suggested external IP address ({@code ::} for no preference)
-     * @param lifetime requested lifetime in seconds
+     * @param lifetime requested lifetime in seconds ({@code 0} is valid, see Javadoc header)
      * @param internalIp IP address on the interface used to access the PCP server
      * @param options PCP options to use
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
