@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.common.NetworkUtils;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.util.Arrays;

@@ -3,7 +3,7 @@ package com.offbynull.portmapper.pcp.externalmessages;
 import com.offbynull.portmapper.pcp.externalmessages.ThirdPartyPcpOption;
 import com.offbynull.portmapper.pcp.externalmessages.PreferFailurePcpOption;
 import com.offbynull.portmapper.pcp.externalmessages.PeerPcpResponse;
-import com.offbynull.portmapper.common.NetworkUtils;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collections;

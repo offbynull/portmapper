@@ -1,19 +1,5 @@
 package com.offbynull.portmapper.natpmp;
 
-import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
-import com.offbynull.portmapper.natpmp.externalmessages.TcpMappingNatPmpResponse;
-import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpResponse;
-import com.offbynull.portmapper.common.ResponseException;
-import com.offbynull.portmapper.testtools.UdpServerEmulator;
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 public class NatPmpControllerTest {
 
 //    private UdpServerEmulator helper;

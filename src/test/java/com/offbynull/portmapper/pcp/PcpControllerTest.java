@@ -1,27 +1,5 @@
 package com.offbynull.portmapper.pcp;
 
-import com.offbynull.portmapper.pcp.externalmessages.PreferFailurePcpOption;
-import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
-import com.offbynull.portmapper.pcp.externalmessages.AnnouncePcpResponse;
-import com.offbynull.portmapper.pcp.externalmessages.PeerPcpResponse;
-import com.offbynull.portmapper.common.CommunicationType;
-import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.common.ResponseException;
-import com.offbynull.portmapper.testtools.UdpServerEmulator;
-import com.offbynull.portmapper.testtools.UdpTestUtils;
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.util.Random;
-import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 public final class PcpControllerTest {
 //    private UdpServerEmulator helper;
 //

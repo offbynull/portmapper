@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.common.TextUtils;
+import com.offbynull.portmapper.helpers.TextUtils;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;

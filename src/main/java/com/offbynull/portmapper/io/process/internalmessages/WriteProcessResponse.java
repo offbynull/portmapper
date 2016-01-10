@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.io.process.internalmessages;
 
-import com.offbynull.portmapper.io.network.internalmessages.*;
 import org.apache.commons.lang3.Validate;
 
 public final class WriteProcessResponse extends IdentifiableProcessResponse {

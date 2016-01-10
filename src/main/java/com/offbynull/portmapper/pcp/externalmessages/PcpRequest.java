@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.common.NetworkUtils;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import static com.offbynull.portmapper.pcp.externalmessages.InternalUtils.PCP_VERSION;
 import java.net.InetAddress;
 import java.util.ArrayList;

@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.natpmp;
 
-import com.offbynull.portmapper.common.BasicBus;
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.BasicBus;
+import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResponse;

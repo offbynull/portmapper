@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.common.TextUtils;
+import com.offbynull.portmapper.helpers.TextUtils;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;

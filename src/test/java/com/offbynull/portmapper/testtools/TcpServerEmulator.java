@@ -1,6 +1,6 @@
 package com.offbynull.portmapper.testtools;
 
-import com.offbynull.portmapper.common.ByteBufferUtils;
+import com.offbynull.portmapper.helpers.ByteBufferUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.commons.io.IOUtils;
 
 public final class TcpServerEmulator implements Closeable {

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.common;
+package com.offbynull.portmapper.helpers;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

@@ -1,6 +1,6 @@
 package com.offbynull.portmapper.testtools;
 
-import com.offbynull.portmapper.common.ByteBufferUtils;
+import com.offbynull.portmapper.helpers.ByteBufferUtils;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

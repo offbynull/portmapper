@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.io.network;
 
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.Bus;
 
 /**
  * Network communication gateway.

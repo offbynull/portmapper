@@ -1,14 +1,5 @@
 package com.offbynull.portmapper.upnpigd;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortMapperEventListener;
-import com.offbynull.portmapper.PortType;
-import java.util.Set;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 public class UpnpIgdTest {
 
 //    @Test

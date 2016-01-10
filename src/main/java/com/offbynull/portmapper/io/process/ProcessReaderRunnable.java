@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.io.process;
 
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.process.internalmessages.ReadType;
 import java.io.IOException;
 import java.io.InputStream;

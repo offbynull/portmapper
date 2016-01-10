@@ -1,5 +1,6 @@
 package com.offbynull.portmapper.common;
 
+import com.offbynull.portmapper.helpers.TextUtils;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

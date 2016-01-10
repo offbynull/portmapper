@@ -17,7 +17,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
 import java.net.InetAddress;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;

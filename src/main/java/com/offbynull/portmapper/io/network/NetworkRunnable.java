@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.io.network;
 
-import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.common.ByteBufferUtils;
+import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.helpers.ByteBufferUtils;
 import com.offbynull.portmapper.io.network.internalmessages.ConnectedTcpNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkResponse;

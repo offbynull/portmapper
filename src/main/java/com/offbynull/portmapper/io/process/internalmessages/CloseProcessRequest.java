@@ -16,8 +16,6 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
-import com.offbynull.portmapper.io.network.internalmessages.*;
-
 public final class CloseProcessRequest implements ProcessRequest {
     private int id;
 

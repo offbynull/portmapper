@@ -16,7 +16,6 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
-import com.offbynull.portmapper.io.network.internalmessages.*;
 import java.util.Arrays;
 
 public final class WriteProcessRequest extends IdentifiableProcessRequest {

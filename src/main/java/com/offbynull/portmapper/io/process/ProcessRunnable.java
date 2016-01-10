@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.io.process;
 
-import com.offbynull.portmapper.common.BasicBus;
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.BasicBus;
+import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;

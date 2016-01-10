@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.upnpigd.InternalUtils.HttpRequest;
 import com.offbynull.portmapper.upnpigd.InternalUtils.ResponseCreator;
 import com.offbynull.portmapper.upnpigd.InternalUtils.UdpRequest;

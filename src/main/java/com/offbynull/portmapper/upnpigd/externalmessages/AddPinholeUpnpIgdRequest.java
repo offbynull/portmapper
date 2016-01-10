@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.common.NetworkUtils;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;

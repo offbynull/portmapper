@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
-import com.offbynull.portmapper.common.Bus;
+import com.offbynull.portmapper.Bus;
 import java.net.InetAddress;
 import org.apache.commons.lang3.Validate;
 

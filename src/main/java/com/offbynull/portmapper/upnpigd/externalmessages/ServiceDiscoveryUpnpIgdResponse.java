@@ -17,7 +17,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import org.apache.commons.lang3.Validate;
 
