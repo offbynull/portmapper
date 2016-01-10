@@ -2,10 +2,10 @@ package com.offbynull.portmapper.io.internalmessages;
 
 import org.apache.commons.lang3.Validate;
 
-public final class WriteTcpNetworkResponse extends IdentifiableNetworkResponse {
+public final class WriteTcpIoResponse extends IdentifiableIoResponse {
     private int amountWritten;
 
-    public WriteTcpNetworkResponse(int id, int amountWritten) {
+    public WriteTcpIoResponse(int id, int amountWritten) {
         super(id);
         Validate.inclusiveBetween(0, Integer.MAX_VALUE, amountWritten);
         this.amountWritten = amountWritten;

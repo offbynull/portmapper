@@ -16,6 +16,6 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public interface NetworkResponse {
+public interface IoResponse {
     
 }

@@ -16,6 +16,6 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class ErrorNetworkResponse implements NetworkResponse {
-
+public final class KillIoRequest implements IoRequest {
+    
 }

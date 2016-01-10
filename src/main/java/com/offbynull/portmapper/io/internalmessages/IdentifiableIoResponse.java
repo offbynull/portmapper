@@ -16,11 +16,11 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public abstract class IdentifiableNetworkResponse {
+public abstract class IdentifiableIoResponse {
     
     private int id;
 
-    IdentifiableNetworkResponse(int id) {
+    IdentifiableIoResponse(int id) {
         this.id = id;
     }
 

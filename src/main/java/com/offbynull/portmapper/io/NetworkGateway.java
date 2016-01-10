@@ -19,26 +19,26 @@ package com.offbynull.portmapper.io;
 import com.offbynull.portmapper.common.Bus;
 import com.offbynull.portmapper.common.ByteBufferUtils;
 import com.offbynull.portmapper.io.UdpNetworkEntry.AddressedByteBuffer;
-import com.offbynull.portmapper.io.internalmessages.ConnectedTcpNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpSocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpSocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpSocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpSocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.ErrorNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesRequest;
-import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesResponse;
-import com.offbynull.portmapper.io.internalmessages.IdentifiableErrorNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.KillNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.ReadTcpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.ReadUdpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteEmptyTcpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteEmptyUdpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteTcpNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.WriteTcpNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.WriteUdpNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.WriteUdpNetworkResponse;
+import com.offbynull.portmapper.io.internalmessages.ConnectedTcpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.CreateTcpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.CreateTcpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.CreateUdpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.CreateUdpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.DestroySocketIoRequest;
+import com.offbynull.portmapper.io.internalmessages.DestroySocketIoResponse;
+import com.offbynull.portmapper.io.internalmessages.ErrorIoResponse;
+import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoRequest;
+import com.offbynull.portmapper.io.internalmessages.GetLocalIpAddressesIoResponse;
+import com.offbynull.portmapper.io.internalmessages.IdentifiableErrorIoResponse;
+import com.offbynull.portmapper.io.internalmessages.KillIoRequest;
+import com.offbynull.portmapper.io.internalmessages.ReadTcpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.ReadUdpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteEmptyTcpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteEmptyUdpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteTcpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.WriteTcpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.WriteUdpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.WriteUdpIoResponse;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -177,7 +177,7 @@ public final class NetworkGateway {
                     boolean connected = channel.finishConnect();
                     if (!alreadyConnected && connected) {
                         entry.setConnecting(false);
-                        responseBus.send(new ConnectedTcpNetworkResponse(id));
+                        responseBus.send(new ConnectedTcpIoResponse(id));
                     }
                 } catch (IOException ioe) {
                     // socket failed to connect
@@ -196,7 +196,7 @@ public final class NetworkGateway {
                     throw new RuntimeException(); // goes up the chain and shuts down the channel
                 } else if (buffer.remaining() > 0) {
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadTcpNetworkNotification(id, bufferAsArray);
+                    Object readResp = new ReadTcpIoNotification(id, bufferAsArray);
                     responseBus.send(readResp);
                 } else if (readCount == 0) {
                     // do nothing
@@ -212,7 +212,7 @@ public final class NetworkGateway {
                 int writeCount = 0;
                 if (outBuffers.isEmpty() && !entry.isNotifiedOfWritable()) { // if empty but not notified yet
                     entry.setNotifiedOfWritable(true);
-                    entry.getResponseBus().send(new WriteEmptyTcpNetworkNotification(id));
+                    entry.getResponseBus().send(new WriteEmptyTcpIoNotification(id));
                 } else {
                     while (!outBuffers.isEmpty()) {
                         ByteBuffer outBuffer = outBuffers.getFirst();
@@ -225,7 +225,7 @@ public final class NetworkGateway {
 
                         outBuffers.removeFirst();
 
-                        Object writeResp = new WriteTcpNetworkResponse(id, writeCount);
+                        Object writeResp = new WriteTcpIoResponse(id, writeCount);
                         responseBus.send(writeResp);
                     }
                 }
@@ -243,7 +243,7 @@ public final class NetworkGateway {
                 if (incomingSocketAddress != null) {
                     buffer.flip();
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadUdpNetworkNotification(id, incomingSocketAddress, bufferAsArray);
+                    Object readResp = new ReadUdpIoNotification(id, incomingSocketAddress, bufferAsArray);
                     responseBus.send(readResp);
                 }
             }
@@ -255,11 +255,11 @@ public final class NetworkGateway {
 
                     int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddress());
 
-                    Object writeResp = new WriteUdpNetworkResponse(id, writeCount);
+                    Object writeResp = new WriteUdpIoResponse(id, writeCount);
                     responseBus.send(writeResp);
                 } else if (!entry.isNotifiedOfWritable()) { // if empty but not notified yet
                     entry.setNotifiedOfWritable(true);
-                    entry.getResponseBus().send(new WriteEmptyUdpNetworkNotification(id));
+                    entry.getResponseBus().send(new WriteEmptyUdpIoNotification(id));
                 }
             }
         }
@@ -285,8 +285,8 @@ public final class NetworkGateway {
         }
 
         private void processMessage(Object msg) throws IOException {
-            if (msg instanceof CreateUdpSocketNetworkRequest) {
-                CreateUdpSocketNetworkRequest req = (CreateUdpSocketNetworkRequest) msg;
+            if (msg instanceof CreateUdpIoRequest) {
+                CreateUdpIoRequest req = (CreateUdpIoRequest) msg;
 
                 Bus responseBus = req.getResponseBus();
 
@@ -300,14 +300,14 @@ public final class NetworkGateway {
                     idMap.put(id, entry);
                     channelMap.put(channel, entry);
                     
-                    responseBus.send(new CreateUdpSocketNetworkResponse(id));
+                    responseBus.send(new CreateUdpIoResponse(id));
                     
                     updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
-                    responseBus.send(new ErrorNetworkResponse());
+                    responseBus.send(new ErrorIoResponse());
                 }
-            } else if (msg instanceof CreateTcpSocketNetworkRequest) {
-                CreateTcpSocketNetworkRequest req = (CreateTcpSocketNetworkRequest) msg;
+            } else if (msg instanceof CreateTcpIoRequest) {
+                CreateTcpIoRequest req = (CreateTcpIoRequest) msg;
 
                 Bus responseBus = req.getResponseBus();
 
@@ -327,12 +327,12 @@ public final class NetworkGateway {
                     entry.setConnecting(true);
                     updateSelectionKey(entry, channel);
 
-                    responseBus.send(new CreateTcpSocketNetworkResponse(id));
+                    responseBus.send(new CreateTcpIoResponse(id));
                 } catch (RuntimeException re) {
-                    responseBus.send(new ErrorNetworkResponse());
+                    responseBus.send(new ErrorIoResponse());
                 }
-            } else if (msg instanceof DestroySocketNetworkRequest) {
-                DestroySocketNetworkRequest req = (DestroySocketNetworkRequest) msg;
+            } else if (msg instanceof DestroySocketIoRequest) {
+                DestroySocketIoRequest req = (DestroySocketIoRequest) msg;
 
                 Bus responseBus = null;
                 int id = req.getId();
@@ -347,14 +347,14 @@ public final class NetworkGateway {
 
                     channel.close();
 
-                    responseBus.send(new DestroySocketNetworkResponse(id));
+                    responseBus.send(new DestroySocketIoResponse(id));
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                        responseBus.send(new IdentifiableErrorIoResponse(id));
                     }
                 }
-            } else if (msg instanceof WriteTcpNetworkRequest) {
-                WriteTcpNetworkRequest req = (WriteTcpNetworkRequest) msg;
+            } else if (msg instanceof WriteTcpIoRequest) {
+                WriteTcpIoRequest req = (WriteTcpIoRequest) msg;
 
                 Bus responseBus = null;
                 int id = req.getId();
@@ -373,11 +373,11 @@ public final class NetworkGateway {
                     updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                        responseBus.send(new IdentifiableErrorIoResponse(id));
                     }
                 }
-            } else if (msg instanceof WriteUdpNetworkRequest) {
-                WriteUdpNetworkRequest req = (WriteUdpNetworkRequest) msg;
+            } else if (msg instanceof WriteUdpIoRequest) {
+                WriteUdpIoRequest req = (WriteUdpIoRequest) msg;
 
                 Bus responseBus = null;
                 int id = req.getId();
@@ -395,11 +395,11 @@ public final class NetworkGateway {
                     updateSelectionKey(entry, channel);
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                        responseBus.send(new IdentifiableErrorIoResponse(id));
                     }
                 }
-            } else if (msg instanceof GetLocalIpAddressesRequest) {
-                GetLocalIpAddressesRequest req = (GetLocalIpAddressesRequest) msg;
+            } else if (msg instanceof GetLocalIpAddressesIoRequest) {
+                GetLocalIpAddressesIoRequest req = (GetLocalIpAddressesIoRequest) msg;
 
                 Set<InetAddress> ret = new HashSet<>();
                 Bus responseBus = req.getResponseBus();
@@ -416,13 +416,13 @@ public final class NetworkGateway {
                             }
                         }
                     }
-                    responseBus.send(new GetLocalIpAddressesResponse(ret));
+                    responseBus.send(new GetLocalIpAddressesIoResponse(ret));
                 } catch (RuntimeException re) {
                     if (responseBus != null) {
-                        responseBus.send(new ErrorNetworkResponse());
+                        responseBus.send(new ErrorIoResponse());
                     }
                 }
-            } else if (msg instanceof KillNetworkRequest) {
+            } else if (msg instanceof KillIoRequest) {
                 throw new KillRequestException();
             }
         }
@@ -433,7 +433,7 @@ public final class NetworkGateway {
                 NetworkEntry<?> networkEntry = entry.getValue();
                 try {
                     int id = networkEntry.getId();
-                    networkEntry.getResponseBus().send(new IdentifiableErrorNetworkResponse(id));
+                    networkEntry.getResponseBus().send(new IdentifiableErrorIoResponse(id));
                     channel.close();
                 } catch (Exception e) {
                     // do nothing
@@ -456,7 +456,7 @@ public final class NetworkGateway {
             idMap.remove(id);
             
             try {
-                ne.getResponseBus().send(new IdentifiableErrorNetworkResponse(id));
+                ne.getResponseBus().send(new IdentifiableErrorIoResponse(id));
                 channel.close();
             } catch (Exception e) {
                 // do nothing

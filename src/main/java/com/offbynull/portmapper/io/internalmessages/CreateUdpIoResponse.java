@@ -16,10 +16,9 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkResponse {
+public final class CreateUdpIoResponse extends IdentifiableIoResponse {
 
-    public IdentifiableErrorNetworkResponse(int id) {
+    public CreateUdpIoResponse(int id) {
         super(id);
     }
-
 }

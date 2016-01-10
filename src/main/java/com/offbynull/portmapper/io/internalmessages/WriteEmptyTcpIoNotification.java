@@ -16,15 +16,10 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class DestroySocketNetworkRequest implements NetworkRequest {
-    private int id;
+public final class WriteEmptyTcpIoNotification extends IdentifiableIoNotification {
 
-    public DestroySocketNetworkRequest(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
+    public WriteEmptyTcpIoNotification(int id) {
+        super(id);
     }
 
 }

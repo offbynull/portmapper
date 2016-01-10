@@ -16,10 +16,9 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class WriteEmptyTcpNetworkNotification extends IdentifiableNetworkNotification {
+public final class CreateTcpIoResponse extends IdentifiableIoResponse {
 
-    public WriteEmptyTcpNetworkNotification(int id) {
+    public CreateTcpIoResponse(int id) {
         super(id);
     }
-
 }

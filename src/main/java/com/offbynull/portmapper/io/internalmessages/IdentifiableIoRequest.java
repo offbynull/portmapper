@@ -16,26 +16,16 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-import com.offbynull.portmapper.common.Bus;
-import java.net.InetAddress;
-import org.apache.commons.lang3.Validate;
+public abstract class IdentifiableIoRequest {
+    
+    private int id;
 
-public final class CreateUdpSocketNetworkRequest implements NetworkRequest {
-    private Bus responseBus;
-    private InetAddress sourceAddress;
-
-    public CreateUdpSocketNetworkRequest(Bus responseBus, InetAddress sourceAddress) {
-        Validate.notNull(responseBus);
-        Validate.notNull(sourceAddress);
-        this.responseBus = responseBus;
-        this.sourceAddress = sourceAddress;
+    public IdentifiableIoRequest(int id) {
+        this.id = id;
     }
 
-    public Bus getResponseBus() {
-        return responseBus;
+    public int getId() {
+        return id;
     }
 
-    public InetAddress getSourceAddress() {
-        return sourceAddress;
-    }
 }

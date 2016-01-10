@@ -16,6 +16,6 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class KillNetworkRequest implements NetworkRequest {
+public interface IoNotification {
     
 }

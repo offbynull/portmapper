@@ -19,7 +19,7 @@ package com.offbynull.portmapper.upnpigd;
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.io.NetworkGateway;
-import com.offbynull.portmapper.io.internalmessages.KillNetworkRequest;
+import com.offbynull.portmapper.io.internalmessages.KillIoRequest;
 import java.util.Set;
 
 /**
@@ -51,7 +51,7 @@ final class App {
             }
             System.out.println(mappers);
         } finally {
-            networkGateway.getBus().send(new KillNetworkRequest());
+            networkGateway.getBus().send(new KillIoRequest());
             networkGateway.join();
         }
     }

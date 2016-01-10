@@ -16,10 +16,18 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class WriteEmptyUdpNetworkNotification extends IdentifiableNetworkNotification {
+import java.util.Arrays;
 
-    public WriteEmptyUdpNetworkNotification(int id) {
+public final class WriteTcpIoRequest extends IdentifiableIoRequest {
+    private byte[] data;
+
+    public WriteTcpIoRequest(int id, byte[] data) {
         super(id);
+        this.data = Arrays.copyOf(data, data.length);
+    }
+
+    public byte[] getData() {
+        return Arrays.copyOf(data, data.length);
     }
 
 }

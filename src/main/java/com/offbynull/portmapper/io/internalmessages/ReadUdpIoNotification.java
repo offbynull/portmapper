@@ -16,14 +16,21 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 
-public final class WriteTcpNetworkRequest extends IdentifiableNetworkRequest {
+public final class ReadUdpIoNotification extends IdentifiableIoNotification {
+    private InetSocketAddress socketAddress;
     private byte[] data;
 
-    public WriteTcpNetworkRequest(int id, byte[] data) {
+    public ReadUdpIoNotification(int id, InetSocketAddress socketAddress, byte[] data) {
         super(id);
+        this.socketAddress = socketAddress;
         this.data = Arrays.copyOf(data, data.length);
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        return socketAddress;
     }
 
     public byte[] getData() {

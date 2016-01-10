@@ -16,25 +16,6 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-
-public final class WriteUdpNetworkRequest extends IdentifiableNetworkRequest {
-    private InetSocketAddress outgoingSocketAddress;
-    private byte[] data;
-
-    public WriteUdpNetworkRequest(int id, InetSocketAddress outgoingSocketAddress, byte[] data) {
-        super(id);
-        this.outgoingSocketAddress = outgoingSocketAddress;
-        this.data = Arrays.copyOf(data, data.length);
-    }
-
-    public InetSocketAddress getOutgoingSocketAddress() {
-        return outgoingSocketAddress;
-    }
-
-    public byte[] getData() {
-        return Arrays.copyOf(data, data.length);
-    }
-
+public interface IoRequest {
+    
 }

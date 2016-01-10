@@ -16,9 +16,11 @@
  */
 
 /**
- * UPNP-IGD client implementation. Does not support eventing subscriptions. For more information on UPNP-IGD, visit
- * http://www.upnp.org/specs/gw/UPnP-gw-WANIPConnection-v1-Service.pdf and
- * http://www.upnp.org/resources/documents/UPnPIGD2vsIGD1d10032009.pdf and
- * http://www.upnp-hacks.org/upnp.html.
+ * UPNP-IGD client implementation. Does not support eventing subscriptions. For more information on UPNP-IGD, visit ...
+ * <ul>
+ * <li>http://upnp.org/specs/gw/igd1</li>
+ * <li>http://upnp.org/specs/gw/igd2</li>
+ * <li>http://www.upnp-hacks.org/upnp.html</li>
+ * </ul>
  */
 package com.offbynull.portmapper.upnpigd;

@@ -2,21 +2,21 @@ package com.offbynull.portmapper.io;
 
 import com.offbynull.portmapper.common.BasicBus;
 import com.offbynull.portmapper.common.Bus;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpSocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateTcpSocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpSocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.CreateUdpSocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.DestroySocketNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.KillNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.ReadTcpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.ReadUdpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteEmptyTcpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteEmptyUdpNetworkNotification;
-import com.offbynull.portmapper.io.internalmessages.WriteTcpNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.WriteTcpNetworkResponse;
-import com.offbynull.portmapper.io.internalmessages.WriteUdpNetworkRequest;
-import com.offbynull.portmapper.io.internalmessages.WriteUdpNetworkResponse;
+import com.offbynull.portmapper.io.internalmessages.CreateTcpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.CreateTcpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.CreateUdpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.CreateUdpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.DestroySocketIoRequest;
+import com.offbynull.portmapper.io.internalmessages.DestroySocketIoResponse;
+import com.offbynull.portmapper.io.internalmessages.KillIoRequest;
+import com.offbynull.portmapper.io.internalmessages.ReadTcpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.ReadUdpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteEmptyTcpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteEmptyUdpIoNotification;
+import com.offbynull.portmapper.io.internalmessages.WriteTcpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.WriteTcpIoResponse;
+import com.offbynull.portmapper.io.internalmessages.WriteUdpIoRequest;
+import com.offbynull.portmapper.io.internalmessages.WriteUdpIoResponse;
 import com.offbynull.portmapper.testtools.TcpServerEmulator;
 import com.offbynull.portmapper.testtools.UdpServerEmulator;
 import java.io.ByteArrayOutputStream;
@@ -41,7 +41,7 @@ public class NetworkGatewayTest {
     }
 
     public void after() {
-        fixtureBus.send(new KillNetworkRequest());
+        fixtureBus.send(new KillIoRequest());
     }
 
     @Test
@@ -55,30 +55,30 @@ public class NetworkGatewayTest {
             int id;
 
             LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-            fixtureBus.send(new CreateTcpSocketNetworkRequest(
+            fixtureBus.send(new CreateTcpIoRequest(
                     new BasicBus(queue),
                     InetAddress.getByName("0.0.0.0"),
                     InetAddress.getLoopbackAddress(),
                     12345));
-            CreateTcpSocketNetworkResponse resp1 = (CreateTcpSocketNetworkResponse) queue.take();
+            CreateTcpIoResponse resp1 = (CreateTcpIoResponse) queue.take();
             id = resp1.getId();
 
 
             
-            fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
+            fixtureBus.send(new WriteTcpIoRequest(id, "hello".getBytes("UTF-8")));
             int remainingWriteBytes = 5;
             while (remainingWriteBytes > 0) {
-                WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
-                WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) queue.take();
+                WriteEmptyTcpIoNotification writeReady = (WriteEmptyTcpIoNotification) queue.take();
+                WriteTcpIoResponse writeResp = (WriteTcpIoResponse) queue.take();
                 remainingWriteBytes -= writeResp.getAmountWritten();
             }
             
-            WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
+            WriteEmptyTcpIoNotification writeReady = (WriteEmptyTcpIoNotification) queue.take();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int remainingReadBytes = 7;
             while (remainingReadBytes > 0) {
-                ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) queue.take();
+                ReadTcpIoNotification readResp = (ReadTcpIoNotification) queue.take();
                 byte[] data = readResp.getData();
                 baos.write(data);
                 remainingReadBytes -= data.length;
@@ -86,8 +86,8 @@ public class NetworkGatewayTest {
             assertEquals("goodbye", new String(baos.toByteArray(), Charset.forName("UTF-8")));
 
 
-            fixtureBus.send(new DestroySocketNetworkRequest(id));
-            DestroySocketNetworkResponse destoryResp = (DestroySocketNetworkResponse) queue.take();
+            fixtureBus.send(new DestroySocketIoRequest(id));
+            DestroySocketIoResponse destoryResp = (DestroySocketIoResponse) queue.take();
         } finally {
             emulator.close();
         }
@@ -104,27 +104,27 @@ public class NetworkGatewayTest {
             int id;
 
             LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-            fixtureBus.send(new CreateUdpSocketNetworkRequest(
+            fixtureBus.send(new CreateUdpIoRequest(
                     new BasicBus(queue),
                     InetAddress.getByName("0.0.0.0")));
-            CreateUdpSocketNetworkResponse resp1 = (CreateUdpSocketNetworkResponse) queue.take();
+            CreateUdpIoResponse resp1 = (CreateUdpIoResponse) queue.take();
             id = resp1.getId();
 
 
-            WriteEmptyUdpNetworkNotification writeReadyResp = (WriteEmptyUdpNetworkNotification) queue.take();
+            WriteEmptyUdpIoNotification writeReadyResp = (WriteEmptyUdpIoNotification) queue.take();
             
-            fixtureBus.send(new WriteUdpNetworkRequest(id, new InetSocketAddress("127.0.0.1", 12345), "hello".getBytes("UTF-8")));
-            WriteUdpNetworkResponse writeResp = (WriteUdpNetworkResponse) queue.take();
+            fixtureBus.send(new WriteUdpIoRequest(id, new InetSocketAddress("127.0.0.1", 12345), "hello".getBytes("UTF-8")));
+            WriteUdpIoResponse writeResp = (WriteUdpIoResponse) queue.take();
 
 
-            WriteEmptyUdpNetworkNotification writeReadyResp2 = (WriteEmptyUdpNetworkNotification) queue.take();
+            WriteEmptyUdpIoNotification writeReadyResp2 = (WriteEmptyUdpIoNotification) queue.take();
             
-            ReadUdpNetworkNotification readResp = (ReadUdpNetworkNotification) queue.take();
+            ReadUdpIoNotification readResp = (ReadUdpIoNotification) queue.take();
             assertEquals("goodbye", new String(readResp.getData(), Charset.forName("UTF-8")));
 
             
-            fixtureBus.send(new DestroySocketNetworkRequest(id));
-            DestroySocketNetworkResponse destoryResp = (DestroySocketNetworkResponse) queue.take();
+            fixtureBus.send(new DestroySocketIoRequest(id));
+            DestroySocketIoResponse destoryResp = (DestroySocketIoResponse) queue.take();
         } finally {
             emulator.close();
         }

@@ -20,23 +20,15 @@ import com.offbynull.portmapper.common.Bus;
 import java.net.InetAddress;
 import org.apache.commons.lang3.Validate;
 
-public final class CreateTcpSocketNetworkRequest implements NetworkRequest {
-
+public final class CreateUdpIoRequest implements IoRequest {
     private Bus responseBus;
     private InetAddress sourceAddress;
-    private InetAddress destinationAddress;
-    private int destinationPort;
 
-    public CreateTcpSocketNetworkRequest(Bus responseBus, InetAddress sourceAddress, InetAddress destinationAddress, int destinationPort) {
+    public CreateUdpIoRequest(Bus responseBus, InetAddress sourceAddress) {
         Validate.notNull(responseBus);
         Validate.notNull(sourceAddress);
-        Validate.notNull(destinationAddress);
-        Validate.inclusiveBetween(1, 65535, destinationPort);
-
         this.responseBus = responseBus;
         this.sourceAddress = sourceAddress;
-        this.destinationAddress = destinationAddress;
-        this.destinationPort = destinationPort;
     }
 
     public Bus getResponseBus() {
@@ -45,13 +37,5 @@ public final class CreateTcpSocketNetworkRequest implements NetworkRequest {
 
     public InetAddress getSourceAddress() {
         return sourceAddress;
-    }
-
-    public InetAddress getDestinationAddress() {
-        return destinationAddress;
-    }
-
-    public int getDestinationPort() {
-        return destinationPort;
     }
 }

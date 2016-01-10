@@ -18,10 +18,10 @@ package com.offbynull.portmapper.io.internalmessages;
 
 import java.util.Arrays;
 
-public final class ReadTcpNetworkNotification extends IdentifiableNetworkNotification {
+public final class ReadTcpIoNotification extends IdentifiableIoNotification {
     private byte[] data;
 
-    public ReadTcpNetworkNotification(int id, byte[] data) {
+    public ReadTcpIoNotification(int id, byte[] data) {
         super(id);
         this.data = Arrays.copyOf(data, data.length);
     }

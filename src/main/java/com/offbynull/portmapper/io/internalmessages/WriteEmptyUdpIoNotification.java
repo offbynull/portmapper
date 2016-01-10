@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public interface NetworkRequest {
-    
+public final class WriteEmptyUdpIoNotification extends IdentifiableIoNotification {
+
+    public WriteEmptyUdpIoNotification(int id) {
+        super(id);
+    }
+
 }

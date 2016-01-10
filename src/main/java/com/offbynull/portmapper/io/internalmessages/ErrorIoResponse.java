@@ -16,9 +16,6 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class CreateTcpSocketNetworkResponse extends IdentifiableNetworkResponse {
+public final class ErrorIoResponse implements IoResponse {
 
-    public CreateTcpSocketNetworkResponse(int id) {
-        super(id);
-    }
 }

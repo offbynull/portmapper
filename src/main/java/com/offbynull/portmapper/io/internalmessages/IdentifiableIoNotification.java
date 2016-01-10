@@ -16,11 +16,11 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public abstract class IdentifiableNetworkNotification implements NetworkNotification {
+public abstract class IdentifiableIoNotification implements IoNotification {
     
     private int id;
 
-    IdentifiableNetworkNotification(int id) {
+    IdentifiableIoNotification(int id) {
         this.id = id;
     }
 

@@ -19,18 +19,18 @@ package com.offbynull.portmapper.io.internalmessages;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
-public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotification {
-    private InetSocketAddress socketAddress;
+public final class WriteUdpIoRequest extends IdentifiableIoRequest {
+    private InetSocketAddress outgoingSocketAddress;
     private byte[] data;
 
-    public ReadUdpNetworkNotification(int id, InetSocketAddress socketAddress, byte[] data) {
+    public WriteUdpIoRequest(int id, InetSocketAddress outgoingSocketAddress, byte[] data) {
         super(id);
-        this.socketAddress = socketAddress;
+        this.outgoingSocketAddress = outgoingSocketAddress;
         this.data = Arrays.copyOf(data, data.length);
     }
 
-    public InetSocketAddress getSocketAddress() {
-        return socketAddress;
+    public InetSocketAddress getOutgoingSocketAddress() {
+        return outgoingSocketAddress;
     }
 
     public byte[] getData() {

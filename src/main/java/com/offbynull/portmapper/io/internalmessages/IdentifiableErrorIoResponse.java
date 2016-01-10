@@ -16,9 +16,10 @@
  */
 package com.offbynull.portmapper.io.internalmessages;
 
-public final class ConnectedTcpNetworkResponse extends IdentifiableNetworkResponse {
+public final class IdentifiableErrorIoResponse extends IdentifiableIoResponse {
 
-    public ConnectedTcpNetworkResponse(int id) {
+    public IdentifiableErrorIoResponse(int id) {
         super(id);
     }
+
 }
