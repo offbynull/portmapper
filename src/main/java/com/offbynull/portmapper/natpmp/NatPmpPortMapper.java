@@ -62,6 +62,9 @@ public final class NatPmpPortMapper implements PortMapper {
     private InetAddress gatewayAddress;
 
     public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException, IOException {
+        Validate.notNull(networkBus);
+        Validate.notNull(processBus);
+        
         // Perform NETSTAT command
         ProcessRequest netstateReq = new ProcessRequest();
         
@@ -149,6 +152,10 @@ public final class NatPmpPortMapper implements PortMapper {
 
     @Override
     public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        Validate.notNull(portType);
+        Validate.inclusiveBetween(1, 65535, internalPort);
+        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
+
         //
         // GET EXTERNAL IP
         //
@@ -230,6 +237,9 @@ public final class NatPmpPortMapper implements PortMapper {
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
+        Validate.notNull(mappedPort);
+        Validate.isTrue(mappedPort instanceof NatPmpMappedPort);
+
         int internalPort = mappedPort.getInternalPort();
         
         UdpRequest mapIpReq = new UdpRequest();
@@ -275,6 +285,9 @@ public final class NatPmpPortMapper implements PortMapper {
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        Validate.notNull(mappedPort);
+        Validate.isTrue(mappedPort instanceof NatPmpMappedPort);
+        Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
         return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
     }
 
