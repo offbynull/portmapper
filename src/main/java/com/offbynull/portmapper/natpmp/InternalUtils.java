@@ -508,6 +508,18 @@ final class InternalUtils {
             networkBus.send(new CloseNetworkRequest(id));
         }
     }
+    
+    static long[] calculateRetryTimes(int attempts) {
+        long[] ret = new long[attempts];
+        
+        long nextTime = 250L;
+        for (int i = 0; i < attempts; i++) {
+            ret[i] = nextTime;
+            nextTime *= 2;
+        }
+        
+        return ret;
+    }
 
     static final class ProcessRequest {
         String executable;
