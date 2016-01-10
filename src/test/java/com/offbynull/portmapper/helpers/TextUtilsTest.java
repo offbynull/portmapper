@@ -1,4 +1,4 @@
-package com.offbynull.portmapper.common;
+package com.offbynull.portmapper.helpers;
 
 import com.offbynull.portmapper.helpers.TextUtils;
 import java.util.List;
