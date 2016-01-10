@@ -122,7 +122,9 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
 
 
-        
+        //
+        // PERFORM MAPPING
+        //
         int reservedExternalPort;
         if (hasAddAnyPortMappingMethod) {
             reservedExternalPort = newMapPort(portType, internalPort, externalPort, lifetime);
@@ -142,10 +144,6 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         String serviceType = getServiceType();
         InetAddress internalAddress = getInternalAddress();
         
-
-        //
-        // PERFORM MAPPING
-        //
         Protocol protocol;
         switch (portType) {
             case TCP:
