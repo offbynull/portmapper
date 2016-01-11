@@ -21,15 +21,13 @@ import com.offbynull.portmapper.PortMapper;
 import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.helpers.TextUtils;
-import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
 import static com.offbynull.portmapper.pcp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
-import com.offbynull.portmapper.pcp.InternalUtils.ProcessRequest;
+import com.offbynull.portmapper.pcp.InternalUtils.RunProcessRequest;
 import com.offbynull.portmapper.pcp.InternalUtils.ResponseCreator;
 import com.offbynull.portmapper.pcp.InternalUtils.UdpRequest;
 import static com.offbynull.portmapper.pcp.InternalUtils.calculateRetryTimes;
 import static com.offbynull.portmapper.pcp.InternalUtils.convertToAddressSet;
 import static com.offbynull.portmapper.pcp.InternalUtils.getLocalIpAddresses;
-import static com.offbynull.portmapper.pcp.InternalUtils.performProcessRequests;
 import static com.offbynull.portmapper.pcp.InternalUtils.performUdpRequests;
 import com.offbynull.portmapper.pcp.externalmessages.MapPcpRequest;
 import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
@@ -47,6 +45,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
+import static com.offbynull.portmapper.pcp.InternalUtils.runCommandline;
 
 /**
  * A PCP {@link PortMapper} implementation.
@@ -72,31 +71,31 @@ public final class PcpPortMapper implements PortMapper {
     private InetAddress gatewayAddress;
     private Random random;
 
-    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static Set<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
 
-        // Perform NETSTAT command
-        ProcessRequest netstateReq = new ProcessRequest();
-        
-        netstateReq.executable = "netstat";
-        netstateReq.parameters = new String[] { "-rn" };
-        netstateReq.sendData = new byte[0];
-        
-        List<ProcessRequest> procReqs = Arrays.asList(netstateReq);
+        // Perform commands to try to grab gateway addresses
+        Set<String> cliOutputs = runCommandline(processBus,
+                new RunProcessRequest("netstat", "-rn"), //linux mac and windows -- but seems wrong for windows
+                new RunProcessRequest("route", "-n"), // linux
+                new RunProcessRequest("route", "-n", "get", "default"), // mac
+                new RunProcessRequest("ipconfig"), // windows
+                new RunProcessRequest("ifconfig")); // linux (and mac?)
 
-        performProcessRequests(processBus, procReqs);
+        
         
         
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        String netstatOutput = new String(netstateReq.recvData, Charset.forName("US-ASCII"));
-        List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(netstatOutput);
-        List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(netstatOutput);
-        
-        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
-        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+        for (String cliOutput : cliOutputs) {
+            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(cliOutput);
+            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(cliOutput);
+
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+        }
         
         
         // Query -- send each query to every interface
@@ -135,10 +134,10 @@ public final class PcpPortMapper implements PortMapper {
         
         
         // Create mappers and returns
-        Set<NatPmpPortMapper> mappers = new HashSet<>();
+        Set<PcpPortMapper> mappers = new HashSet<>();
         for (UdpRequest udpReq : udpReqs) {
             if (udpReq.respMsg != null) {
-                NatPmpPortMapper portMapper = new NatPmpPortMapper(
+                PcpPortMapper portMapper = new PcpPortMapper(
                         networkBus,
                         udpReq.sourceAddress,
                         udpReq.destinationSocketAddress.getAddress());

@@ -21,6 +21,7 @@ import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.CloseProcessRequest;
+import com.offbynull.portmapper.io.process.internalmessages.ErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
 import com.offbynull.portmapper.io.process.internalmessages.IdentifiableErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
@@ -70,7 +71,7 @@ final class ProcessRunnable implements Runnable {
         }
     }
 
-    private void processMessage(Object msg) throws IOException {
+    private void processMessage(Object msg) {
         if (msg instanceof CreateProcessRequest) {
             CreateProcessRequest req = (CreateProcessRequest) msg;
             Bus responseBus = req.getResponseBus();
@@ -79,7 +80,6 @@ final class ProcessRunnable implements Runnable {
             Thread stdoutThread = null;
             Thread stderrThread = null;
             Thread stdinThread = null;
-            Integer createdId = null;
             try {
                 String executable = req.getExecutable();
                 UnmodifiableList<String> parameters = req.getParameters();
@@ -106,13 +106,14 @@ final class ProcessRunnable implements Runnable {
                         stdinRunnable.getLocalInputBus(), id, responseBus);
                 responseBus.send(new CreateProcessResponse(id));
                 idMap.put(id, entry);
-                createdId = id;
                 
+                // just assume at this point it'll never fuck up -- if we get to the point where we're starting threads and one of the
+                // threads fails to start, something happened that we didn't expect / couldn't predict
                 stdoutThread.start();
                 stderrThread.start();
                 stdinThread.start();
                 monitorThread.start();
-            } catch (RuntimeException re) {
+            } catch (IOException | RuntimeException re) {
                 if (stdoutThread != null) {
                     stdoutThread.interrupt();
                 }
@@ -128,11 +129,8 @@ final class ProcessRunnable implements Runnable {
                 if (process != null) {
                     process.destroy();
                 }
-                
-                if (createdId != null) {
-                    responseBus.send(new IdentifiableErrorProcessResponse(createdId));
-                    idMap.remove(createdId);
-                }
+
+                responseBus.send(new ErrorProcessResponse());
             }
         } else if (msg instanceof CloseProcessRequest) {
             CloseProcessRequest req = (CloseProcessRequest) msg;
@@ -162,7 +160,7 @@ final class ProcessRunnable implements Runnable {
                     if (exitCode == null) {
                         responseBus.send(new IdentifiableErrorProcessResponse(id));
                     } else {
-                        responseBus.send(new ExitProcessNotification(exitCode, id));
+                        responseBus.send(new ExitProcessNotification(id, exitCode));
                     }
                 }
             } catch (RuntimeException re) {

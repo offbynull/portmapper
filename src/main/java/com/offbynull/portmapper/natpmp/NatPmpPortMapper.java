@@ -22,14 +22,14 @@ import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.helpers.TextUtils;
 import static com.offbynull.portmapper.natpmp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
-import com.offbynull.portmapper.natpmp.InternalUtils.ProcessRequest;
 import com.offbynull.portmapper.natpmp.InternalUtils.ResponseCreator;
+import com.offbynull.portmapper.natpmp.InternalUtils.RunProcessRequest;
 import com.offbynull.portmapper.natpmp.InternalUtils.UdpRequest;
 import static com.offbynull.portmapper.natpmp.InternalUtils.calculateRetryTimes;
 import static com.offbynull.portmapper.natpmp.InternalUtils.convertToAddressSet;
 import static com.offbynull.portmapper.natpmp.InternalUtils.getLocalIpAddresses;
-import static com.offbynull.portmapper.natpmp.InternalUtils.performProcessRequests;
 import static com.offbynull.portmapper.natpmp.InternalUtils.performUdpRequests;
+import static com.offbynull.portmapper.natpmp.InternalUtils.runCommandline;
 import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpRequest;
 import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
 import com.offbynull.portmapper.natpmp.externalmessages.MappingNatPmpResponse;
@@ -40,8 +40,6 @@ import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpRequest;
 import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpResponse;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -67,26 +65,26 @@ public final class NatPmpPortMapper implements PortMapper {
         Validate.notNull(processBus);
         
         // Perform NETSTAT command
-        ProcessRequest netstateReq = new ProcessRequest();
+        // Perform commands to try to grab gateway addresses
+        Set<String> cliOutputs = runCommandline(processBus,
+                new RunProcessRequest("netstat", "-rn"), //linux mac and windows -- but seems wrong for windows
+                new RunProcessRequest("route", "-n"), // linux
+                new RunProcessRequest("route", "-n", "get", "default"), // mac
+                new RunProcessRequest("ipconfig"), // windows
+                new RunProcessRequest("ifconfig")); // linux (and mac?)
         
-        netstateReq.executable = "netstat";
-        netstateReq.parameters = new String[] { "-rn" };
-        netstateReq.sendData = new byte[0];
-        
-        List<ProcessRequest> procReqs = Arrays.asList(netstateReq);
-
-        performProcessRequests(processBus, procReqs);
         
         
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        String netstatOutput = new String(netstateReq.recvData, Charset.forName("US-ASCII"));
-        List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(netstatOutput);
-        List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(netstatOutput);
-        
-        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
-        potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+        for (String cliOutput : cliOutputs) {
+            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(cliOutput);
+            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(cliOutput);
+
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+        }
         
         
         // Query -- send each query to every interface

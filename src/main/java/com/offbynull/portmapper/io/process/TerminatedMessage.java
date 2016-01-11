@@ -1,10 +1,10 @@
 package com.offbynull.portmapper.io.process;
 
 final class TerminatedMessage {
-    private Integer id;
-    private int exitCode;
+    private int id;
+    private Integer exitCode;
 
-    public TerminatedMessage(Integer id, int exitCode) {
+    public TerminatedMessage(int id, Integer exitCode) {
         this.id = id;
         this.exitCode = exitCode;
     }

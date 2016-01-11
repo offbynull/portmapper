@@ -39,10 +39,10 @@ final class ProcessMonitorRunnable implements Runnable {
     public void run() {
         try {
             int exitCode = process.waitFor();
-            processBus.send(new TerminatedMessage(exitCode, id));
+            processBus.send(new TerminatedMessage(id, exitCode));
         } catch (InterruptedException ioe) {
             process.destroy();
-            processBus.send(new TerminatedMessage(null, id));
+            processBus.send(new TerminatedMessage(id, null));
         }
     }
     

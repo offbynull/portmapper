@@ -31,7 +31,7 @@ public class UpnpIgdPortMapperTest {
     }
 
     @Test
-    public void testPortMapping() throws Throwable {
+    public void mustFindAndControlPortMappers() throws Throwable {
         Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkBus);
         assertEquals(2, mappers.size());
         

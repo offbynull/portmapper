@@ -19,7 +19,7 @@ package com.offbynull.portmapper.io.process.internalmessages;
 public final class ExitProcessNotification extends IdentifiableProcessResponse {
     private final Integer exitCode;
 
-    public ExitProcessNotification(int exitCode, Integer id) {
+    public ExitProcessNotification(int id, Integer exitCode) {
         super(id);
         this.exitCode = exitCode;
     }
