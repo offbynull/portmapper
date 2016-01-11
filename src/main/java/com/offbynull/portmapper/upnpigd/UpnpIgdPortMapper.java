@@ -174,24 +174,26 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         // Get root XMLs
         Collection<HttpRequest> rootRequests = new ArrayList<>(discoveryRequests.size());
         for (UdpRequest discoveryReq : discoveryRequests) {
-            try {
-                ServiceDiscoveryUpnpIgdResponse discoveryResp = (ServiceDiscoveryUpnpIgdResponse) discoveryReq.respMsg;
+            for (UpnpIgdHttpResponse respMsg : discoveryReq.respMsges) {
+                try {
+                    ServiceDiscoveryUpnpIgdResponse discoveryResp = (ServiceDiscoveryUpnpIgdResponse) respMsg;
 
-                HttpRequest req = new HttpRequest();
+                    HttpRequest req = new HttpRequest();
 
-                ProbeResult other = new ProbeResult();
-                other.source = discoveryReq.sourceAddress;
-                other.location = discoveryResp.getLocation();
-                other.serverName = discoveryResp.getServer();
+                    ProbeResult other = new ProbeResult();
+                    other.source = discoveryReq.sourceAddress;
+                    other.location = discoveryResp.getLocation();
+                    other.serverName = discoveryResp.getServer();
 
-                req.other = other;
-                req.sourceAddress = other.source;
-                req.location = other.location;
-                req.respCreator = new RootUpnpIgdResponseCreator(other.location);
-                req.sendMsg = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
-                rootRequests.add(req);
-            } catch (RuntimeException iae) {
-                // failed to parse, so skip to next
+                    req.other = other;
+                    req.sourceAddress = other.source;
+                    req.location = other.location;
+                    req.respCreator = new RootUpnpIgdResponseCreator(other.location);
+                    req.sendMsg = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
+                    rootRequests.add(req);
+                } catch (RuntimeException iae) {
+                    // failed to parse, so skip to next
+                }
             }
         }
         performBatchedHttpRequests(networkBus, rootRequests, 5000L, 5000L, 5000L);

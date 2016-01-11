@@ -29,6 +29,17 @@ import org.apache.commons.lang3.Validate;
  */
 public final class NetworkUtils {
 
+    public static final InetAddress ZERO_IPV6;
+    public static final InetAddress ZERO_IPV4;
+    static {
+        try {
+            ZERO_IPV6 = InetAddress.getByName("::");
+            ZERO_IPV4 = InetAddress.getByName("0.0.0.0");
+        } catch (UnknownHostException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
     private NetworkUtils() {
         // do nothing
     }

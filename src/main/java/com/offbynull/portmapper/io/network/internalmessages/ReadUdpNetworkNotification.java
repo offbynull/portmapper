@@ -18,19 +18,29 @@ package com.offbynull.portmapper.io.network.internalmessages;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import org.apache.commons.lang3.Validate;
 
 public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotification {
-    private InetSocketAddress socketAddress;
+    private InetSocketAddress localAddress;
+    private InetSocketAddress remoteAddress;
     private byte[] data;
 
-    public ReadUdpNetworkNotification(int id, InetSocketAddress socketAddress, byte[] data) {
+    public ReadUdpNetworkNotification(int id, InetSocketAddress localAddress, InetSocketAddress remoteAddress, byte[] data) {
         super(id);
-        this.socketAddress = socketAddress;
+        Validate.notNull(localAddress);
+        Validate.notNull(remoteAddress);
+        Validate.notNull(data);
+        this.localAddress = localAddress;
+        this.remoteAddress = remoteAddress;
         this.data = Arrays.copyOf(data, data.length);
     }
 
-    public InetSocketAddress getSocketAddress() {
-        return socketAddress;
+    public InetSocketAddress getLocalAddress() {
+        return localAddress;
+    }
+
+    public InetSocketAddress getRemoteAddress() {
+        return remoteAddress;
     }
 
     public byte[] getData() {

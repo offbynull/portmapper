@@ -20,6 +20,8 @@ import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortMapper;
 import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.Bus;
+import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
+import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.helpers.TextUtils;
 import static com.offbynull.portmapper.pcp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
 import com.offbynull.portmapper.pcp.InternalUtils.RunProcessRequest;
@@ -34,9 +36,6 @@ import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
 import com.offbynull.portmapper.pcp.externalmessages.PcpResponse;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -55,16 +54,6 @@ import static com.offbynull.portmapper.pcp.InternalUtils.runCommandline;
 public final class PcpPortMapper implements PortMapper {
     
     private static final int PORT = 5351;
-    private static final InetAddress ZERO_IPV6;;
-    private static final InetAddress ZERO_IPV4;
-    static {
-        try {
-            ZERO_IPV6 = InetAddress.getByName("::");
-            ZERO_IPV4 = InetAddress.getByName("0.0.0.0");
-        } catch (UnknownHostException ex) {
-            throw new IllegalStateException(ex);
-        }
-    }
     
     private Bus networkBus;
     private InetAddress internalAddress;
@@ -104,6 +93,11 @@ public final class PcpPortMapper implements PortMapper {
         Set<InetAddress> sourceAddresses = getLocalIpAddresses(networkBus);
         for (InetAddress sourceAddress : sourceAddresses) {
             for (InetAddress gatewayAddress : potentialGatewayAddresses) {
+                // both addresses must be ipv4 or both address must be ipv6
+                if (!sourceAddress.getClass().equals(gatewayAddress.getClass())) {
+                    continue;
+                }
+
                 UdpRequest udpReq = new UdpRequest();
                 udpReq.sourceAddress = sourceAddress;
                 udpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
@@ -129,7 +123,7 @@ public final class PcpPortMapper implements PortMapper {
             }
         }
         
-        performUdpRequests(networkBus, udpReqs, 1000L, 1000L, 1000L, 1000L, 1000L); // don't do standard natpmp/pcp retries -- just
+        performUdpRequests(networkBus, udpReqs, 3000L, 3000L, 3000L, 3000L, 3000L); // don't do standard natpmp/pcp retries -- just
                                                                                     // attempting to discover
         
         

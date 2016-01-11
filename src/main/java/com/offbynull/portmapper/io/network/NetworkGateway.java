@@ -33,6 +33,8 @@ public final class NetworkGateway {
         
         ng.runnable = new NetworkRunnable();
         ng.thread = new Thread(ng.runnable);
+        ng.thread.setDaemon(true);
+        ng.thread.setName("Network IO");
         
         ng.thread.start();
         

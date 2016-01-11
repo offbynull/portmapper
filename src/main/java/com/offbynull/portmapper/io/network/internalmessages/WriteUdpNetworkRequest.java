@@ -37,4 +37,9 @@ public final class WriteUdpNetworkRequest extends IdentifiableNetworkRequest {
         return Arrays.copyOf(data, data.length);
     }
 
+    @Override
+    public String toString() {
+        return "WriteUdpNetworkRequest{" + "outgoingSocketAddress=" + outgoingSocketAddress + ", data=" + data + '}';
+    }
+
 }

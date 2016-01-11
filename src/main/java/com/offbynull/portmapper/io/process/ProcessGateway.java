@@ -29,14 +29,16 @@ public final class ProcessGateway {
     private Thread thread;
     
     public static ProcessGateway create() {
-        ProcessGateway ng = new ProcessGateway();
+        ProcessGateway pg = new ProcessGateway();
         
-        ng.runnable = new ProcessRunnable();
-        ng.thread = new Thread(ng.runnable);
+        pg.runnable = new ProcessRunnable();
+        pg.thread = new Thread(pg.runnable);
+        pg.thread.setDaemon(true);
+        pg.thread.setName("Process IO");
         
-        ng.thread.start();
+        pg.thread.start();
         
-        return ng;
+        return pg;
     }
     
     private ProcessGateway() {
