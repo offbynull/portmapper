@@ -32,7 +32,23 @@ public final class NetworkUtils {
     private NetworkUtils() {
         // do nothing
     }
-    
+
+    /**
+     * Convert host to {@link InetAddress}. Equivalent to calling {@link InetAddress#getByName(java.lang.String) } but throws an unchecked
+     * exception on problem.
+     * @param host host to convert
+     * @return address converted address
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if host couldn't be converted to an {@link InetAddress}
+     */
+    public static InetAddress toAddress(String host) {
+        try {
+            return InetAddress.getByName(host);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(uhe); // should never happen
+        }
+    }
+
     /**
      * Gets the address as an IPv6 address string. If {@code address} is a {@link Inet4Address}, it'll be converted to an IPv4 mapped to
      * IPv5 address. If {@code address} is a {@link Inet6Address}, it'll return {@code address.getHostAddress()}.

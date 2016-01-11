@@ -104,15 +104,11 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 return new GetExternalIpAddressUpnpIgdResponse(buffer);
             }
         };
-        
-        try {
-            performHttpRequests(
-                    networkBus,
-                    Collections.singleton(externalIpHttpRequest),
-                    5000L, 5000L, 5000L);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+
+        performHttpRequests(
+                networkBus,
+                Collections.singleton(externalIpHttpRequest),
+                5000L, 5000L, 5000L);
         
         if (externalIpHttpRequest.respMsg == null) {
             throw new IllegalStateException("No response/invalid response to getting external IP");
@@ -190,15 +186,11 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 return new AddAnyPortMappingUpnpIgdResponse(buffer);
             }
         };
-        
-        try {
-            performHttpRequests(
-                    networkBus,
-                    Collections.singleton(mapHttpRequest),
-                    5000L, 5000L, 5000L);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+
+        performHttpRequests(
+                networkBus,
+                Collections.singleton(mapHttpRequest),
+                5000L, 5000L, 5000L);
         
         if (mapHttpRequest.respMsg == null) {
             throw new IllegalStateException("No response/invalid response to mapping");
@@ -266,14 +258,10 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 }
             };
 
-            try {
-                performHttpRequests(
-                        networkBus,
-                        Collections.singleton(mapHttpRequest),
-                        retryDurations);
-            } catch (IOException ex) {
-                throw new IllegalStateException(ex);
-            }
+            performHttpRequests(
+                    networkBus,
+                    Collections.singleton(mapHttpRequest),
+                    retryDurations);
 
             if (mapHttpRequest.respMsg != null) {
                 // server responded, so we're good to go
@@ -331,14 +319,10 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
             }
         };
         
-        try {
-            performHttpRequests(
-                    networkBus,
-                    Collections.singleton(httpRequest),
-                    5000L, 5000L, 5000L);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        performHttpRequests(
+                networkBus,
+                Collections.singleton(httpRequest),
+                5000L, 5000L, 5000L);
         
         if (httpRequest.respMsg == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");

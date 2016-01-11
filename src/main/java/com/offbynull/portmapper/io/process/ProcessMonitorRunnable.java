@@ -20,13 +20,13 @@ import com.offbynull.portmapper.Bus;
 
 import org.apache.commons.lang3.Validate;
 
-final class ProcessExitRunnable implements Runnable {
+final class ProcessMonitorRunnable implements Runnable {
 
     private final int id;
     private final Process process;
     private final Bus processBus;
 
-    public ProcessExitRunnable(int id, Process process, Bus processBus) {
+    public ProcessMonitorRunnable(int id, Process process, Bus processBus) {
         Validate.notNull(process);
         Validate.notNull(processBus);
         

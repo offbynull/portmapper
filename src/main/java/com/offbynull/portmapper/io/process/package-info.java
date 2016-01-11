@@ -14,18 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.io.process.internalmessages;
 
-public final class ExitProcessNotification extends IdentifiableProcessResponse {
-    private final Integer exitCode;
-
-    public ExitProcessNotification(int exitCode, Integer id) {
-        super(id);
-        this.exitCode = exitCode;
-    }
-
-    public Integer getExitCode() { // null if not available
-        return exitCode;
-    }
-    
-}
+/**
+ * Process IO gateway.
+ */
+package com.offbynull.portmapper.io.process;

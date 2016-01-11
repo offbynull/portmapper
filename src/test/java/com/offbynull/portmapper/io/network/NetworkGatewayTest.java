@@ -1,6 +1,5 @@
-package com.offbynull.portmapper.io;
+package com.offbynull.portmapper.io.network;
 
-import com.offbynull.portmapper.io.network.NetworkGateway;
 import com.offbynull.portmapper.BasicBus;
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkRequest;

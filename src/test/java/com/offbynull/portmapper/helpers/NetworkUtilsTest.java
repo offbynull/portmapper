@@ -9,6 +9,12 @@ import org.junit.Test;
 public class NetworkUtilsTest {
 
     @Test
+    public void mustCreateInetAddress() throws UnknownHostException {
+        InetAddress actual = NetworkUtils.toAddress("127.0.0.1");
+        assertEquals(InetAddress.getByName("127.0.0.1"), actual);
+    }
+
+    @Test
     public void mustConvertToIpv6AddressWhenIpv4() throws UnknownHostException {
         String actual = NetworkUtils.toIpv6AddressString(InetAddress.getByName("127.0.0.1"));
         assertEquals("::ffff:7f00:1", actual);

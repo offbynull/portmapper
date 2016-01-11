@@ -34,10 +34,10 @@ import static com.offbynull.portmapper.pcp.InternalUtils.performUdpRequests;
 import com.offbynull.portmapper.pcp.externalmessages.MapPcpRequest;
 import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
 import com.offbynull.portmapper.pcp.externalmessages.PcpResponse;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -71,7 +71,7 @@ public final class PcpPortMapper implements PortMapper {
     private InetAddress gatewayAddress;
     private Random random;
 
-    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException, IOException {
+    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
 
@@ -90,7 +90,7 @@ public final class PcpPortMapper implements PortMapper {
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        String netstatOutput = new String(netstateReq.recvData, "US-ASCII");
+        String netstatOutput = new String(netstateReq.recvData, Charset.forName("US-ASCII"));
         List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(netstatOutput);
         List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(netstatOutput);
         

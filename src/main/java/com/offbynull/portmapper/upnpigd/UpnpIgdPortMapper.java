@@ -32,7 +32,6 @@ import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpI
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdResponse;
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -124,7 +123,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                 + '}';
     }
 
-    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException, IOException {
+    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
         Validate.notNull(networkBus);
 
         // Probe for devices -- for each device found, query the device

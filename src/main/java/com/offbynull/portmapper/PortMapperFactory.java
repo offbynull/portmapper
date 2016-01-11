@@ -34,6 +34,8 @@ public final class PortMapperFactory {
     
     /**
      * Searches for all PCP, NAT-PMP, or UPNP-IGD enabled routers on all available interfaces.
+     * @param networkBus network bus
+     * @param processBus process bus
      * @return port mapper
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted

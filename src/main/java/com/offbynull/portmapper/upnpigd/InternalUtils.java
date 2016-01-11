@@ -18,6 +18,7 @@ package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.BasicBus;
 import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
@@ -38,7 +39,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,7 +73,7 @@ final class InternalUtils {
     
     // avoids flooding a single server with a bunch of requests -- does requests to each server in batches of no more than 3
     static void performBatchedHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations)
-            throws InterruptedException, IOException {
+            throws InterruptedException {
         ArrayListValuedHashMap<String, HttpRequest> ret = new ArrayListValuedHashMap<>();
         for (HttpRequest req : reqs) {
             String authority = req.location.getAuthority();
@@ -112,8 +112,7 @@ final class InternalUtils {
         }
     }
     
-    static void performHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations) throws InterruptedException,
-            UnknownHostException, IOException {
+    static void performHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations) throws InterruptedException {
         
         Queue<Long> remainingAttemptDurations = new LinkedList<>();
         for (long attemptDuration : attemptDurations) {
@@ -136,7 +135,7 @@ final class InternalUtils {
                     continue;
                 }
 
-                InetAddress destinationAddress = InetAddress.getByName(req.location.getHost());
+                InetAddress destinationAddress = NetworkUtils.toAddress(req.location.getHost());
                 int destinationPort = req.location.getPort();
 
                 networkBus.send(new CreateTcpNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
@@ -192,7 +191,11 @@ final class InternalUtils {
 
                     ByteArrayOutputStream baos = readBuffers.get(id);
                     Validate.validState(baos != null); // sanity check -- should never happen
-                    baos.write(readResp.getData());
+                    try {
+                        baos.write(readResp.getData());
+                    } catch (IOException ioe) {
+                        throw new IllegalStateException(); // should never happen
+                    }
                 } else if (resp instanceof IdentifiableErrorNetworkResponse) {
                     // On error, remove socket from active set (server likely closed the socket)
                     IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;

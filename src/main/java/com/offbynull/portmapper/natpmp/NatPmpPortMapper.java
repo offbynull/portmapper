@@ -38,9 +38,9 @@ import com.offbynull.portmapper.natpmp.externalmessages.TcpMappingNatPmpRequest;
 import com.offbynull.portmapper.natpmp.externalmessages.TcpMappingNatPmpResponse;
 import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpRequest;
 import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpResponse;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,7 +61,7 @@ public final class NatPmpPortMapper implements PortMapper {
     private InetAddress internalAddress;
     private InetAddress gatewayAddress;
 
-    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException, IOException {
+    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
         
@@ -80,7 +80,7 @@ public final class NatPmpPortMapper implements PortMapper {
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        String netstatOutput = new String(netstateReq.recvData, "US-ASCII");
+        String netstatOutput = new String(netstateReq.recvData, Charset.forName("US-ASCII"));
         List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(netstatOutput);
         List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(netstatOutput);
         

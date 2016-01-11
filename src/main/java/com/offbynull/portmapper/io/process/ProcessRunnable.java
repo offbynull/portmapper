@@ -18,13 +18,13 @@ package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.BasicBus;
 import com.offbynull.portmapper.Bus;
-import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
-import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.CloseProcessRequest;
-import com.offbynull.portmapper.io.process.internalmessages.ErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.IdentifiableErrorProcessResponse;
+import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
+import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
 import com.offbynull.portmapper.io.process.internalmessages.ReadType;
 import com.offbynull.portmapper.io.process.internalmessages.WriteEmptyProcessNotification;
 import com.offbynull.portmapper.io.process.internalmessages.WriteProcessRequest;
@@ -75,6 +75,11 @@ final class ProcessRunnable implements Runnable {
             CreateProcessRequest req = (CreateProcessRequest) msg;
             Bus responseBus = req.getResponseBus();
             Process process = null;
+            Thread monitorThread = null;
+            Thread stdoutThread = null;
+            Thread stderrThread = null;
+            Thread stdinThread = null;
+            Integer createdId = null;
             try {
                 String executable = req.getExecutable();
                 UnmodifiableList<String> parameters = req.getParameters();
@@ -86,31 +91,48 @@ final class ProcessRunnable implements Runnable {
                 
                 int id = nextId++;
                 
-                ProcessExitRunnable exitRunnable = new ProcessExitRunnable(id, process, responseBus);
-                Thread exitThread = new Thread(exitRunnable);
-                ProcessReaderRunnable stdoutRunnable = new ProcessReaderRunnable(id, process.getInputStream(), responseBus,
+                ProcessMonitorRunnable monitorRunnable = new ProcessMonitorRunnable(id, process, bus);
+                monitorThread = new Thread(monitorRunnable);
+                ProcessReaderRunnable stdoutRunnable = new ProcessReaderRunnable(id, process.getInputStream(), bus,
                         ReadType.STDOUT);
-                Thread stdoutThread = new Thread(stdoutRunnable);
-                ProcessReaderRunnable stderrRunnable = new ProcessReaderRunnable(id, process.getErrorStream(), responseBus,
+                stdoutThread = new Thread(stdoutRunnable);
+                ProcessReaderRunnable stderrRunnable = new ProcessReaderRunnable(id, process.getErrorStream(), bus,
                         ReadType.STDERR);
-                Thread stderrThread = new Thread(stderrRunnable);
-                ProcessWriterRunnable stdinRunnable = new ProcessWriterRunnable(id, process.getOutputStream(), responseBus);
-                Thread stdinThread = new Thread(stdinRunnable);
+                stderrThread = new Thread(stderrRunnable);
+                ProcessWriterRunnable stdinRunnable = new ProcessWriterRunnable(id, process.getOutputStream(), bus);
+                stdinThread = new Thread(stdinRunnable);
+                
+                ProcessEntry entry = new ProcessEntry(process, monitorThread, stdinThread, stdoutThread, stderrThread,
+                        stdinRunnable.getLocalInputBus(), id, responseBus);
+                responseBus.send(new CreateProcessResponse(id));
+                idMap.put(id, entry);
+                createdId = id;
                 
                 stdoutThread.start();
                 stderrThread.start();
                 stdinThread.start();
-                exitThread.start();
-                
-                ProcessEntry entry = new ProcessEntry(process, exitThread, stdinThread, stdoutThread, stderrThread,
-                        stdinRunnable.getLocalInputBus(), id, responseBus);
-                idMap.put(id, entry);
-                responseBus.send(new CreateProcessResponse(id));
+                monitorThread.start();
             } catch (RuntimeException re) {
+                if (stdoutThread != null) {
+                    stdoutThread.interrupt();
+                }
+                if (stderrThread != null) {
+                    stderrThread.interrupt();
+                }
+                if (stdinThread != null) {
+                    stdinThread.interrupt();
+                }
+                if (monitorThread != null) {
+                    monitorThread.interrupt();
+                }
                 if (process != null) {
                     process.destroy();
                 }
-                responseBus.send(new ErrorProcessResponse());
+                
+                if (createdId != null) {
+                    responseBus.send(new IdentifiableErrorProcessResponse(createdId));
+                    idMap.remove(createdId);
+                }
             }
         } else if (msg instanceof CloseProcessRequest) {
             CloseProcessRequest req = (CloseProcessRequest) msg;
@@ -138,7 +160,7 @@ final class ProcessRunnable implements Runnable {
                     Integer exitCode = req.getExitCode();
                     
                     if (exitCode == null) {
-                        responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                        responseBus.send(new IdentifiableErrorProcessResponse(id));
                     } else {
                         responseBus.send(new ExitProcessNotification(exitCode, id));
                     }
@@ -150,19 +172,19 @@ final class ProcessRunnable implements Runnable {
             // sent internally once process has nothing else to write out
             WriteEmptyMessage req = (WriteEmptyMessage) msg;
             int id = req.getId();
-            ProcessEntry entry = idMap.remove(id);
+            ProcessEntry entry = idMap.get(id);
             if (entry != null) {
                 Bus responseBus = entry.getResponseBus();
                 responseBus.send(new WriteEmptyProcessNotification(id));
             }
         } else if (msg instanceof ReadMessage) {
             // sent internally once process has read something in
-            WriteEmptyMessage req = (WriteEmptyMessage) msg;
+            ReadMessage req = (ReadMessage) msg;
             int id = req.getId();
-            ProcessEntry entry = idMap.remove(id);
+            ProcessEntry entry = idMap.get(id);
             if (entry != null) {
                 Bus responseBus = entry.getResponseBus();
-                responseBus.send(new WriteEmptyProcessNotification(id));
+                responseBus.send(new ReadProcessNotification(id, req.getData(), req.getReadType()));
             }
         } else if (msg instanceof WriteProcessRequest) {
             WriteProcessRequest req = (WriteProcessRequest) msg;
@@ -178,28 +200,38 @@ final class ProcessRunnable implements Runnable {
                 if (process != null) {
                     process.destroy();
                 } else if (responseBus != null) {
-                    responseBus.send(new IdentifiableErrorNetworkResponse(id));
+                    responseBus.send(new IdentifiableErrorProcessResponse(id));
                 }
             }
-        } else if (msg instanceof KillNetworkRequest) {
+        } else if (msg instanceof KillProcessRequest) {
             throw new KillRequestException();
         }
     }
 
     private void shutdownResources() {
         for (Entry<Integer, ProcessEntry> entry : idMap.entrySet()) {
-            ProcessEntry processEntry = entry.getValue();
+            int id = entry.getKey();
+            ProcessEntry pe = entry.getValue();
+
             try {
-                processEntry.getProcess().destroy();
-                processEntry.getStdoutThread().interrupt();
-                processEntry.getStderrThread().interrupt();
-                processEntry.getStdinThread().interrupt();
-                processEntry.getExitThread().join();
+                pe.getProcess().destroy();
+                pe.getStdoutThread().interrupt();
+                pe.getStderrThread().interrupt();
+                pe.getStdinThread().interrupt();
+                pe.getStdoutThread().join();
+                pe.getStderrThread().join();
+                pe.getStdinThread().join();
+                pe.getExitThread().join();
             } catch (InterruptedException ie) {
                 throw new RuntimeException(ie);
             } catch (RuntimeException e) {
                 // do nothing
             }
+
+            // shutdownResources() is the last thing that gets called before the ProcessRunnable thread gets shut down. Any messages put on
+            // the ProcessRunnable bus by the threads that were interrupted will never be processed, including notifications of the process
+            // stopping. As such, we send the notification here that the process is being forcefully stopped.
+            pe.getResponseBus().send(new ExitProcessNotification(id, null));
         }
         idMap.clear();
     }

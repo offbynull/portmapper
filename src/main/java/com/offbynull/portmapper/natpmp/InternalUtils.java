@@ -313,7 +313,7 @@ final class InternalUtils {
         return localIpsResp.getLocalAddresses();
     }
     
-    static void performProcessRequests(Bus processBus, Collection<ProcessRequest> reqs) throws InterruptedException, IOException {
+    static void performProcessRequests(Bus processBus, Collection<ProcessRequest> reqs) throws InterruptedException {
 
         Set<ProcessRequest> remainingReqs = new HashSet<>(reqs);
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
@@ -381,7 +381,11 @@ final class InternalUtils {
 
                 ByteArrayOutputStream baos = readBuffers.get(id);
                 Validate.validState(baos != null); // sanity check -- should never happen
-                baos.write(readResp.getData());
+                try {
+                    baos.write(readResp.getData());
+                } catch (IOException ioe) {
+                    throw new IllegalStateException(); // should never happen
+                }
             }
         }
 
