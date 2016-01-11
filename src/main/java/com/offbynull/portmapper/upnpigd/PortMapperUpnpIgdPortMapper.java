@@ -32,10 +32,10 @@ import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpn
 import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Objects;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
@@ -121,20 +121,15 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         //
         // PERFORM MAPPING
         //
-        int reservedExternalPort;
         if (hasAddAnyPortMappingMethod) {
-            reservedExternalPort = newMapPort(portType, internalPort, externalPort, lifetime);
+            return newMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
         } else {
-            reservedExternalPort = oldMapPort(portType, internalPort, externalPort, lifetime);
+            return oldMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
         }
-        
-        
-        
-        
-        return new PortMapperMappedPort(internalPort, reservedExternalPort, externalAddress, portType, lifetime);
     }
     
-    private int newMapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+    private MappedPort newMapPort(PortType portType, int internalPort, int externalPort, long lifetime, InetAddress externalAddress)
+            throws InterruptedException {
         Bus networkBus = getNetworkBus();
         URL controlUrl = getControlUrl();
         String serviceType = getServiceType();
@@ -198,10 +193,17 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         
         
-        return ((AddAnyPortMappingUpnpIgdResponse) mapHttpRequest.respMsg).getReservedPort();
+        int reservedExternalPort = ((AddAnyPortMappingUpnpIgdResponse) mapHttpRequest.respMsg).getReservedPort();
+        return new PortMapperMappedPort(
+                internalPort,
+                reservedExternalPort,
+                externalAddress,
+                portType,
+                leaseDuration);
     }
     
-    private int oldMapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+    private MappedPort oldMapPort(PortType portType, int internalPort, int externalPort, long lifetime, InetAddress externalAddress)
+            throws InterruptedException {
         Bus networkBus = getNetworkBus();
         URL controlUrl = getControlUrl();
         String serviceType = getServiceType();
@@ -265,7 +267,12 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
             if (mapHttpRequest.respMsg != null) {
                 // server responded, so we're good to go
-                return externalPort;
+                return new PortMapperMappedPort(
+                        internalPort,
+                        externalPort,
+                        externalAddress,
+                        portType,
+                        leaseDuration);
             }
             
             // choose another external port for next try -- next try only make 1 attempt
@@ -334,7 +341,15 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PortMapperMappedPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
-        return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
+        MappedPort newMappedPort = mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
+        
+        Validate.validState(mappedPort.getExternalPort() == newMappedPort.getExternalPort(),
+                "External port changed from %d to %d during refresh", mappedPort.getExternalPort(), newMappedPort.getExternalPort());
+        
+        Validate.validState(Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress()),
+                "External IP changed from %s to %s during refresh", mappedPort.getExternalAddress(), newMappedPort.getExternalAddress());
+        
+        return newMappedPort;
     }
 
     @Override

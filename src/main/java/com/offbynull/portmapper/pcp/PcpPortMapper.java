@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
@@ -241,7 +242,15 @@ public final class PcpPortMapper implements PortMapper {
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PcpMappedPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
-        return mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
+        MappedPort newMappedPort = mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
+        
+        Validate.validState(mappedPort.getExternalPort() == newMappedPort.getExternalPort(),
+                "External port changed from %d to %d during refresh", mappedPort.getExternalPort(), newMappedPort.getExternalPort());
+        
+        Validate.validState(Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress()),
+                "External IP changed from %s to %s during refresh", mappedPort.getExternalAddress(), newMappedPort.getExternalAddress());
+        
+        return newMappedPort;
     }
 
     @Override

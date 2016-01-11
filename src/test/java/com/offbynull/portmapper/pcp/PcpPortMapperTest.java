@@ -1,6 +1,6 @@
 package com.offbynull.portmapper.pcp;
 
-public final class PcpTest {
+public final class PcpPortMapperTest {
 //    
 //    @Test
 //    @Ignore // REQUIRES AN APPLE ROUTER TO TEST PROPERLY (OR POSSIBLE NAT-PMP ENABLED MINIUPNPD)

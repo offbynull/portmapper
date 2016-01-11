@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +41,7 @@ public class NetworkGatewayTest {
         fixtureBus = fixture.getBus();
     }
 
+    @After
     public void after() {
         fixtureBus.send(new KillNetworkRequest());
     }

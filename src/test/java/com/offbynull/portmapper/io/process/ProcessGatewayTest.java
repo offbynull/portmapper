@@ -10,6 +10,7 @@ import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotificat
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,6 +28,7 @@ public class ProcessGatewayTest {
         fixtureBus = fixture.getBus();
     }
 
+    @After
     public void after() {
         fixtureBus.send(new KillProcessRequest());
     }

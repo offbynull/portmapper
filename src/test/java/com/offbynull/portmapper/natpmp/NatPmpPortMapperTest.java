@@ -1,6 +1,6 @@
 package com.offbynull.portmapper.natpmp;
 
-public final class NatPmpTest {
+public final class NatPmpPortMapperTest {
     
 //    @Test
 //    @Ignore // REQUIRES AN APPLE ROUTER TO TEST PROPERLY (OR POSSIBLE NAT-PMP ENABLED MINIUPNPD)

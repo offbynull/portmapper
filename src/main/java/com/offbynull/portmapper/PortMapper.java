@@ -28,7 +28,7 @@ public interface PortMapper {
      * Map a port. Mapping the same port multiple times has undefined behaviour.
      * @param portType port type
      * @param internalPort internal port
-     * @param externalPort external port
+     * @param externalPort suggested external port (mapped external port may be different)
      * @param lifetime number of seconds to acquire mapping for (may be reduced or extended depending on server and/or client)
      * @return object that describes mapping
      * @throws NullPointerException if any argument is {@code null}
