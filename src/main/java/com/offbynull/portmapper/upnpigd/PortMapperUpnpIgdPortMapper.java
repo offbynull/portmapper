@@ -343,11 +343,19 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
         MappedPort newMappedPort = mapPort(mappedPort.getPortType(), mappedPort.getInternalPort(), mappedPort.getExternalPort(), lifetime);
         
-        Validate.validState(mappedPort.getExternalPort() == newMappedPort.getExternalPort(),
-                "External port changed from %d to %d during refresh", mappedPort.getExternalPort(), newMappedPort.getExternalPort());
-        
-        Validate.validState(Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress()),
-                "External IP changed from %s to %s during refresh", mappedPort.getExternalAddress(), newMappedPort.getExternalAddress());
+        if (mappedPort.getExternalPort() != newMappedPort.getExternalPort()
+                || !Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress())) {
+            try {
+                unmapPort(newMappedPort);
+            } catch (IllegalStateException ise) {
+                // do nothing
+            }
+            
+            throw new IllegalStateException("External IP/port changed from "
+                    + mappedPort.getExternalAddress() + ":" + mappedPort.getExternalPort()
+                    + " to "
+                    + newMappedPort.getExternalAddress() + ":" + newMappedPort.getExternalPort());
+        }
         
         return newMappedPort;
     }
