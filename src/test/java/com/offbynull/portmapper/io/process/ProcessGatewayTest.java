@@ -2,12 +2,9 @@ package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.BasicBus;
 import com.offbynull.portmapper.Bus;
-import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
-import com.offbynull.portmapper.io.process.internalmessages.CloseProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
-import com.offbynull.portmapper.io.process.internalmessages.IdentifiableErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
 import java.io.ByteArrayOutputStream;
@@ -15,8 +12,10 @@ import java.nio.charset.Charset;
 import java.util.concurrent.LinkedBlockingQueue;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("Not a stable test -- depends on OS and environment settings")
 public class ProcessGatewayTest {
 
     private ProcessGateway fixture;
