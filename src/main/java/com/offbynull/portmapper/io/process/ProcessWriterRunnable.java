@@ -62,8 +62,6 @@ final class ProcessWriterRunnable implements Runnable {
             }
         } catch (IOException | InterruptedException ioe) {
             // do nothing
-        } finally {
-            
         }
     }
     

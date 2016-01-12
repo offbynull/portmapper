@@ -54,7 +54,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
     private final boolean hasAddAnyPortMappingMethod;
     
     /**
-     * Constructs a {@link PortMapperUpnpIgdPortMapper} object
+     * Constructs a {@link PortMapperUpnpIgdPortMapper} object.
      * @param networkBus bus to network component
      * @param internalAddress local address accessing gateway device
      * @param controlUrl service control URL
@@ -211,7 +211,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         // attempt to map 5 times -- first attempt should be 3 tries to map the externalPort passed in... anything after that is 1 attempt
         // to map a randomized externalPort
-        long[] retryDurations = new long[] { 5000L, 5000L, 5000L };
+        long[] retryDurations = new long[] {5000L, 5000L, 5000L};
         for (int i = 0; i < 5; i++) {
             Protocol protocol;
             switch (portType) {

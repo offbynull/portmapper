@@ -48,7 +48,6 @@ import static com.offbynull.portmapper.pcp.InternalUtils.runCommandline;
 
 /**
  * A PCP {@link PortMapper} implementation.
- *
  * @author Kasra Faghihi
  */
 public final class PcpPortMapper implements PortMapper {
@@ -60,6 +59,18 @@ public final class PcpPortMapper implements PortMapper {
     private InetAddress gatewayAddress;
     private Random random;
 
+    /**
+     * Identify PCP devices on all interfaces.
+     * <p>
+     * Since PCP devices have no broadcast discovery mechanism, this method makes use of multiple OS-specific commands to try to find the
+     * addresses of gateways. This may change in the future -- see <a href="https://tools.ietf.org/html/draft-ietf-pcp-anycast-08">this RFC
+     * draft</a>.
+     * @param networkBus network bus
+     * @param processBus process bus
+     * @return set of found PCP devices
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws InterruptedException if interrupted
+     */
     public static Set<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);

@@ -116,12 +116,14 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         return leaseDurationRange;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "UpnpIgdPortMapper{" + "internalAddress=" + internalAddress + ", controlUrl=" + controlUrl + ", serverName=" + serverName
                 + ", serviceType=" + serviceType + ", externalPortRange=" + externalPortRange + ", leaseDurationRange=" + leaseDurationRange
                 + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 
     public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
         Validate.notNull(networkBus);
@@ -315,7 +317,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
 
         private URL baseUrl;
 
-        public RootUpnpIgdResponseCreator(URL baseUrl) {
+        private RootUpnpIgdResponseCreator(URL baseUrl) {
             this.baseUrl = baseUrl;
         }
 

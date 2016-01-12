@@ -55,8 +55,6 @@ final class ProcessReaderRunnable implements Runnable {
             }
         } catch (IOException ioe) {
             // do nothing
-        } finally {
-            
         }
     }
     

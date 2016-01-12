@@ -60,6 +60,19 @@ public final class NatPmpPortMapper implements PortMapper {
     private InetAddress internalAddress;
     private InetAddress gatewayAddress;
 
+    /**
+     * Identify NAT-PMP devices on all interfaces.
+     * <p>
+     * Since NAT-PMP devices have no broadcast discovery mechanism, this method makes use of multiple OS-specific commands to try to find
+     * the addresses of gateways. This may is unlikely to change in the future as this is a deprecated protocol. However, once
+     * <a href="https://tools.ietf.org/html/draft-ietf-pcp-anycast-08">this RFC draft</a> is implemented, PCP devices that implement that
+     * RFC + also support NAT-PMP may be discoverable via anycast/broadcast.
+     * @param networkBus network bus
+     * @param processBus process bus
+     * @return set of found PCP devices
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws InterruptedException if interrupted
+     */
     public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
