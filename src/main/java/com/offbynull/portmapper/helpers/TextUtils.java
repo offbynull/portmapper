@@ -66,7 +66,7 @@ public final class TextUtils {
     }
     
     /**
-     * Parsed host/port combination
+     * Parsed host/port combination.
      */
     public static final class ParsedHost {
         private final String host;

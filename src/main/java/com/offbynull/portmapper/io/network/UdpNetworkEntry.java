@@ -26,13 +26,13 @@ import java.util.LinkedList;
 final class UdpNetworkEntry extends NetworkEntry<AddressedByteBuffer> {
     private LinkedList<AddressedByteBuffer> outgoingBuffers;
 
-    public UdpNetworkEntry(int id, Channel channel, Bus responseBus) {
+    UdpNetworkEntry(int id, Channel channel, Bus responseBus) {
         super(id, channel, responseBus);
         outgoingBuffers = new LinkedList<>();
     }
 
     @Override
-    public LinkedList<AddressedByteBuffer> getOutgoingBuffers() {
+    LinkedList<AddressedByteBuffer> getOutgoingBuffers() {
         return outgoingBuffers;
     }
     
@@ -40,16 +40,16 @@ final class UdpNetworkEntry extends NetworkEntry<AddressedByteBuffer> {
         private ByteBuffer buffer;
         private InetSocketAddress socketAddres;
 
-        public AddressedByteBuffer(ByteBuffer buffer, InetSocketAddress socketAddres) {
+        AddressedByteBuffer(ByteBuffer buffer, InetSocketAddress socketAddres) {
             this.buffer = buffer;
             this.socketAddres = socketAddres;
         }
 
-        public ByteBuffer getBuffer() {
+        ByteBuffer getBuffer() {
             return buffer;
         }
 
-        public InetSocketAddress getSocketAddress() {
+        InetSocketAddress getSocketAddress() {
             return socketAddres;
         }
         

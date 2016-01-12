@@ -21,6 +21,9 @@
  * <li>http://upnp.org/specs/gw/igd1</li>
  * <li>http://upnp.org/specs/gw/igd2</li>
  * <li>http://www.upnp-hacks.org/upnp.html</li>
+ * <li>https://tools.ietf.org/html/draft-goland-http-udp-00</li>
+ * <li>http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt</li>
  * </ul>
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.upnpigd;

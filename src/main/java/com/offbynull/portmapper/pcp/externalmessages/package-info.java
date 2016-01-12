@@ -16,6 +16,7 @@
  */
 
 /**
- * PCP messages.
+ * Messages to interface with PCP devices.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.pcp.externalmessages;

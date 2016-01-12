@@ -4,16 +4,16 @@ final class TerminatedMessage {
     private int id;
     private Integer exitCode;
 
-    public TerminatedMessage(int id, Integer exitCode) {
+    TerminatedMessage(int id, Integer exitCode) { // exitcode may be null
         this.id = id;
         this.exitCode = exitCode;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 
-    public Integer getExitCode() {
+    Integer getExitCode() {
         return exitCode;
     }
 

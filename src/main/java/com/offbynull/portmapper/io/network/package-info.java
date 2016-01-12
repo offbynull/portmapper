@@ -17,5 +17,6 @@
 
 /**
  * Network IO gateway.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.io.network;

@@ -16,18 +16,22 @@
  */
 package com.offbynull.portmapper.io.network;
 
+import com.offbynull.portmapper.Gateway;
 import com.offbynull.portmapper.Bus;
 
 /**
  * Network communication gateway.
- *
  * @author Kasra Faghihi
  */
-public final class NetworkGateway {
+public final class NetworkGateway implements Gateway {
 
     private NetworkRunnable runnable;
     private Thread thread;
-    
+
+    /**
+     * Creates a {@link NetworkGateway} object.
+     * @return new {@link NetworkGateway}
+     */
     public static NetworkGateway create() {
         NetworkGateway ng = new NetworkGateway();
         
@@ -44,11 +48,13 @@ public final class NetworkGateway {
     private NetworkGateway() {
         // do nothing
     }
-    
+
+    @Override
     public Bus getBus() {
         return runnable.getBus();
     }
     
+    @Override
     public void join() throws InterruptedException {
         thread.join();
     }

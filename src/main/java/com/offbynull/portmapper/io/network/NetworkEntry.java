@@ -28,7 +28,7 @@ abstract class NetworkEntry<B> {
     private int selectionKey;
     private boolean notifiedOfWritable;
     
-    public NetworkEntry(int id, Channel channel, Bus responseBus) {
+    NetworkEntry(int id, Channel channel, Bus responseBus) {
         Validate.notNull(channel);
         Validate.notNull(responseBus);
         
@@ -39,33 +39,33 @@ abstract class NetworkEntry<B> {
         this.notifiedOfWritable = false;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 
-    public Bus getResponseBus() {
+    Bus getResponseBus() {
         return responseBus;
     }
 
-    public Channel getChannel() {
+    Channel getChannel() {
         return channel;
     }
 
-    public int getSelectionKey() {
+    int getSelectionKey() {
         return selectionKey;
     }
 
-    public void setSelectionKey(int selectionKey) {
+    void setSelectionKey(int selectionKey) {
         this.selectionKey = selectionKey;
     }
 
-    public boolean isNotifiedOfWritable() {
+    boolean isNotifiedOfWritable() {
         return notifiedOfWritable;
     }
 
-    public void setNotifiedOfWritable(boolean notifiedOfWritable) {
+    void setNotifiedOfWritable(boolean notifiedOfWritable) {
         this.notifiedOfWritable = notifiedOfWritable;
     }
     
-    public abstract LinkedList<B> getOutgoingBuffers();
+    abstract LinkedList<B> getOutgoingBuffers();
 }

@@ -21,11 +21,11 @@ final class WriteEmptyMessage {
 
     private int id;
     
-    public WriteEmptyMessage(int id) {
+    WriteEmptyMessage(int id) {
         this.id = id;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 

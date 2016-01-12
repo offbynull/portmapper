@@ -30,7 +30,7 @@ final class ProcessReaderRunnable implements Runnable {
     private final Bus processBus;
     private final ReadType readType;
 
-    public ProcessReaderRunnable(int id, InputStream inputStream, Bus processBus, ReadType readType) {
+    ProcessReaderRunnable(int id, InputStream inputStream, Bus processBus, ReadType readType) {
         Validate.notNull(inputStream);
         Validate.notNull(processBus);
         Validate.notNull(readType);

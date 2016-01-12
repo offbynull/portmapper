@@ -26,7 +26,7 @@ final class ProcessMonitorRunnable implements Runnable {
     private final Process process;
     private final Bus processBus;
 
-    public ProcessMonitorRunnable(int id, Process process, Bus processBus) {
+    ProcessMonitorRunnable(int id, Process process, Bus processBus) {
         Validate.notNull(process);
         Validate.notNull(processBus);
         

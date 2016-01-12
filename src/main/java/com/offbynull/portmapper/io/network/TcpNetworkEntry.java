@@ -25,7 +25,7 @@ final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
     private boolean connecting = true;
     private LinkedList<ByteBuffer> outgoingBuffers;
 
-    public TcpNetworkEntry(int id, Channel channel, Bus responseBus) {
+    TcpNetworkEntry(int id, Channel channel, Bus responseBus) {
         super(id, channel, responseBus);
         outgoingBuffers = new LinkedList<>();
     }
@@ -35,11 +35,11 @@ final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
         return outgoingBuffers;
     }
 
-    public boolean isConnecting() {
+    boolean isConnecting() {
         return connecting;
     }
 
-    public void setConnecting(boolean connecting) {
+    void setConnecting(boolean connecting) {
         this.connecting = connecting;
     }
     

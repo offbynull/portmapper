@@ -16,6 +16,15 @@
  */
 package com.offbynull.portmapper;
 
+/**
+ * A bus.
+ * @author Kasra Faghihi
+ */
 public interface Bus {
+    /**
+     * Send a message to this bus.
+     * @param msg message to send
+     * @throws NullPointerException if any argument is {@code null}
+     */
     void send(Object msg);
 }

@@ -27,22 +27,22 @@ final class ReadMessage {
     private byte[] data;
     private ReadType readType;
     
-    public ReadMessage(int id, byte[] data, ReadType readType) {
+    ReadMessage(int id, byte[] data, ReadType readType) {
         Validate.notNull(data);
         this.id = id;
         this.data = Arrays.copyOf(data, data.length);
         this.readType = readType;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 
-    public byte[] getData() {
+    byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
 
-    public ReadType getReadType() {
+    ReadType getReadType() {
         return readType;
     }
 

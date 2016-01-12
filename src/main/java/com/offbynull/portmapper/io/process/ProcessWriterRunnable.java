@@ -33,7 +33,7 @@ final class ProcessWriterRunnable implements Runnable {
     private final Bus localInputBus;
     private final Bus processBus;
 
-    public ProcessWriterRunnable(int id, OutputStream outputStream, Bus processBus) {
+    ProcessWriterRunnable(int id, OutputStream outputStream, Bus processBus) {
         Validate.notNull(outputStream);
         Validate.notNull(processBus);
         
@@ -44,7 +44,7 @@ final class ProcessWriterRunnable implements Runnable {
         this.processBus = processBus;
     }
 
-    public Bus getLocalInputBus() {
+    Bus getLocalInputBus() {
         return localInputBus;
     }
     

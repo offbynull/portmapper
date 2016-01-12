@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2013-2016, Kasra Faghihi, All rights reserved.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.
+ */
 package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.Bus;
@@ -14,7 +30,7 @@ final class ProcessEntry {
     private final Thread stderrThread;
     private final Bus stdinBus;
 
-    public ProcessEntry(Process process, Thread exitThread, Thread stdinThread, Thread stdoutThread, Thread stderrThread, Bus stdinBus,
+    ProcessEntry(Process process, Thread exitThread, Thread stdinThread, Thread stdoutThread, Thread stderrThread, Bus stdinBus,
             int id, Bus responseBus) {
         Validate.notNull(responseBus);
         Validate.notNull(process);
@@ -33,35 +49,35 @@ final class ProcessEntry {
         this.stdinBus = stdinBus;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 
-    public Bus getResponseBus() {
+    Bus getResponseBus() {
         return responseBus;
     }
 
-    public Process getProcess() {
+    Process getProcess() {
         return process;
     }
 
-    public Thread getExitThread() {
+    Thread getExitThread() {
         return exitThread;
     }
 
-    public Thread getStdinThread() {
+    Thread getStdinThread() {
         return stdinThread;
     }
 
-    public Thread getStdoutThread() {
+    Thread getStdoutThread() {
         return stdoutThread;
     }
 
-    public Thread getStderrThread() {
+    Thread getStderrThread() {
         return stderrThread;
     }
 
-    public Bus getStdinBus() {
+    Bus getStdinBus() {
         return stdinBus;
     }
 }

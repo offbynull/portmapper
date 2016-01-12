@@ -16,6 +16,8 @@
  */
 
 /**
- * PCP client implementation. For more information on NAT-PMP, visit http://tools.ietf.org/html/rfc6887.
+ * PCP client implementation. Does not support unsolicited ANNOUNCEs. For more information on NAT-PMP, visit
+ * http://tools.ietf.org/html/rfc6887.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.pcp;

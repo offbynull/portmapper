@@ -16,6 +16,7 @@
  */
 
 /**
- * NAT-PMP messages.
+ * Messages to interface with NAT-PMP devices.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.natpmp.externalmessages;

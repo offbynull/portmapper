@@ -14,28 +14,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.io.network;
+package com.offbynull.portmapper;
 
-import com.offbynull.portmapper.Bus;
-import java.nio.channels.Selector;
-import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.commons.lang3.Validate;
+/**
+ * A gateway.
+ * @author Kasra Faghihi
+ */
+public interface Gateway {
 
-final class NetworkBus implements Bus {
-    private Selector selector;
-    private LinkedBlockingQueue<Object> queue;
+    /**
+     * Get the bus used to send messages to this gateway.
+     * @return bus to send messages to this gateway
+     */
+    Bus getBus();
 
-    NetworkBus(Selector selector, LinkedBlockingQueue<Object> queue) {
-        Validate.notNull(selector);
-        Validate.notNull(queue);
-        this.selector = selector;
-        this.queue = queue;
-    }
-
-    @Override
-    public void send(Object msg) {
-        Validate.notNull(msg);
-        queue.add(msg);
-        selector.wakeup();
-    }
+    /**
+     * Waits until this gateway dies.
+     * @throws InterruptedException if interrupted
+     */
+    void join() throws InterruptedException;
+    
 }

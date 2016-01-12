@@ -29,7 +29,13 @@ import org.apache.commons.lang3.Validate;
  */
 public final class NetworkUtils {
 
+    /**
+     * An address that represents an all zero IPv6 address (::).
+     */
     public static final InetAddress ZERO_IPV6;
+    /**
+     * An address that represents an all zero IPv4 address (0.0.0.0).
+     */
     public static final InetAddress ZERO_IPV4;
     static {
         try {

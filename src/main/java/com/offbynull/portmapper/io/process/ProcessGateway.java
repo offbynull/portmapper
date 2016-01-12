@@ -17,17 +17,21 @@
 package com.offbynull.portmapper.io.process;
 
 import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.Gateway;
 
 /**
- * Network communication gateway.
- *
+ * Process gateway.
  * @author Kasra Faghihi
  */
-public final class ProcessGateway {
+public final class ProcessGateway implements Gateway {
 
     private ProcessRunnable runnable;
     private Thread thread;
     
+    /**
+     * Creates a {@link ProcessGateway} object.
+     * @return new {@link ProcessGateway}
+     */
     public static ProcessGateway create() {
         ProcessGateway pg = new ProcessGateway();
         
@@ -45,10 +49,12 @@ public final class ProcessGateway {
         // do nothing
     }
     
+    @Override
     public Bus getBus() {
         return runnable.getBus();
     }
     
+    @Override
     public void join() throws InterruptedException {
         thread.join();
     }

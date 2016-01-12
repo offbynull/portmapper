@@ -18,5 +18,6 @@
 /**
  * NAT-PMP client implementation. For more information on NAT-PMP, visit http://miniupnp.free.fr/nat-pmp.html or
  * http://tools.ietf.org/html/rfc6886.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.natpmp;

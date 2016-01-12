@@ -66,7 +66,7 @@ final class NetworkRunnable implements Runnable {
     private final Selector selector;
     private int nextId = 0;
 
-    public NetworkRunnable() {
+    NetworkRunnable() {
         try {
             selector = Selector.open();
         } catch (IOException ioe) {
@@ -274,7 +274,7 @@ final class NetworkRunnable implements Runnable {
             } catch (RuntimeException re) {
                 responseBus.send(new ErrorNetworkResponse());
             }
-        }else if (msg instanceof CloseNetworkRequest) {
+        } else if (msg instanceof CloseNetworkRequest) {
             CloseNetworkRequest req = (CloseNetworkRequest) msg;
             Bus responseBus = null;
             int id = req.getId();

@@ -19,10 +19,20 @@ package com.offbynull.portmapper;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * A bus that's backed by a {@link LinkedBlockingQueue}.
+ * @author Kasra Faghihi
+ */
 public final class BasicBus implements Bus {
     private LinkedBlockingQueue<Object> queue;
 
+    /**
+     * Constructs a {@link BasicBus} object.
+     * @param queue internal queue to use for this bus
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public BasicBus(LinkedBlockingQueue<Object> queue) {
+        Validate.notNull(queue);
         this.queue = queue;
     }
 

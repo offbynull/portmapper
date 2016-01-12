@@ -16,11 +16,7 @@
  */
 
 /**
- * UPNP-IGD messages.
- * <p>
- * https://tools.ietf.org/html/draft-goland-http-udp-00<br/>
- * http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt<br/>
- * http://upnp.org/specs/gw/igd1<br/>
- * http://upnp.org/specs/gw/igd2
+ * Messages to interface with UPnP-IGD devices.
+ * @author Kasra Faghihi
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;

@@ -45,7 +45,7 @@ final class ProcessRunnable implements Runnable {
     private final LinkedBlockingQueue<Object> queue;
     private int nextId = 0;
 
-    public ProcessRunnable() {
+    ProcessRunnable() {
         queue = new LinkedBlockingQueue<>();
         bus = new BasicBus(queue);
     }
