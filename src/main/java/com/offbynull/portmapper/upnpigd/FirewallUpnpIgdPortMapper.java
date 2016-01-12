@@ -46,7 +46,7 @@ import org.apache.commons.lang3.Validate;
 public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     /**
-     * Constructs a {@link FirewallUpnpIgdPortMapper} object
+     * Constructs a {@link FirewallUpnpIgdPortMapper} object.
      * @param networkBus bus to network component
      * @param internalAddress local address accessing gateway device
      * @param controlUrl service control URL
@@ -77,7 +77,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
         // attempt to map 5 times -- first attempt should be 3 tries to map the externalPort passed in... anything after that is 1 attempt
         // to map a randomized externalPort
-        long[] retryDurations = new long[] { 5000L, 5000L, 5000L };
+        long[] retryDurations = new long[] {5000L, 5000L, 5000L};
         for (int i = 0; i < 5; i++) {
             Protocol protocol;
             switch (portType) {
@@ -136,7 +136,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
             }
             
             // choose another external port for next try -- next try only make 1 attempt
-            retryDurations = new long[] { 5000L };
+            retryDurations = new long[] {5000L};
             externalPort = RandomUtils.nextInt(
                     externalPortRange.getMinimum().intValue(), // should never be < 1
                     externalPortRange.getMaximum().intValue() + 1); // should never be > 65535

@@ -137,6 +137,7 @@ public abstract class UpnpIgdHttpResponse {
         return content;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 7;
@@ -169,5 +170,5 @@ public abstract class UpnpIgdHttpResponse {
         }
         return true;
     }
-    
+    // CHECKSTYLE:ON:DesignForExtension
 }

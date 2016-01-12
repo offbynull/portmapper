@@ -88,30 +88,58 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         this.leaseDurationRange = leaseDurationRange;
     }
 
+    /**
+     * Get network bus.
+     * @return network bus
+     */
     protected final Bus getNetworkBus() {
         return networkBus;
     }
 
+    /**
+     * Get local address used to interface with the UPnP-IGD device.
+     * @return local address
+     */
     protected final InetAddress getInternalAddress() {
         return internalAddress;
     }
 
+    /**
+     * Get control URL.
+     * @return control URL
+     */
     protected final URL getControlUrl() {
         return controlUrl;
     }
 
+    /**
+     * Get server name.
+     * @return server name (may be {@code null})
+     */
     protected final String getServerName() {
         return serverName;
     }
 
+    /**
+     * Get service type.
+     * @return service type
+     */
     protected final String getServiceType() {
         return serviceType;
     }
 
+    /**
+     * Get external port mapping range.
+     * @return external port mapping range
+     */
     protected final Range<Long> getExternalPortRange() {
         return externalPortRange;
     }
 
+    /**
+     * Get lease duration range.
+     * @return lease duration range
+     */
     protected final Range<Long> getLeaseDurationRange() {
         return leaseDurationRange;
     }

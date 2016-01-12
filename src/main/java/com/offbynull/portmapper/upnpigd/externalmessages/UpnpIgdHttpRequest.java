@@ -90,6 +90,7 @@ public abstract class UpnpIgdHttpRequest {
         }
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = 5;

@@ -102,6 +102,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         return null;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         int hash = super.hashCode();
@@ -129,5 +130,6 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
     
 }

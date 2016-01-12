@@ -98,6 +98,7 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         return sb.toString();
     }
     
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -120,4 +121,5 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         }
         return true;
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }
