@@ -97,6 +97,13 @@ public final class PcpPortMapper implements PortMapper {
                 if (!sourceAddress.getClass().equals(gatewayAddress.getClass())) {
                     continue;
                 }
+                
+                // avoid sending anything to 127.x.x.x or ::1, these are loopback addresses and cause the socket to throw an IOException on
+                // send for whatever reason when we try to send to it -- which in turn causes the socket to close and none of the other
+                // messages will get sent
+                if (gatewayAddress.isLoopbackAddress()) {
+                    continue;
+                }
 
                 UdpRequest udpReq = new UdpRequest();
                 udpReq.sourceAddress = sourceAddress;
@@ -123,7 +130,7 @@ public final class PcpPortMapper implements PortMapper {
             }
         }
         
-        performUdpRequests(networkBus, udpReqs, 3000L, 3000L, 3000L, 3000L, 3000L); // don't do standard natpmp/pcp retries -- just
+        performUdpRequests(networkBus, udpReqs, 1000L, 1000L, 1000L, 1000L, 1000L); // don't do standard natpmp/pcp retries -- just
                                                                                     // attempting to discover
         
         

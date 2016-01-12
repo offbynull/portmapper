@@ -18,6 +18,8 @@ package com.offbynull.portmapper.natpmp;
 
 import com.offbynull.portmapper.BasicBus;
 import com.offbynull.portmapper.Bus;
+import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
+import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResponse;
@@ -45,6 +47,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +57,9 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.lang3.Validate;
 
@@ -314,7 +319,6 @@ final class InternalUtils {
         return localIpsResp.getLocalAddresses();
     }
     
-
     static Set<String> runCommandline(Bus processBus, RunProcessRequest ... reqs) throws InterruptedException {
 
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
@@ -384,7 +388,6 @@ final class InternalUtils {
         return ret;
     }
     
-    
 
     static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, long ... attemptDurations)
             throws InterruptedException {
@@ -394,13 +397,13 @@ final class InternalUtils {
 
         
         // Get unique source addresses and create socket for each one
-        BidiMap<InetAddress, Integer> addressToId = new DualHashBidiMap<>(); // source address to socket id
-        BidiMap<Integer, UdpRequest> idToRequest = new DualHashBidiMap<>(); // source address to socket id
+        BidiMap<InetAddress, Integer> addressToSocketId = new DualHashBidiMap<>(); // source address to socket id
+        MultiValuedMap<Integer, UdpRequest> socketIdToRequests = new ArrayListValuedHashMap<>(); // source address to requests
 
         long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
         next:
         for (UdpRequest req : reqs) {
-            if (addressToId.containsKey(req.sourceAddress)) {
+            if (addressToSocketId.containsKey(req.sourceAddress)) {
                 continue;
             }
 
@@ -424,26 +427,35 @@ final class InternalUtils {
             }
 
             int id = ((CreateUdpNetworkResponse) createResp).getId();
-            addressToId.put(req.sourceAddress, id);
-            idToRequest.put(id, req);
+            addressToSocketId.put(req.sourceAddress, id);
+        }
+        
+        
+        
+        // Queue up requests to send out
+        for (UdpRequest req : reqs) {
+            int id = addressToSocketId.get(req.sourceAddress);
+            if (req.destinationSocketAddress.getAddress().equals(ZERO_IPV4)
+                    || req.destinationSocketAddress.getAddress().equals(ZERO_IPV6)) {
+                // skip if 0.0.0.0 or :: -- seems to cause a socketexception if you try to send to these addresses, which in turn causes the
+                // networkgateway to close the socket
+                continue;
+            }
+            
+            socketIdToRequests.put(id, req);
         }
 
-        
+
         // Send requests
         Queue<Long> remainingAttemptDurations = new LinkedList<>();
         for (long attemptDuration : attemptDurations) {
             remainingAttemptDurations.add(attemptDuration);
         }
-        while (!idToRequest.isEmpty() && !remainingAttemptDurations.isEmpty()) {
+        while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
             // Send requests to whoever hasn't responded yet
-            for (UdpRequest req : idToRequest.values()) {
-                int id = addressToId.get(req.sourceAddress);
-
-                try {
-                    networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
-                } catch (RuntimeException re) {
-                    // do nothing -- just skip
-                }
+            for (UdpRequest req : socketIdToRequests.values()) {
+                int id = addressToSocketId.get(req.sourceAddress);
+                networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
             }
 
             // Wait for responses
@@ -467,30 +479,28 @@ final class InternalUtils {
                 ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
                 int id = readNetResp.getId();
 
-                UdpRequest req = idToRequest.get(id);
-                if (req == null) {
-                    // a secondary response came in after the first one was already processed, so skip
-                    continue;
-                }
-
-                // leave this out for now
-//                if (!req.destinationSocketAddress.equals(readNetResp.getSocketAddress())) {
-//                    // skip if we're recving from someone other than who we sent to
-//                    continue;
-//                }
-                byte[] respData = readNetResp.getData();
-                try {
-                    req.respMsg = req.respCreator.create(respData);
-                    idToRequest.remove(id);
-                } catch (RuntimeException e) {
-                    // do nothing
+                InetSocketAddress remoteSocketAddress = readNetResp.getRemoteAddress();
+                Iterator<UdpRequest> it = socketIdToRequests.get(id).iterator();
+                while (it.hasNext()) {
+                    UdpRequest pendingReq = it.next();
+                    if (pendingReq.destinationSocketAddress.equals(remoteSocketAddress)) {
+                        byte[] respData = readNetResp.getData();
+                        try {
+                            pendingReq.respMsg = pendingReq.respCreator.create(respData);
+                            it.remove();
+                        } catch (RuntimeException e) {
+                            // do nothing
+                        }
+                        
+                        break;
+                    }
                 }
             }
         }
 
         
         // Destroy UDP sockets
-        for (int id : addressToId.values()) {
+        for (int id : addressToSocketId.values()) {
             networkBus.send(new CloseNetworkRequest(id));
         }
     }

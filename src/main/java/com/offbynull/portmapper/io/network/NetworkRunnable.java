@@ -108,7 +108,6 @@ final class NetworkRunnable implements Runnable {
                         }
                         updateSelectionKey(entry, (AbstractSelectableChannel) channel);
                     } catch (SocketException | RuntimeException e) {
-                        e.printStackTrace();
                         shutdownResource(channel);
                     }
                 }
@@ -208,7 +207,6 @@ final class NetworkRunnable implements Runnable {
             if (!outBuffers.isEmpty()) {
                 // if not empty
                 UdpNetworkEntry.AddressedByteBuffer outBuffer = outBuffers.removeFirst();
-                System.out.println(channel.getLocalAddress() + " " + outBuffer.getSocketAddress());
                 int writeCount = channel.send(outBuffer.getBuffer(), outBuffer.getSocketAddress());
                 Object writeResp = new WriteUdpNetworkResponse(id, writeCount);
                 responseBus.send(writeResp);
@@ -249,14 +247,12 @@ final class NetworkRunnable implements Runnable {
                 channel.configureBlocking(false);
                 channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
                 int id = nextId++;
-                System.out.println(id + "binding to " + req.getSourceAddress());
                 UdpNetworkEntry entry = new UdpNetworkEntry(id, channel, responseBus);
                 idMap.put(id, entry);
                 channelMap.put(channel, entry);
                 responseBus.send(new CreateUdpNetworkResponse(id));
                 updateSelectionKey(entry, channel);
             } catch (RuntimeException re) {
-                re.printStackTrace();
                 responseBus.send(new ErrorNetworkResponse());
             }
         } else if (msg instanceof CreateTcpNetworkRequest) {
@@ -276,7 +272,6 @@ final class NetworkRunnable implements Runnable {
                 updateSelectionKey(entry, channel);
                 responseBus.send(new CreateTcpNetworkResponse(id));
             } catch (RuntimeException re) {
-                re.printStackTrace();
                 responseBus.send(new ErrorNetworkResponse());
             }
         }else if (msg instanceof CloseNetworkRequest) {
@@ -292,7 +287,6 @@ final class NetworkRunnable implements Runnable {
                 channel.close();
                 responseBus.send(new CloseNetworkResponse(id));
             } catch (RuntimeException re) {
-                re.printStackTrace();
                 if (responseBus != null) {
                     responseBus.send(new IdentifiableErrorNetworkResponse(id));
                 }
@@ -313,7 +307,6 @@ final class NetworkRunnable implements Runnable {
                 AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
                 updateSelectionKey(entry, channel);
             } catch (RuntimeException re) {
-                re.printStackTrace();
                 if (responseBus != null) {
                     responseBus.send(new IdentifiableErrorNetworkResponse(id));
                 }
@@ -332,7 +325,6 @@ final class NetworkRunnable implements Runnable {
                 AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
                 updateSelectionKey(entry, channel);
             } catch (RuntimeException re) {
-//                re.printStackTrace();
                 if (responseBus != null) {
                     responseBus.send(new IdentifiableErrorNetworkResponse(id));
                 }
@@ -355,7 +347,6 @@ final class NetworkRunnable implements Runnable {
                 }
                 responseBus.send(new GetLocalIpAddressesNetworkResponse(ret));
             } catch (RuntimeException re) {
-                re.printStackTrace();
                 if (responseBus != null) {
                     responseBus.send(new ErrorNetworkResponse());
                 }

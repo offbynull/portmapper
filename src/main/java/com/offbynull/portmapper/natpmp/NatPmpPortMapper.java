@@ -93,6 +93,18 @@ public final class NatPmpPortMapper implements PortMapper {
         Set<InetAddress> sourceAddresses = getLocalIpAddresses(networkBus);
         for (InetAddress sourceAddress : sourceAddresses) {
             for (InetAddress gatewayAddress : potentialGatewayAddresses) {
+                // both addresses must be ipv4 or both address must be ipv6
+                if (!sourceAddress.getClass().equals(gatewayAddress.getClass())) {
+                    continue;
+                }
+                
+                // avoid sending anything to 127.x.x.x or ::1, these are loopback addresses and cause the socket to throw an IOException on
+                // send for whatever reason when we try to send to it -- which in turn causes the socket to close and none of the other
+                // messages will get sent
+                if (gatewayAddress.isLoopbackAddress()) {
+                    continue;
+                }
+
                 UdpRequest udpReq = new UdpRequest();
                 udpReq.sourceAddress = sourceAddress;
                 udpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);

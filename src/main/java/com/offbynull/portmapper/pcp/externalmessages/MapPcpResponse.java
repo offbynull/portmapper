@@ -130,8 +130,8 @@ public final class MapPcpResponse extends PcpResponse {
      * {@code assignedExternalPort} field, or if there were problems parsing options
      * @throws IllegalArgumentException if any numeric argument is negative, or if {@code buffer} isn't the right size (max of 1100 bytes)
      * or is malformed ({@code r-flag != 1 || op != 1 || 0L > lifetime > 0xFFFFFFFFL || mappingNonce.length != 12 || 0 > protocol > 255
-     * || 0 > internalPort > 65535  || (resultCode == 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort > 65535)}) or contains
-     * an unparseable options region.
+     * || 0 > internalPort > 65535  || (resultCode == 0 && lifetime != 0 ? 1 > assignedExternalPort > 65535 : 0 > assignedExternalPort >
+     * 65535)}) or contains an unparseable options region.
      */
     public MapPcpResponse(byte[] buffer) {
         super(buffer, DATA_LENGTH);
@@ -167,8 +167,9 @@ public final class MapPcpResponse extends PcpResponse {
         Validate.inclusiveBetween(0, 255, protocol); // copied from the request, see javadoc for request to see what 0 means
         Validate.inclusiveBetween(0, 65535, internalPort); // copied from the request, see javadoc for request to see what 0 means...
                                                            // 0 is valid in certain cases, but those cases can't be checked here.
-        if (getResultCode() == 0) {
+        if (getResultCode() == 0 && getLifetime() != 0L) { // lifetime of 0 meeans delete
             Validate.inclusiveBetween(1, 65535, assignedExternalPort); // on success, this is the assigned external port for the mapping
+                                                                       // ... which must be between 1 and 65535 (unless its a delete)
         } else {
             Validate.inclusiveBetween(0, 65535, assignedExternalPort); // on error, 'suggested external port' copied from request (can be 0)
         }
