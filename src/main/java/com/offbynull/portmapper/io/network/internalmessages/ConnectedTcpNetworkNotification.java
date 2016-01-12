@@ -16,9 +16,17 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
-public final class ConnectedTcpNetworkResponse extends IdentifiableNetworkResponse {
+/**
+ * Connected a TCP socket. Occurs shortly after a TCP socket has been created.
+ * @author Kasra Faghihi
+ */
+public final class ConnectedTcpNetworkNotification extends IdentifiableNetworkNotification {
 
-    public ConnectedTcpNetworkResponse(int id) {
+    /**
+     * Constructs a {@link ConnectedTcpNetworkNotification}.
+     * @param id id of socket
+     */
+    public ConnectedTcpNetworkNotification(int id) {
         super(id);
     }
 }

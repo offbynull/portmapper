@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Created a UDP socket. Successful response to {@link CreateUdpNetworkResponse}.
+ * @author Kasra Faghihi
+ */
 public final class CreateUdpNetworkResponse extends IdentifiableNetworkResponse {
 
+    /**
+     * Constructs a {@link CreateUdpNetworkResponse}.
+     * @param id id of socket
+     */
     public CreateUdpNetworkResponse(int id) {
         super(id);
     }

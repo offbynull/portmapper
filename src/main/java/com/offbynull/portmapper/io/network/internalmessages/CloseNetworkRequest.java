@@ -16,15 +16,18 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
-public final class CloseNetworkRequest implements NetworkRequest {
-    private int id;
+/**
+ * Close a socket. Possible responses are {@link CloseNetworkRequest} and {@link IdentifiableErrorNetworkResponse}).
+ * @author Kasra Faghihi
+ */
+public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
 
+    /**
+     * Constructs a {@link CloseNetworkRequest}.
+     * @param id socket id
+     */
     public CloseNetworkRequest(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
+        super(id);
     }
 
 }

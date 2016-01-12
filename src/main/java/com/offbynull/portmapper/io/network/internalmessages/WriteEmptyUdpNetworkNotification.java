@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Write buffer for UDP socket is empty.
+ * @author Kasra Faghihi
+ */
 public final class WriteEmptyUdpNetworkNotification extends IdentifiableNetworkNotification {
 
+    /**
+     * Constructs a {@link WriteEmptyUdpNetworkNotification} object.
+     * @param id socket id
+     */
     public WriteEmptyUdpNetworkNotification(int id) {
         super(id);
     }

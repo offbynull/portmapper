@@ -17,15 +17,31 @@
 package com.offbynull.portmapper.io.network.internalmessages;
 
 import java.util.Arrays;
+import org.apache.commons.lang3.Validate;
 
+/**
+ * Send data to a TCP socket. Possible responses are {@link WriteTcpNetworkResponse} and {@link IdentifiableErrorNetworkResponse}).
+ * @author Kasra Faghihi
+ */
 public final class WriteTcpNetworkRequest extends IdentifiableNetworkRequest {
     private byte[] data;
 
+    /**
+     * Constructs a {@link WriteTcpNetworkRequest} object.
+     * @param id socket id
+     * @param data send data
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public WriteTcpNetworkRequest(int id, byte[] data) {
         super(id);
+        Validate.notNull(data);
         this.data = Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Get send data.
+     * @return send data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }

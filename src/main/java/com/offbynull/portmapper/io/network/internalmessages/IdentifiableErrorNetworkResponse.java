@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Error message associated with a socket. Once received, it means the socket associated with this ID is dead (no longer usable).
+ * @author Kasra Faghihi
+ */
 public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkResponse {
 
+    /**
+     * Constructs a {@link IdentifiableErrorNetworkResponse} object.
+     * @param id socket id
+     */
     public IdentifiableErrorNetworkResponse(int id) {
         super(id);
     }

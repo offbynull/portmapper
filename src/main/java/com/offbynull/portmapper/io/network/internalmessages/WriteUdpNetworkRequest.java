@@ -18,28 +18,50 @@ package com.offbynull.portmapper.io.network.internalmessages;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import org.apache.commons.lang3.Validate;
 
+/**
+ * Send packet to a UDP socket. Possible responses are {@link WriteUdpNetworkResponse} and {@link IdentifiableErrorNetworkResponse}).
+ * @author Kasra Faghihi
+ */
 public final class WriteUdpNetworkRequest extends IdentifiableNetworkRequest {
-    private InetSocketAddress outgoingSocketAddress;
+    private InetSocketAddress remoteAddress;
     private byte[] data;
 
-    public WriteUdpNetworkRequest(int id, InetSocketAddress outgoingSocketAddress, byte[] data) {
+    /**
+     * Constructs a {@link WriteUdpNetworkRequest} object.
+     * @param id socket id
+     * @param remoteAddress outgoing socket address
+     * @param data send data
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public WriteUdpNetworkRequest(int id, InetSocketAddress remoteAddress, byte[] data) {
         super(id);
-        this.outgoingSocketAddress = outgoingSocketAddress;
+        Validate.notNull(remoteAddress);
+        Validate.notNull(data);
+        this.remoteAddress = remoteAddress;
         this.data = Arrays.copyOf(data, data.length);
     }
 
-    public InetSocketAddress getOutgoingSocketAddress() {
-        return outgoingSocketAddress;
+    /**
+     * Get remote address.
+     * @return remote address
+     */
+    public InetSocketAddress getRemoteAddress() {
+        return remoteAddress;
     }
 
+    /**
+     * Get send packet.
+     * @return send packet
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
 
     @Override
     public String toString() {
-        return "WriteUdpNetworkRequest{" + "outgoingSocketAddress=" + outgoingSocketAddress + ", data=" + data + '}';
+        return "WriteUdpNetworkRequest{" + "remoteAddress=" + remoteAddress + ", data=" + data + '}';
     }
 
 }

@@ -18,14 +18,28 @@ package com.offbynull.portmapper.io.network.internalmessages;
 
 import java.util.Arrays;
 
+/**
+ * TCP socket has received data.
+ * @author Kasra Faghihi
+ */
 public final class ReadTcpNetworkNotification extends IdentifiableNetworkNotification {
     private byte[] data;
 
+    /**
+     * Constructs a {@link ReadTcpNetworkNotification} object.
+     * @param id socket id
+     * @param data received data
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public ReadTcpNetworkNotification(int id, byte[] data) {
         super(id);
         this.data = Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Get data.
+     * @return data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }

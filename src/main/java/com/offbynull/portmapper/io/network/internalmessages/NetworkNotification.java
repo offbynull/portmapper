@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Network notification marker.
+ * @author Kasra Faghihi
+ */
 public interface NetworkNotification {
     
 }

@@ -16,15 +16,23 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Request associated with a socket.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableNetworkRequest {
     
     private int id;
 
-    public IdentifiableNetworkRequest(int id) {
+    IdentifiableNetworkRequest(int id) {
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get socket id.
+     * @return socket id
+     */
+    public final int getId() {
         return id;
     }
 

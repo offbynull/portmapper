@@ -16,6 +16,11 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Kill the network gateway. There is no response to this message, the network gateway closes all sockets and shuts down after receiving
+ * this message.
+ * @author Kasra Faghihi
+ */
 public final class KillNetworkRequest implements NetworkRequest {
     
 }

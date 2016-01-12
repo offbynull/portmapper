@@ -16,6 +16,11 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Non-identifiable error response when. Error response to {@link CreateTcpNetworkRequest}, {@link CreateUdpNetworkRequest}, or
+ * {@link GetLocalIpAddressesNetworkRequest}.
+ * @author Kasra Faghihi
+ */
 public final class ErrorNetworkResponse implements NetworkResponse {
 
 }

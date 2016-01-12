@@ -20,10 +20,21 @@ import com.offbynull.portmapper.Bus;
 import java.net.InetAddress;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Create a UDP socket. Possible responses are {@link CreateUdpNetworkRequest} and {@link IdentifiableErrorNetworkResponse}). Shortly after
+ * creation, the socket will connect and a {@link ConnectedUdpNetworkNotification} will be sent out to the creator.
+ * @author Kasra Faghihi
+ */
 public final class CreateUdpNetworkRequest implements NetworkRequest {
     private Bus responseBus;
     private InetAddress sourceAddress;
 
+    /**
+     * Constructs a {@link CreateUdpNetworkRequest} object.
+     * @param responseBus bus to send responses/notifications to for the created socket 
+     * @param sourceAddress source address of the socket to be created
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public CreateUdpNetworkRequest(Bus responseBus, InetAddress sourceAddress) {
         Validate.notNull(responseBus);
         Validate.notNull(sourceAddress);
@@ -31,10 +42,18 @@ public final class CreateUdpNetworkRequest implements NetworkRequest {
         this.sourceAddress = sourceAddress;
     }
 
+    /**
+     * Bus to send responses/notifications to for the created socket.
+     * @return response bus
+     */
     public Bus getResponseBus() {
         return responseBus;
     }
 
+    /**
+     * Source address of the socket to be created.
+     * @return source address
+     */
     public InetAddress getSourceAddress() {
         return sourceAddress;
     }

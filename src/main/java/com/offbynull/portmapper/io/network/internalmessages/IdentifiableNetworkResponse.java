@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Response associated with a socket.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableNetworkResponse {
     
     private int id;
@@ -24,7 +28,11 @@ public abstract class IdentifiableNetworkResponse {
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get socket id.
+     * @return socket id
+     */
+    public final int getId() {
         return id;
     }
 

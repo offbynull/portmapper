@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Network response marker.
+ * @author Kasra Faghihi
+ */
 public interface NetworkResponse {
     
 }

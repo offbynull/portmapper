@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Closed a socket. Successful response to {@link CloseNetworkRequest}.
+ * @author Kasra Faghihi
+ */
 public final class CloseNetworkResponse extends IdentifiableNetworkResponse {
 
+    /**
+     * Constructs a {@link CloseNetworkResponse}.
+     * @param id id of socket
+     */
     public CloseNetworkResponse(int id) {
         super(id);
     }

@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Write buffer for TCP socket is empty.
+ * @author Kasra Faghihi
+ */
 public final class WriteEmptyTcpNetworkNotification extends IdentifiableNetworkNotification {
 
+    /**
+     * Constructs a {@link WriteEmptyTcpNetworkNotification} object.
+     * @param id socket id
+     */
     public WriteEmptyTcpNetworkNotification(int id) {
         super(id);
     }

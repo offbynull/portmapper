@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+/**
+ * Notification message associated with a socket.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableNetworkNotification implements NetworkNotification {
     
     private int id;
@@ -24,7 +28,11 @@ public abstract class IdentifiableNetworkNotification implements NetworkNotifica
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get socket id.
+     * @return socket id
+     */
+    public final int getId() {
         return id;
     }
 

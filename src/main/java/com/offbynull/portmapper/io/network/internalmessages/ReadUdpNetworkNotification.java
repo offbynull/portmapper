@@ -20,11 +20,23 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * UDP socket has received data.
+ * @author Kasra Faghihi
+ */
 public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotification {
     private InetSocketAddress localAddress;
     private InetSocketAddress remoteAddress;
     private byte[] data;
 
+    /**
+     * Constructs a {@link ReadUdpNetworkNotification} object.
+     * @param id socket id
+     * @param localAddress address sent to
+     * @param remoteAddress address sent from
+     * @param data received data
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public ReadUdpNetworkNotification(int id, InetSocketAddress localAddress, InetSocketAddress remoteAddress, byte[] data) {
         super(id);
         Validate.notNull(localAddress);
@@ -35,14 +47,26 @@ public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotific
         this.data = Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Get local address.
+     * @return local address
+     */
     public InetSocketAddress getLocalAddress() {
         return localAddress;
     }
 
+    /**
+     * Get remote address.
+     * @return remote address
+     */
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
     }
 
+    /**
+     * Get data.
+     * @return data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }

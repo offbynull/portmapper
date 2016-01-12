@@ -18,7 +18,7 @@ package com.offbynull.portmapper.io.network;
 
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.helpers.ByteBufferUtils;
-import com.offbynull.portmapper.io.network.internalmessages.ConnectedTcpNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.ConnectedTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
@@ -138,7 +138,7 @@ final class NetworkRunnable implements Runnable {
                 boolean connected = channel.finishConnect();
                 if (!alreadyConnected && connected) {
                     entry.setConnecting(false);
-                    responseBus.send(new ConnectedTcpNetworkResponse(id));
+                    responseBus.send(new ConnectedTcpNetworkNotification(id));
                 }
             } catch (IOException ioe) {
                 // socket failed to connect
@@ -320,7 +320,7 @@ final class NetworkRunnable implements Runnable {
                 responseBus = entry.getResponseBus();
                 LinkedList<UdpNetworkEntry.AddressedByteBuffer> outBuffers = entry.getOutgoingBuffers();
                 ByteBuffer writeBuffer = ByteBuffer.wrap(req.getData());
-                InetSocketAddress writeAddress = req.getOutgoingSocketAddress();
+                InetSocketAddress writeAddress = req.getRemoteAddress();
                 outBuffers.add(new UdpNetworkEntry.AddressedByteBuffer(writeBuffer, writeAddress));
                 AbstractSelectableChannel channel = (AbstractSelectableChannel) entry.getChannel();
                 updateSelectionKey(entry, channel);
