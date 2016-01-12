@@ -276,7 +276,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
             }
             
             // choose another external port for next try -- next try only make 1 attempt
-            retryDurations = new long[] { 5000L };
+            retryDurations = new long[] {5000L};
             externalPort = RandomUtils.nextInt(
                     externalPortRange.getMinimum().intValue(), // should never be < 1
                     externalPortRange.getMaximum().intValue() + 1); // should never be > 65535

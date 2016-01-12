@@ -66,6 +66,20 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
     private final Range<Long> externalPortRange;
     private final Range<Long> leaseDurationRange;
 
+    /**
+     * Constructs a {@link UpnpIgdPortMapper} object.
+     * @param networkBus network bus
+     * @param internalAddress source address (address to communicate with gateway from)
+     * @param controlUrl control URL
+     * @param serverName sever name (may be {@code null})
+     * @param serviceType service type
+     * @param externalPortRange external port range
+     * @param leaseDurationRange lease duration range
+     * @throws NullPointerException if any argument other than {@code serverName} is {@code null}
+     * @throws IllegalArgumentException if {@code 0L > externalPortRange > 65535L || 0L > leaseDurationRange > 0xFFFFFFFFL}, or if
+     * {@code controlUrl} scheme is not {@code "http"}
+     * 
+     */
     protected UpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
         Validate.notNull(networkBus);
@@ -79,6 +93,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         Validate.isTrue(leaseDurationRange.getMaximum() <= 0xFFFFFFFFL);
         Validate.isTrue(externalPortRange.getMinimum() >= 0L);
         Validate.isTrue(externalPortRange.getMaximum() <= 0xFFFFL);
+        Validate.isTrue("http".equalsIgnoreCase(controlUrl.getProtocol()));
         this.networkBus = networkBus;
         this.internalAddress = internalAddress;
         this.controlUrl = controlUrl;
@@ -153,6 +168,13 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
     }
     // CHECKSTYLE:ON:DesignForExtension
 
+    /**
+     * Identify UPnP-IGD devices on all interfaces.
+     * @param networkBus network bus
+     * @return set of found UPnP-IGD devices
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws InterruptedException if interrupted
+     */
     public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
         Validate.notNull(networkBus);
 
