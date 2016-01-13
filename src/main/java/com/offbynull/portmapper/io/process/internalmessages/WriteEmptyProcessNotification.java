@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Write buffer for process is empty.
+ * @author Kasra Faghihi
+ */
 public final class WriteEmptyProcessNotification extends IdentifiableProcessNotification {
 
+    /**
+     * Constructs a {@link WriteEmptyProcessNotification} object.
+     * @param id id of process
+     */
     public WriteEmptyProcessNotification(int id) {
         super(id);
     }

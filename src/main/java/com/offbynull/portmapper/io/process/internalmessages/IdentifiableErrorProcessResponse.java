@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Error message associated with a process. Once received, it means the process associated with this ID is dead (no longer usable).
+ * @author Kasra Faghihi
+ */
 public final class IdentifiableErrorProcessResponse extends IdentifiableProcessResponse {
 
+    /**
+     * Constructs a {@link IdentifiableErrorProcessResponse} object.
+     * @param id id of process
+     */
     public IdentifiableErrorProcessResponse(int id) {
         super(id);
     }

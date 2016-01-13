@@ -17,13 +17,13 @@
 package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
- * Created a TCP socket. Successful response to {@link CreateTcpNetworkResponse}.
+ * Created a TCP socket. Successful response to {@link CreateTcpNetworkRequest}.
  * @author Kasra Faghihi
  */
 public final class CreateTcpNetworkResponse extends IdentifiableNetworkResponse {
 
     /**
-     * Constructs a {@link CreateTcpNetworkResponse}.
+     * Constructs a {@link CreateTcpNetworkResponse} object.
      * @param id id of socket
      */
     public CreateTcpNetworkResponse(int id) {

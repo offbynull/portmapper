@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Process notification marker.
+ * @author Kasra Faghihi
+ */
 public interface ProcessNotification {
     
 }

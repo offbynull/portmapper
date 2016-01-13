@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.pcp.externalmessages.UnknownPcpOption;
 import java.util.Arrays;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

@@ -140,7 +140,7 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
         private String multicastSocketAddressAsHeader;
         private InetSocketAddress multicastSocketAddress;
         
-        private ProbeDeviceType(String multicastHost, int port) {
+        ProbeDeviceType(String multicastHost, int port) {
             Validate.notNull(multicastHost);
             Validate.inclusiveBetween(1, 65535, port);
             this.multicastSocketAddressAsHeader = multicastHost + ':' + port;

@@ -24,7 +24,7 @@ public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkR
 
     /**
      * Constructs a {@link IdentifiableErrorNetworkResponse} object.
-     * @param id socket id
+     * @param id id of socket
      */
     public IdentifiableErrorNetworkResponse(int id) {
         super(id);

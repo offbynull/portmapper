@@ -18,14 +18,28 @@ package com.offbynull.portmapper.io.process.internalmessages;
 
 import java.util.Arrays;
 
+/**
+ * Send data to a process. Possible responses are {@link WriteProcesskResponse} and {@link IdentifiableErrorProcessResponse}).
+ * @author Kasra Faghihi
+ */
 public final class WriteProcessRequest extends IdentifiableProcessRequest {
     private byte[] data;
 
+    /**
+     * Constructs a {@link WriteProcessRequest} object.
+     * @param id id of process
+     * @param data send data
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public WriteProcessRequest(int id, byte[] data) {
         super(id);
         this.data = Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Get send data.
+     * @return send data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }

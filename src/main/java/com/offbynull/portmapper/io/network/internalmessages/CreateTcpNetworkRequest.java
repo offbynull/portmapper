@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Create a TCP socket. Possible responses are {@link CreateTcpNetworkRequest} and {@link IdentifiableErrorNetworkResponse}). Shortly after
+ * Create a TCP socket. Possible responses are {@link CreateTcpNetworkResponse} and {@link IdentifiableErrorNetworkResponse}). Shortly after
  * creation, the socket will connect and a {@link ConnectedTcpNetworkNotification} will be sent out to the creator.
  * @author Kasra Faghihi
  */

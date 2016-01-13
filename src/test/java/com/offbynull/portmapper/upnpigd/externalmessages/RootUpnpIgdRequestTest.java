@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdRequest;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 

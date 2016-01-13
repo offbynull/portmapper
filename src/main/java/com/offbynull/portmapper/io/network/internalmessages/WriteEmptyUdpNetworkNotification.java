@@ -24,7 +24,7 @@ public final class WriteEmptyUdpNetworkNotification extends IdentifiableNetworkN
 
     /**
      * Constructs a {@link WriteEmptyUdpNetworkNotification} object.
-     * @param id socket id
+     * @param id id of socket
      */
     public WriteEmptyUdpNetworkNotification(int id) {
         super(id);

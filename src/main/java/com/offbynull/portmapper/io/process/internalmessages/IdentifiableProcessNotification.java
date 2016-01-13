@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Notification message associated with a process.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableProcessNotification implements ProcessNotification {
     
     private int id;
@@ -24,7 +28,11 @@ public abstract class IdentifiableProcessNotification implements ProcessNotifica
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get process id.
+     * @return id of process
+     */
+    public final int getId() {
         return id;
     }
 

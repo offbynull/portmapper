@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.DeletePortMappingUpnpIgdResponse;
 import org.junit.Test;
 
 public class DeletePortMappingUpnpIgdResponseTest {

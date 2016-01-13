@@ -16,7 +16,17 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Type of stream that received data.
+ * @author Kasra Faghihi
+ */
 public enum ReadType {
+    /**
+     * Standard out.
+     */
     STDOUT,
+    /**
+     * Standard error.
+     */
     STDERR
 }

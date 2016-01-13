@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Created a process. Successful response to {@link CreateProcessRequest}.
+ * @author Kasra Faghihi
+ */
 public final class CreateProcessResponse extends IdentifiableProcessResponse {
 
+    /**
+     * Constructs a {@link CreateProcessResponse} object.
+     * @param id id of process
+     */
     public CreateProcessResponse(int id) {
         super(id);
     }

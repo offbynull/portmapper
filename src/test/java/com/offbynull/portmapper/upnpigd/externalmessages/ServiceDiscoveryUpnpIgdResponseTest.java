@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdResponse;
 import java.net.URI;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

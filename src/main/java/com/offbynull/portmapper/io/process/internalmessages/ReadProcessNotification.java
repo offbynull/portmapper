@@ -19,10 +19,21 @@ package com.offbynull.portmapper.io.process.internalmessages;
 import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Process has received data.
+ * @author Kasra Faghihi
+ */
 public final class ReadProcessNotification extends IdentifiableProcessNotification {
     private byte[] data;
     private ReadType readType;
 
+    /**
+     * Constructs a {@link ReadProcessNotification} object.
+     * @param id id of process
+     * @param data received data
+     * @param readType stream which received the data (STDOUT or STDERR)
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public ReadProcessNotification(int id, byte[] data, ReadType readType) {
         super(id);
         Validate.notNull(data);
@@ -31,10 +42,18 @@ public final class ReadProcessNotification extends IdentifiableProcessNotificati
         this.readType = readType;
     }
 
+    /**
+     * Get data.
+     * @return data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Get stream which received data.
+     * @return stream which received data
+     */
     public ReadType getReadType() {
         return readType;
     }

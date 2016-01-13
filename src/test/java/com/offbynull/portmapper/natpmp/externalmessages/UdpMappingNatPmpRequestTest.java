@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.natpmp.externalmessages;
 
-import com.offbynull.portmapper.natpmp.externalmessages.UdpMappingNatPmpRequest;
 import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

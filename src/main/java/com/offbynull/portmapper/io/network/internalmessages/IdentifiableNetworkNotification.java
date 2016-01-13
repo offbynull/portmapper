@@ -30,7 +30,7 @@ public abstract class IdentifiableNetworkNotification implements NetworkNotifica
 
     /**
      * Get socket id.
-     * @return socket id
+     * @return id of socket
      */
     public final int getId() {
         return id;

@@ -31,7 +31,7 @@ public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotific
 
     /**
      * Constructs a {@link ReadUdpNetworkNotification} object.
-     * @param id socket id
+     * @param id id of socket
      * @param localAddress address sent to
      * @param remoteAddress address sent from
      * @param data received data

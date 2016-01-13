@@ -17,14 +17,14 @@
 package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
- * Close a socket. Possible responses are {@link CloseNetworkRequest} and {@link IdentifiableErrorNetworkResponse}).
+ * Close a socket. Possible responses are {@link CloseNetworkResponse} and {@link IdentifiableErrorNetworkResponse}).
  * @author Kasra Faghihi
  */
 public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
 
     /**
      * Constructs a {@link CloseNetworkRequest}.
-     * @param id socket id
+     * @param id id of socket
      */
     public CloseNetworkRequest(int id) {
         super(id);

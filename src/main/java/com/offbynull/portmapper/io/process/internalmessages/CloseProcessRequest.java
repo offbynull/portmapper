@@ -16,15 +16,18 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
-public final class CloseProcessRequest implements ProcessRequest {
-    private int id;
+/**
+ * Close a process. Possible responses are {@link CloseProcessResponse} and {@link IdentifiableErrorProcessResponse}).
+ * @author Kasra Faghihi
+ */
+public final class CloseProcessRequest extends IdentifiableProcessResponse {
 
+    /**
+     * Constructs a {@link CloseProcessRequest}.
+     * @param id id of process
+     */
     public CloseProcessRequest(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
+        super(id);
     }
 
 }

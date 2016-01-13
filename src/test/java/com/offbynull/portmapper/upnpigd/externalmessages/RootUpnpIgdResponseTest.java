@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.RootUpnpIgdResponse.ServiceReference;
 import java.net.URL;
 import java.util.List;

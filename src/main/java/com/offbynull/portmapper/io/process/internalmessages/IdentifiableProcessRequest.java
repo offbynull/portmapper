@@ -16,15 +16,23 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Request associated with a process.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableProcessRequest {
     
     private int id;
 
-    public IdentifiableProcessRequest(int id) {
+    IdentifiableProcessRequest(int id) {
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get process id.
+     * @return id of process
+     */
+    public final int getId() {
         return id;
     }
 

@@ -1,8 +1,5 @@
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.pcp.externalmessages.ThirdPartyPcpOption;
-import com.offbynull.portmapper.pcp.externalmessages.PreferFailurePcpOption;
-import com.offbynull.portmapper.pcp.externalmessages.MapPcpResponse;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;

@@ -18,15 +18,28 @@ package com.offbynull.portmapper.io.process.internalmessages;
 
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Sent data through a process. Successful response to {@link WriteProcessResponse}.
+ * @author Kasra Faghihi
+ */
 public final class WriteProcessResponse extends IdentifiableProcessResponse {
     private int amountWritten;
 
+    /**
+     * Constructs a {@link WriteProcessResponse} object.
+     * @param id id of process
+     * @param amountWritten amount of data written out (in bytes)
+     */
     public WriteProcessResponse(int id, int amountWritten) {
         super(id);
         Validate.inclusiveBetween(0, Integer.MAX_VALUE, amountWritten);
         this.amountWritten = amountWritten;
     }
 
+    /**
+     * Amount of data written out.
+     * @return bytes written out
+     */
     public int getAmountWritten() {
         return amountWritten;
     }

@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.ServiceDiscoveryUpnpIgdRequest.ProbeDeviceType;
 import org.junit.Assert;
 import org.junit.Test;

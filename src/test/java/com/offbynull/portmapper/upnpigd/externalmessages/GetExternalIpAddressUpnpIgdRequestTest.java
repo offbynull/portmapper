@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdRequest;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -11,7 +10,6 @@ public class GetExternalIpAddressUpnpIgdRequestTest {
         GetExternalIpAddressUpnpIgdRequest req = new GetExternalIpAddressUpnpIgdRequest("fake", "/controllink", "service:type");
         String bufferText = new String(req.dump(), "US-ASCII");
 
-        System.out.println(bufferText);
         assertEquals("POST /controllink HTTP/1.1\r\n"
                 + "Host: fake\r\n"
                 + "Content-Type: text/xml\r\n"

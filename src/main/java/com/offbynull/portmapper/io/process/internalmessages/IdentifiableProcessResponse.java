@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Response associated with a process.
+ * @author Kasra Faghihi
+ */
 public abstract class IdentifiableProcessResponse {
     
     private int id;
@@ -24,7 +28,11 @@ public abstract class IdentifiableProcessResponse {
         this.id = id;
     }
 
-    public int getId() {
+    /**
+     * Get process id.
+     * @return id of process
+     */
+    public final int getId() {
         return id;
     }
 

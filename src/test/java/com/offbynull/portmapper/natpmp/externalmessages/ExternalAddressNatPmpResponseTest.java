@@ -1,7 +1,5 @@
 package com.offbynull.portmapper.natpmp.externalmessages;
 
-import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpResponse;
-import com.offbynull.portmapper.natpmp.externalmessages.ExternalAddressNatPmpRequest;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;

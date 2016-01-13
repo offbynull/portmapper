@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Process request marker.
+ * @author Kasra Faghihi
+ */
 public interface ProcessRequest {
     
 }

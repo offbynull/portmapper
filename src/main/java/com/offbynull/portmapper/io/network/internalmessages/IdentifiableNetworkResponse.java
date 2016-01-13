@@ -30,7 +30,7 @@ public abstract class IdentifiableNetworkResponse {
 
     /**
      * Get socket id.
-     * @return socket id
+     * @return id of socket
      */
     public final int getId() {
         return id;

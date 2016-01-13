@@ -30,7 +30,7 @@ public final class WriteUdpNetworkRequest extends IdentifiableNetworkRequest {
 
     /**
      * Constructs a {@link WriteUdpNetworkRequest} object.
-     * @param id socket id
+     * @param id id of socket
      * @param remoteAddress outgoing socket address
      * @param data send data
      * @throws NullPointerException if any argument is {@code null}

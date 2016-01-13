@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.pcp.externalmessages.PreferFailurePcpOption;
 import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

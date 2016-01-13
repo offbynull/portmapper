@@ -16,6 +16,10 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Non-identifiable error response. Error response to {@link CreateProcessRequest}.
+ * @author Kasra Faghihi
+ */
 public final class ErrorProcessResponse implements ProcessResponse {
 
 }

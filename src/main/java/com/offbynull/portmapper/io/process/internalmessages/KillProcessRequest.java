@@ -16,6 +16,11 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Kill the process gateway. There is no response to this message, the process gateway closes all processes and shuts down after receiving
+ * this message.
+ * @author Kasra Faghihi
+ */
 public final class KillProcessRequest implements ProcessRequest {
     
 }

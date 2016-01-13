@@ -27,7 +27,7 @@ public final class ReadTcpNetworkNotification extends IdentifiableNetworkNotific
 
     /**
      * Constructs a {@link ReadTcpNetworkNotification} object.
-     * @param id socket id
+     * @param id id of socket
      * @param data received data
      * @throws NullPointerException if any argument is {@code null}
      */

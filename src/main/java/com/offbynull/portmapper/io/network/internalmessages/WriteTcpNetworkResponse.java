@@ -27,7 +27,7 @@ public final class WriteTcpNetworkResponse extends IdentifiableNetworkResponse {
 
     /**
      * Constructs a {@link WriteTcpNetworkResponse} object.
-     * @param id socket id
+     * @param id id of socket
      * @param amountWritten amount of data written out (in bytes)
      */
     public WriteTcpNetworkResponse(int id, int amountWritten) {
@@ -37,7 +37,7 @@ public final class WriteTcpNetworkResponse extends IdentifiableNetworkResponse {
     }
 
     /**
-     * Amount of data written out .
+     * Amount of data written out.
      * @return bytes written out
      */
     public int getAmountWritten() {

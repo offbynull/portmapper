@@ -16,8 +16,16 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Closed a process. Successful response to {@link CloseProcessRequest}.
+ * @author Kasra Faghihi
+ */
 public final class CloseProcessResponse extends IdentifiableProcessResponse {
 
+    /**
+     * Constructs a {@link CloseProcessResponse}.
+     * @param id id of process
+     */
     public CloseProcessResponse(int id) {
         super(id);
     }

@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdResponse;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

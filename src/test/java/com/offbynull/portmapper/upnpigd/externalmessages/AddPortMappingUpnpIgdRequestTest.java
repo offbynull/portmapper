@@ -52,7 +52,6 @@ public class AddPortMappingUpnpIgdRequestTest {
                 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
 
-        System.out.println(bufferText);
         assertEquals("POST /controllink HTTP/1.1\r\n"
                 + "Host: fake\r\n"
                 + "Content-Type: text/xml\r\n"

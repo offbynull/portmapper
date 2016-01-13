@@ -16,14 +16,27 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+/**
+ * Process exited.
+ * @author Kasra Faghihi
+ */
 public final class ExitProcessNotification extends IdentifiableProcessResponse {
     private final Integer exitCode;
 
+    /**
+     * Constructs a {@link ExitProcessNotification} object.
+     * @param id id of process
+     * @param exitCode exit code ({@code null} if not available)
+     */
     public ExitProcessNotification(int id, Integer exitCode) {
         super(id);
         this.exitCode = exitCode;
     }
 
+    /**
+     * Get exit code of process.
+     * @return exit code of process ({@code null} if not available)
+     */
     public Integer getExitCode() { // null if not available
         return exitCode;
     }

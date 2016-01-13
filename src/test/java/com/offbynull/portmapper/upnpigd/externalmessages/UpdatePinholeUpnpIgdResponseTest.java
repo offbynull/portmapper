@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.UpdatePinholeUpnpIgdResponse;
 import org.junit.Test;
 
 public class UpdatePinholeUpnpIgdResponseTest {

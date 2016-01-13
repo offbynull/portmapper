@@ -1,6 +1,5 @@
 package com.offbynull.portmapper.pcp.externalmessages;
 
-import com.offbynull.portmapper.pcp.externalmessages.FilterPcpOption;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;

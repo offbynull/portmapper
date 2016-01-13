@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Create a UDP socket. Possible responses are {@link CreateUdpNetworkRequest} and {@link IdentifiableErrorNetworkResponse}). Shortly after
+ * Create a UDP socket. Possible responses are {@link CreateUdpNetworkResponse} and {@link IdentifiableErrorNetworkResponse}). Shortly after
  * creation, the socket will connect and a {@link ConnectedUdpNetworkNotification} will be sent out to the creator.
  * @author Kasra Faghihi
  */
