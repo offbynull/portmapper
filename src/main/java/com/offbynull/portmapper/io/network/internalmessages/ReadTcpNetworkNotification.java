@@ -44,4 +44,9 @@ public final class ReadTcpNetworkNotification extends IdentifiableNetworkNotific
         return Arrays.copyOf(data, data.length);
     }
 
+    @Override
+    public String toString() {
+        return "ReadTcpNetworkNotification{super=" + super.toString() + "data=" + Arrays.toString(data) + '}';
+    }
+
 }

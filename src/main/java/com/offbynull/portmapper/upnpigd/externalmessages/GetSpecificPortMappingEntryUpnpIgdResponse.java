@@ -116,4 +116,9 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
         Validate.inclusiveBetween(0L, 0xFFFFFFFFL, leaseDuration);
         return leaseDuration;
     }
+
+    @Override
+    public String toString() {
+        return "GetSpecificPortMappingEntryUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

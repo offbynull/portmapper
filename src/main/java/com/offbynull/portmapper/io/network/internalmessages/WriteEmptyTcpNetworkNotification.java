@@ -30,4 +30,9 @@ public final class WriteEmptyTcpNetworkNotification extends IdentifiableNetworkN
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "WriteEmptyTcpNetworkNotification{super=" + super.toString() + '}';
+    }
+
 }

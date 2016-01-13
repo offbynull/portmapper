@@ -46,4 +46,9 @@ public final class WriteTcpNetworkRequest extends IdentifiableNetworkRequest {
         return Arrays.copyOf(data, data.length);
     }
 
+    @Override
+    public String toString() {
+        return "WriteTcpNetworkRequest{super=" + super.toString() + "data=" + Arrays.toString(data) + '}';
+    }
+
 }

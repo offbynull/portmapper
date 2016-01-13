@@ -36,4 +36,9 @@ public abstract class IdentifiableProcessResponse {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableProcessResponse{" + "id=" + id + '}';
+    }
+
 }

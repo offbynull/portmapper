@@ -87,6 +87,11 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "ServiceDiscoveryUpnpIgdRequest{super=" + super.toString() + '}';
+    }
     
     /**
      * Type of device to probe.

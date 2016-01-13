@@ -35,4 +35,9 @@ public final class UpdatePinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     public UpdatePinholeUpnpIgdResponse(byte[] buffer) {
         super("UpdatePinholeResponse", Collections.<String>emptySet(), buffer);
     }
+
+    @Override
+    public String toString() {
+        return "UpdatePinholeUpnpIgdResponse{super=" + super.toString() +  '}';
+    }
 }

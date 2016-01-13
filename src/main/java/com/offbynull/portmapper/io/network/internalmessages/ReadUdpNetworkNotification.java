@@ -71,4 +71,10 @@ public final class ReadUdpNetworkNotification extends IdentifiableNetworkNotific
         return Arrays.copyOf(data, data.length);
     }
 
+    @Override
+    public String toString() {
+        return "ReadUdpNetworkNotification{super=" + super.toString() + "localAddress=" + localAddress + ", remoteAddress=" + remoteAddress
+                + ", data=" + Arrays.toString(data) + '}';
+    }
+
 }

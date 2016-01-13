@@ -40,5 +40,10 @@ public final class ExitProcessNotification extends IdentifiableProcessResponse {
     public Integer getExitCode() { // null if not available
         return exitCode;
     }
+
+    @Override
+    public String toString() {
+        return "ExitProcessNotification{super=" + super.toString() + "exitCode=" + exitCode + '}';
+    }
     
 }

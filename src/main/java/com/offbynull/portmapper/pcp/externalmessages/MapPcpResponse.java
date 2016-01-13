@@ -243,5 +243,12 @@ public final class MapPcpResponse extends PcpResponse {
     public InetAddress getAssignedExternalIpAddress() {
         return assignedExternalIpAddress;
     }
+
+    @Override
+    public String toString() {
+        return "MapPcpResponse{super=" + super.toString() + "mappingNonce=" + Arrays.toString(mappingNonce) + ", protocol=" + protocol
+                + ", internalPort=" + internalPort + ", assignedExternalPort=" + assignedExternalPort + ", assignedExternalIpAddress="
+                + assignedExternalIpAddress + '}';
+    }
   
 }

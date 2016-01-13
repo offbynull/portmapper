@@ -49,4 +49,9 @@ public final class AddPinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
         Validate.validState(uniqueIdStr != null);
         return uniqueIdStr;
     }
+
+    @Override
+    public String toString() {
+        return "AddPinholeUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

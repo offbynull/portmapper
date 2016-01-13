@@ -318,4 +318,11 @@ public final class PeerPcpRequest extends PcpRequest {
     public InetAddress getRemotePeerIpAddress() {
         return remotePeerIpAddress;
     }
+
+    @Override
+    public String toString() {
+        return "PeerPcpRequest{super=" + super.toString() + "mappingNonce=" + Arrays.toString(mappingNonce) + ", protocol=" + protocol
+                + ", internalPort=" + internalPort + ", suggestedExternalPort=" + suggestedExternalPort + ", suggestedExternalIpAddress="
+                + suggestedExternalIpAddress + ", remotePeerPort=" + remotePeerPort + ", remotePeerIpAddress=" + remotePeerIpAddress + '}';
+    }
 }

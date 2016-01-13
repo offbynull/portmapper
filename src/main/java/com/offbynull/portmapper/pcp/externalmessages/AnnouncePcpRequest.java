@@ -59,4 +59,9 @@ public final class AnnouncePcpRequest extends PcpRequest {
     public byte[] getData() {
         return new byte[OPCODE_SPECIFIC_DATA_LENGTH];
     }
+
+    @Override
+    public String toString() {
+        return "AnnouncePcpRequest{super=" + super.toString() + '}';
+    }
 }

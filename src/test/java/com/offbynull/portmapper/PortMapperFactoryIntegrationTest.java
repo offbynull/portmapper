@@ -8,10 +8,11 @@ import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
 import com.offbynull.portmapper.pcp.PcpPortMapper;
 import com.offbynull.portmapper.upnpigd.FirewallUpnpIgdPortMapper;
 import com.offbynull.portmapper.upnpigd.PortMapperUpnpIgdPortMapper;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -40,9 +41,9 @@ public class PortMapperFactoryIntegrationTest {
 
     @Test
     public void mustDiscoverPortMappers() throws Exception {
-        Set<PortMapper> mappers = PortMapperFactory.create(networkBus, processBus);
+        List<PortMapper> mappers = PortMapperFactory.create(networkBus, processBus);
         
-        Set<Class<?>> expectedTypes = new HashSet<>();
+        List<Class<?>> expectedTypes = new ArrayList<>();
         
         for (PortMapper mapper : mappers) {
             expectedTypes.add(mapper.getClass());

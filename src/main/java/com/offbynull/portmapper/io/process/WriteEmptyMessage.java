@@ -29,4 +29,9 @@ final class WriteEmptyMessage {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "WriteEmptyMessage{" + "id=" + id + '}';
+    }
+
 }

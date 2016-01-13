@@ -30,4 +30,9 @@ public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkR
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableErrorNetworkResponse{super=" + super.toString() + '}';
+    }
+
 }

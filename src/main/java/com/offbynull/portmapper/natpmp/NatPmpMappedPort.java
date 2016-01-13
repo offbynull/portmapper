@@ -19,7 +19,6 @@ package com.offbynull.portmapper.natpmp;
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 final class NatPmpMappedPort implements MappedPort {
@@ -70,48 +69,8 @@ final class NatPmpMappedPort implements MappedPort {
 
     @Override
     public String toString() {
-        return "PortMapperMappedPort{" + "internalPort=" + internalPort + ", externalPort=" + externalPort + ", externalAddress="
+        return "NatPmpMappedPort{" + "internalPort=" + internalPort + ", externalPort=" + externalPort + ", externalAddress="
                 + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 29 * hash + this.internalPort;
-        hash = 29 * hash + this.externalPort;
-        hash = 29 * hash + Objects.hashCode(this.portType);
-        hash = 29 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final NatPmpMappedPort other = (NatPmpMappedPort) obj;
-        if (this.internalPort != other.internalPort) {
-            return false;
-        }
-        if (this.externalPort != other.externalPort) {
-            return false;
-        }
-        if (this.lifetime != other.lifetime) {
-            return false;
-        }
-        if (!Objects.equals(this.externalAddress, other.externalAddress)) {
-            return false;
-        }
-        if (this.portType != other.portType) {
-            return false;
-        }
-        return true;
     }
     
 }

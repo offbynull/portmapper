@@ -117,4 +117,9 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
     public InetAddress getAddress() {
         return inetAddress;
     }
+
+    @Override
+    public String toString() {
+        return "ExternalAddressNatPmpResponse{super=" + super.toString() + "inetAddress=" + inetAddress + '}';
+    }
 }

@@ -30,4 +30,9 @@ public final class WriteEmptyProcessNotification extends IdentifiableProcessNoti
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "WriteEmptyProcessNotification{super=" + super.toString() + '}';
+    }
+
 }

@@ -76,4 +76,11 @@ final class PcpMappedPort implements MappedPort {
     public long getLifetime() {
         return lifetime;
     }
+
+    @Override
+    public String toString() {
+        return "PcpMappedPort{" + "nonce=" + Arrays.toString(nonce) + ", internalPort=" + internalPort + ", externalPort=" + externalPort
+                + ", externalAddress=" + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
+    }
+    
 }

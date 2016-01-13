@@ -137,4 +137,9 @@ public abstract class UpnpIgdHttpResponse {
         return content;
     }
 
+    @Override
+    public String toString() {
+        return "UpnpIgdHttpResponse{" + "headers=" + headers + ", responseCode=" + responseCode + ", content=" + content + '}';
+    }
+
 }

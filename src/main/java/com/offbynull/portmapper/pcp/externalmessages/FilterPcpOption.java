@@ -167,4 +167,10 @@ public final class FilterPcpOption extends PcpOption {
         
         return data;
     }
+
+    @Override
+    public String toString() {
+        return "FilterPcpOption{super=" + super.toString() + "prefixLength=" + prefixLength + ", remotePeerPort=" + remotePeerPort
+                + ", remotePeerIpAddress=" + remotePeerIpAddress + '}';
+    }
 }

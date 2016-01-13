@@ -70,4 +70,9 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "DeletePortMappingUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

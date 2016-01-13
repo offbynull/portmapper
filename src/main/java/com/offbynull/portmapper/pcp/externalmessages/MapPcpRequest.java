@@ -252,4 +252,11 @@ public final class MapPcpRequest extends PcpRequest {
     public InetAddress getSuggestedExternalIpAddress() {
         return suggestedExternalIpAddress;
     }
+
+    @Override
+    public String toString() {
+        return "MapPcpRequest{super=" + super.toString() + "mappingNonce=" + Arrays.toString(mappingNonce) + ", protocol=" + protocol
+                + ", internalPort=" + internalPort + ", suggestedExternalPort=" + suggestedExternalPort + ", suggestedExternalIpAddress="
+                + suggestedExternalIpAddress + '}';
+    }
 }

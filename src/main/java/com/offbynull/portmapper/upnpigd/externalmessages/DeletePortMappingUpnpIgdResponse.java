@@ -35,4 +35,9 @@ public final class DeletePortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
     public DeletePortMappingUpnpIgdResponse(byte[] buffer) {
         super("DeletePortMappingResponse", Collections.<String>emptySet(), buffer);
     }
+
+    @Override
+    public String toString() {
+        return "DeletePortMappingUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

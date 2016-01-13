@@ -35,4 +35,9 @@ public final class AddPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse {
     public AddPortMappingUpnpIgdResponse(byte[] buffer) {
         super("AddPortMappingResponse", Collections.<String>emptySet(), buffer);
     }
+
+    @Override
+    public String toString() {
+        return "AddPortMappingUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

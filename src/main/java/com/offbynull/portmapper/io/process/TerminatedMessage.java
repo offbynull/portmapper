@@ -33,4 +33,9 @@ final class TerminatedMessage {
         return exitCode;
     }
 
+    @Override
+    public String toString() {
+        return "TerminatedMessage{" + "id=" + id + ", exitCode=" + exitCode + '}';
+    }
+
 }

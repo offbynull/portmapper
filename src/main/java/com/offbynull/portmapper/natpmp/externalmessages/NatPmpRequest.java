@@ -59,4 +59,9 @@ public abstract class NatPmpRequest implements NatPmpMessage {
     public final int getOp() {
         return op;
     }
+
+    @Override
+    public String toString() {
+        return "NatPmpRequest{" + "op=" + op + '}';
+    }
 }

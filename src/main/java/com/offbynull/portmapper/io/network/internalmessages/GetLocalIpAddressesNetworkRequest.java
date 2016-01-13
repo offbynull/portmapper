@@ -44,4 +44,9 @@ public final class GetLocalIpAddressesNetworkRequest implements NetworkRequest {
     public Bus getResponseBus() {
         return responseBus;
     }
+
+    @Override
+    public String toString() {
+        return "GetLocalIpAddressesNetworkRequest{" + "responseBus=" + responseBus + '}';
+    }
 }

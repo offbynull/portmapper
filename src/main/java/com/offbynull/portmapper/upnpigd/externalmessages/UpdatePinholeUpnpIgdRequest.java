@@ -56,4 +56,9 @@ public final class UpdatePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "UpdatePinholeUpnpIgdRequest{super=" + super.toString() +  '}';
+    }
 }

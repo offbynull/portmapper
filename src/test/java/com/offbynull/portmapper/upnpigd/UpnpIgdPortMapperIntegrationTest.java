@@ -6,6 +6,7 @@ import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.io.network.NetworkGateway;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +33,7 @@ public class UpnpIgdPortMapperIntegrationTest {
 
     @Test
     public void mustFindAndControlPortMappers() throws Throwable {
-        Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkBus);
+        List<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkBus);
         assertEquals(2, mappers.size());
         
         Set<Class<?>> expectedTypes = new HashSet<>();

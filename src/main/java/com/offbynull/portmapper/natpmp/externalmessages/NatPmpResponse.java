@@ -86,4 +86,10 @@ public abstract class NatPmpResponse implements NatPmpMessage {
     public final long getSecondsSinceStartOfEpoch() {
         return secondsSinceStartOfEpoch;
     }
+
+    @Override
+    public String toString() {
+        return "NatPmpResponse{" + "op=" + op + ", resultCode=" + resultCode + ", secondsSinceStartOfEpoch=" + secondsSinceStartOfEpoch
+                + '}';
+    }
 }

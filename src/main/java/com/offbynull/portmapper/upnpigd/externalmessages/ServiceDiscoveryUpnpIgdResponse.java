@@ -121,4 +121,9 @@ public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
         Validate.validState(val != null);
         return val;
     }
+
+    @Override
+    public String toString() {
+        return "ServiceDiscoveryUpnpIgdResponse{super=" + super.toString() +  '}';
+    }
 }

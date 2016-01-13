@@ -67,4 +67,10 @@ final class PortMapperMappedPort implements MappedPort {
     public long getLifetime() {
         return lifetime;
     }
+
+    @Override
+    public String toString() {
+        return "PortMapperMappedPort{" + "internalPort=" + internalPort + ", externalPort=" + externalPort + ", externalAddress="
+                + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
+    }
 }

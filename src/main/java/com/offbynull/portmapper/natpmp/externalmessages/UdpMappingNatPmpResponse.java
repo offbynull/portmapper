@@ -154,4 +154,9 @@ public final class UdpMappingNatPmpResponse extends MappingNatPmpResponse {
     public UdpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
     }
+
+    @Override
+    public String toString() {
+        return "UdpMappingNatPmpResponse{super=" + super.toString() + '}';
+    }
 }

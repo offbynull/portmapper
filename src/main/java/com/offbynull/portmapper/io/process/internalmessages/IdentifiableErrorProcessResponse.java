@@ -30,4 +30,9 @@ public final class IdentifiableErrorProcessResponse extends IdentifiableProcessR
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableErrorProcessResponse{super=" + super.toString() + '}';
+    }
+
 }

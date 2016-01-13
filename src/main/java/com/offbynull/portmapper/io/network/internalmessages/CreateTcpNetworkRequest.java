@@ -84,4 +84,10 @@ public final class CreateTcpNetworkRequest implements NetworkRequest {
     public int getDestinationPort() {
         return destinationPort;
     }
+
+    @Override
+    public String toString() {
+        return "CreateTcpNetworkRequest{" + "responseBus=" + responseBus + ", sourceAddress=" + sourceAddress + ", destinationAddress="
+                + destinationAddress + ", destinationPort=" + destinationPort + '}';
+    }
 }

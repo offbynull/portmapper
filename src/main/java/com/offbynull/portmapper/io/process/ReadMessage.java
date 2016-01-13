@@ -46,4 +46,9 @@ final class ReadMessage {
         return readType;
     }
 
+    @Override
+    public String toString() {
+        return "ReadMessage{" + "id=" + id + ", data=" + data + ", readType=" + readType + '}';
+    }
+
 }

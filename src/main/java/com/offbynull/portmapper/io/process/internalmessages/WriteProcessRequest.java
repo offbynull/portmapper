@@ -44,4 +44,9 @@ public final class WriteProcessRequest extends IdentifiableProcessRequest {
         return Arrays.copyOf(data, data.length);
     }
 
+    @Override
+    public String toString() {
+        return "WriteProcessRequest{super=" + super.toString() + "data=" + Arrays.toString(data) + '}';
+    }
+
 }

@@ -30,4 +30,9 @@ public final class WriteEmptyUdpNetworkNotification extends IdentifiableNetworkN
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "WriteEmptyUdpNetworkNotification{super=" + super.toString() + '}';
+    }
+
 }

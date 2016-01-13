@@ -298,6 +298,12 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
             return externalPortRange;
         }
 
+        @Override
+        public String toString() {
+            return "IdentifiedService{super=" + super.toString() +  "leaseDurationRange=" + leaseDurationRange + ", externalPortRange="
+                    + externalPortRange + '}';
+        }
+
     }
     
     /**

@@ -57,4 +57,9 @@ public final class CreateUdpNetworkRequest implements NetworkRequest {
     public InetAddress getSourceAddress() {
         return sourceAddress;
     }
+
+    @Override
+    public String toString() {
+        return "CreateUdpNetworkRequest{" + "responseBus=" + responseBus + ", sourceAddress=" + sourceAddress + '}';
+    }
 }

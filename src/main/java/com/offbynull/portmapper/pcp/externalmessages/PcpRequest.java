@@ -287,4 +287,10 @@ public abstract class PcpRequest implements PcpMessage {
         // return data
         return data;
     }
+
+    @Override
+    public String toString() {
+        return "PcpRequest{" + "op=" + op + ", lifetime=" + lifetime + ", internalIp=" + internalIp + ", options=" + options
+                + ", dataLength=" + dataLength + ", optionsLength=" + optionsLength + '}';
+    }
 }

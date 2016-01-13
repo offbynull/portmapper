@@ -306,4 +306,10 @@ public abstract class PcpResponse implements PcpMessage {
         // return data
         return data;
     }
+
+    @Override
+    public String toString() {
+        return "PcpResponse{" + "op=" + op + ", resultCode=" + resultCode + ", lifetime=" + lifetime + ", epochTime=" + epochTime
+                + ", options=" + options + ", dataLength=" + dataLength + ", optionsLength=" + optionsLength + '}';
+    }
 }

@@ -10,7 +10,7 @@ import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.process.ProcessGateway;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import java.net.InetAddress;
-import java.util.Set;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +39,7 @@ public final class NatPmpPortMapperIntegrationTest {
     
     @Test
     public void mustFindAndControlPortMappers() throws Throwable {
-        Set<NatPmpPortMapper> mappers = NatPmpPortMapper.identify(networkBus, processBus);
+        List<NatPmpPortMapper> mappers = NatPmpPortMapper.identify(networkBus, processBus);
         NatPmpPortMapper miniupnpdMapper = new NatPmpPortMapper(
                 networkBus,
                 InetAddress.getByName("192.168.75.1"),

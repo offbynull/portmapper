@@ -22,5 +22,10 @@ package com.offbynull.portmapper.io.process.internalmessages;
  * @author Kasra Faghihi
  */
 public final class KillProcessRequest implements ProcessRequest {
+
+    @Override
+    public String toString() {
+        return "KillProcessRequest{" + '}';
+    }
     
 }

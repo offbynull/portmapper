@@ -22,4 +22,9 @@ package com.offbynull.portmapper.io.process.internalmessages;
  */
 public final class ErrorProcessResponse implements ProcessResponse {
 
+    @Override
+    public String toString() {
+        return "ErrorProcessResponse{" + '}';
+    }
+
 }

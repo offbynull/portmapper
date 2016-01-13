@@ -29,4 +29,9 @@ public final class CreateProcessResponse extends IdentifiableProcessResponse {
     public CreateProcessResponse(int id) {
         super(id);
     }
+
+    @Override
+    public String toString() {
+        return "CreateProcessResponse{super=" + super.toString() + '}';
+    }
 }

@@ -35,4 +35,9 @@ public final class DeletePinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     public DeletePinholeUpnpIgdResponse(byte[] buffer) {
         super("DeletePinholeResponse", Collections.<String>emptySet(), buffer);
     }
+
+    @Override
+    public String toString() {
+        return "DeletePinholeUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

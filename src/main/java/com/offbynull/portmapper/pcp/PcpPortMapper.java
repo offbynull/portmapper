@@ -71,7 +71,7 @@ public final class PcpPortMapper implements PortMapper {
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static Set<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
 
@@ -146,7 +146,7 @@ public final class PcpPortMapper implements PortMapper {
         
         
         // Create mappers and returns
-        Set<PcpPortMapper> mappers = new HashSet<>();
+        List<PcpPortMapper> mappers = new LinkedList<>();
         for (UdpRequest udpReq : udpReqs) {
             if (udpReq.getRespMsg() != null) {
                 PcpPortMapper portMapper = new PcpPortMapper(
@@ -288,4 +288,11 @@ public final class PcpPortMapper implements PortMapper {
         random.nextBytes(mappingNonce);
         return mappingNonce;
     }
+
+    @Override
+    public String toString() {
+        return "PcpPortMapper{" + "networkBus=" + networkBus + ", internalAddress=" + internalAddress + ", gatewayAddress="
+                + gatewayAddress + ", random=" + random + '}';
+    }
+    
 }

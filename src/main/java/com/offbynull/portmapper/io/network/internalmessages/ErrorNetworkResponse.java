@@ -23,4 +23,9 @@ package com.offbynull.portmapper.io.network.internalmessages;
  */
 public final class ErrorNetworkResponse implements NetworkResponse {
 
+    @Override
+    public String toString() {
+        return "ErrorNetworkResponse{" + '}';
+    }
+
 }

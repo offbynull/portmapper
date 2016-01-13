@@ -30,4 +30,9 @@ public final class CloseProcessRequest extends IdentifiableProcessResponse {
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "CloseProcessRequest{super=" + super.toString() + '}';
+    }
+
 }

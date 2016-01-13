@@ -46,5 +46,10 @@ public final class GetLocalIpAddressesNetworkResponse implements NetworkResponse
     public Set<InetAddress> getLocalAddresses() {
         return localAddresses;
     }
+
+    @Override
+    public String toString() {
+        return "GetLocalIpAddressesNetworkResponse{" + "localAddresses=" + localAddresses + '}';
+    }
     
 }

@@ -36,4 +36,9 @@ public abstract class IdentifiableProcessNotification implements ProcessNotifica
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableProcessNotification{" + "id=" + id + '}';
+    }
+
 }

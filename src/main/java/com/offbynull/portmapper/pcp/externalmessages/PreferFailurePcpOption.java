@@ -74,4 +74,9 @@ public final class PreferFailurePcpOption extends PcpOption {
     public byte[] getData() {
         return new byte[0];
     }
+
+    @Override
+    public String toString() {
+        return "PreferFailurePcpOption{super=" + super.toString() + '}';
+    }
 }

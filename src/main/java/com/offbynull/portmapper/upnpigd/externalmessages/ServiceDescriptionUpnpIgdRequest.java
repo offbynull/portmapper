@@ -48,4 +48,9 @@ public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "ServiceDescriptionUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

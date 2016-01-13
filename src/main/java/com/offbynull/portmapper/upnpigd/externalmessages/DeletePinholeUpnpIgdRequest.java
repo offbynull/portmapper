@@ -50,4 +50,9 @@ public final class DeletePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "DeletePinholeUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

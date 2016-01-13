@@ -43,5 +43,10 @@ public final class WriteUdpNetworkResponse extends IdentifiableNetworkResponse {
     public int getAmountWritten() {
         return amountWritten;
     }
+
+    @Override
+    public String toString() {
+        return "WriteUdpNetworkResponse{super=" + super.toString() + "amountWritten=" + amountWritten + '}';
+    }
     
 }

@@ -29,4 +29,9 @@ public final class CreateUdpNetworkResponse extends IdentifiableNetworkResponse 
     public CreateUdpNetworkResponse(int id) {
         super(id);
     }
+
+    @Override
+    public String toString() {
+        return "CreateUdpNetworkResponse{super=" + super.toString() + '}';
+    }
 }

@@ -101,4 +101,9 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "AddPortMappingUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

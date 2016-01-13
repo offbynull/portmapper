@@ -296,4 +296,11 @@ public final class PeerPcpResponse extends PcpResponse {
     public InetAddress getRemotePeerIpAddress() {
         return remotePeerIpAddress;
     }
+
+    @Override
+    public String toString() {
+        return "PeerPcpResponse{super=" + super.toString() + "mappingNonce=" + Arrays.toString(mappingNonce) + ", protocol=" + protocol
+                + ", internalPort=" + internalPort + ", assignedExternalPort=" + assignedExternalPort + ", assignedExternalIpAddress="
+                + assignedExternalIpAddress + ", remotePeerPort=" + remotePeerPort + ", remotePeerIpAddress=" + remotePeerIpAddress + '}';
+    }
 }

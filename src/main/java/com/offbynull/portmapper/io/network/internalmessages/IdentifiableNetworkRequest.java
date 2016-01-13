@@ -36,4 +36,9 @@ public abstract class IdentifiableNetworkRequest {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableNetworkRequest{" + "id=" + id + '}';
+    }
+
 }

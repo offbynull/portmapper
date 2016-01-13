@@ -157,4 +157,9 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
             return scpdUrl;
         }
     }
+
+    @Override
+    public String toString() {
+        return "RootUpnpIgdResponse{super=" + super.toString() +  "services=" + services + '}';
+    }
 }

@@ -74,4 +74,10 @@ public final class CreateProcessRequest implements ProcessRequest {
         return parameters;
     }
 
+    @Override
+    public String toString() {
+        return "CreateProcessRequest{" + "responseBus=" + responseBus + ", executable=" + executable
+                + ", parameters=" + parameters + '}';
+    }
+
 }

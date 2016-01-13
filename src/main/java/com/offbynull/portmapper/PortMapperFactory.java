@@ -19,8 +19,8 @@ package com.offbynull.portmapper;
 import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
 import com.offbynull.portmapper.pcp.PcpPortMapper;
 import com.offbynull.portmapper.upnpigd.UpnpIgdPortMapper;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -40,11 +40,11 @@ public final class PortMapperFactory {
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static Set<PortMapper> create(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<PortMapper> create(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
         
-        Set<PortMapper> ret = new HashSet<>();
+        List<PortMapper> ret = new LinkedList<>();
         
         ret.addAll(UpnpIgdPortMapper.identify(networkBus));
         ret.addAll(NatPmpPortMapper.identify(networkBus, processBus));

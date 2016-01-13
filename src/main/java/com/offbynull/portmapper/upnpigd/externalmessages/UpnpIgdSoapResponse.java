@@ -101,5 +101,10 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return "UpnpIgdSoapResponse{super=" + super.toString() + "arguments=" + arguments + '}';
+    }
  
 }

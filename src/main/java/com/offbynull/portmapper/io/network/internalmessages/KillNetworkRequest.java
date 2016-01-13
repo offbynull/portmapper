@@ -22,5 +22,10 @@ package com.offbynull.portmapper.io.network.internalmessages;
  * @author Kasra Faghihi
  */
 public final class KillNetworkRequest implements NetworkRequest {
+
+    @Override
+    public String toString() {
+        return "KillNetworkRequest{" + '}';
+    }
     
 }

@@ -89,5 +89,11 @@ public abstract class UpnpIgdHttpRequest {
             return sb.toString().getBytes(Charset.forName("US-ASCII"));
         }
     }
+
+    @Override
+    public String toString() {
+        return "UpnpIgdHttpRequest{" + "method=" + method + ", location=" + location + ", headers=" + headers + ", content=" + content +
+                '}';
+    }
     
 }

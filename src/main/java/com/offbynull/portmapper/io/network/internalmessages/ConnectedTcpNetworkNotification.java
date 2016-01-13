@@ -29,4 +29,9 @@ public final class ConnectedTcpNetworkNotification extends IdentifiableNetworkNo
     public ConnectedTcpNetworkNotification(int id) {
         super(id);
     }
+
+    @Override
+    public String toString() {
+        return "ConnectedTcpNetworkNotification{super=" + super.toString() + '}';
+    }
 }

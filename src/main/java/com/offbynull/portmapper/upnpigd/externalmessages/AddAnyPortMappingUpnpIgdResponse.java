@@ -54,4 +54,9 @@ public final class AddAnyPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
         Validate.validState(reservedPort >= 1 && reservedPort <= 65535);
         return reservedPort;
     }
+
+    @Override
+    public String toString() {
+        return "AddAnyPortMappingUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

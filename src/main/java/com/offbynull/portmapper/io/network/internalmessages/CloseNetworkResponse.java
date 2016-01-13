@@ -30,4 +30,9 @@ public final class CloseNetworkResponse extends IdentifiableNetworkResponse {
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "CloseNetworkResponse{super=" + super.toString() + '}';
+    }
+
 }

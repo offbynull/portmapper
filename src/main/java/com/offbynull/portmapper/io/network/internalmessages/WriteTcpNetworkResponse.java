@@ -43,5 +43,10 @@ public final class WriteTcpNetworkResponse extends IdentifiableNetworkResponse {
     public int getAmountWritten() {
         return amountWritten;
     }
+
+    @Override
+    public String toString() {
+        return "WriteTcpNetworkResponse{super=" + super.toString() + "amountWritten=" + amountWritten + '}';
+    }
     
 }

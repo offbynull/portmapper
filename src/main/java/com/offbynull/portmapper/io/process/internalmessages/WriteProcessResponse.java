@@ -43,5 +43,10 @@ public final class WriteProcessResponse extends IdentifiableProcessResponse {
     public int getAmountWritten() {
         return amountWritten;
     }
+
+    @Override
+    public String toString() {
+        return "WriteProcessResponse{super=" + super.toString() + "amountWritten=" + amountWritten + '}';
+    }
     
 }

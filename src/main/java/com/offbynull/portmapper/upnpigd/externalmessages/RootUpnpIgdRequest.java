@@ -47,4 +47,9 @@ public final class RootUpnpIgdRequest extends UpnpIgdHttpRequest {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "RootUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

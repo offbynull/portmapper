@@ -45,4 +45,9 @@ public final class TcpMappingNatPmpRequest extends MappingNatPmpRequest {
     public TcpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
         super(OP, internalPort, suggestedExternalPort, lifetime);
     }
+
+    @Override
+    public String toString() {
+        return "TcpMappingNatPmpRequest{super=" + super.toString() + '}';
+    }
 }

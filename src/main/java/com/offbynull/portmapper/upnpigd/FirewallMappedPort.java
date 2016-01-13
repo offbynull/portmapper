@@ -74,4 +74,10 @@ final class FirewallMappedPort implements MappedPort {
     public long getLifetime() {
         return lifetime;
     }
+
+    @Override
+    public String toString() {
+        return "FirewallMappedPort{" + "key=" + key + ", internalPort=" + internalPort + ", externalPort=" + externalPort
+                + ", externalAddress=" + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
+    }
 }

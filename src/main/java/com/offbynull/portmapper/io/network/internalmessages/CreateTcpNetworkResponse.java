@@ -29,4 +29,9 @@ public final class CreateTcpNetworkResponse extends IdentifiableNetworkResponse 
     public CreateTcpNetworkResponse(int id) {
         super(id);
     }
+
+    @Override
+    public String toString() {
+        return "CreateTcpNetworkResponse{super=" + super.toString() + '}';
+    }
 }

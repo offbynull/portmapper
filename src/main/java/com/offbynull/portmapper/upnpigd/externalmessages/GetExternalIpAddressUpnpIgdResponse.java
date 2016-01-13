@@ -54,4 +54,9 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
             throw new IllegalStateException(e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "GetExternalIpAddressUpnpIgdResponse{super=" + super.toString() + '}';
+    }
 }

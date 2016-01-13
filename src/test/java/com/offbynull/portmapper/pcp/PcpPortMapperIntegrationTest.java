@@ -8,7 +8,7 @@ import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.process.ProcessGateway;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import java.net.InetAddress;
-import java.util.Set;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public final class PcpPortMapperIntegrationTest {
     
     @Test
     public void mustFindAndControlPortMappers() throws Throwable {
-        Set<PcpPortMapper> mappers = PcpPortMapper.identify(networkBus, processBus);
+        List<PcpPortMapper> mappers = PcpPortMapper.identify(networkBus, processBus);
         PcpPortMapper miniupnpdMapper = new PcpPortMapper(
                 networkBus,
                 InetAddress.getByName("192.168.75.1"),

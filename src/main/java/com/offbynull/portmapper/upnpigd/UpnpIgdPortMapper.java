@@ -38,7 +38,6 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,6 +49,7 @@ import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescripti
 import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.OLD_PORT_MAPPER;
 import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.NEW_PORT_MAPPER;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
+import java.util.List;
 
 /**
  * UPNP-IGD {@link PortMapper} implementation.
@@ -175,7 +175,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static Set<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
+    public static List<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
         Validate.notNull(networkBus);
 
         // Probe for devices -- for each device found, query the device
@@ -278,7 +278,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         performBatchedHttpRequests(networkBus, serviceDescRequests, 5000L, 5000L, 5000L);
 
         // Get service descriptions
-        Set<UpnpIgdPortMapper> ret = new HashSet<>();
+        List<UpnpIgdPortMapper> ret = new LinkedList<>();
         for (HttpRequest serviceDescRequest : serviceDescRequests) {
             try {
                 ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.getRespMsg();

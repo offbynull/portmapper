@@ -67,4 +67,9 @@ public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
     public byte[] dump() {
         return new byte[] {0, OP};
     }
+
+    @Override
+    public String toString() {
+        return "ExternalAddressNatPmpRequest{super=" + super.toString() + '}';
+    }
 }

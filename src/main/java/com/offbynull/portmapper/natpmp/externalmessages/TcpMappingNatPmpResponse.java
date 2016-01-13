@@ -153,4 +153,9 @@ public final class TcpMappingNatPmpResponse extends MappingNatPmpResponse {
     public TcpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
     }
+
+    @Override
+    public String toString() {
+        return "TcpMappingNatPmpResponse{super=" + super.toString() + '}';
+    }
 }

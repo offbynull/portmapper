@@ -65,4 +65,9 @@ public final class UnknownPcpOption extends PcpOption {
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
+
+    @Override
+    public String toString() {
+        return "UnknownPcpOption{super=" + super.toString() + "data=" + Arrays.toString(data) + '}';
+    }
 }

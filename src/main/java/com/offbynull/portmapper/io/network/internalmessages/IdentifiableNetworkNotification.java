@@ -36,4 +36,9 @@ public abstract class IdentifiableNetworkNotification implements NetworkNotifica
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "IdentifiableNetworkNotification{" + "id=" + id + '}';
+    }
+
 }

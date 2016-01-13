@@ -70,4 +70,9 @@ public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoap
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "GetSpecificPortMappingEntryUpnpIgdRequest{super=" + super.toString() + '}';
+    }
 }

@@ -58,4 +58,9 @@ public final class ReadProcessNotification extends IdentifiableProcessNotificati
         return readType;
     }
 
+    @Override
+    public String toString() {
+        return "ReadProcessNotification{super=" + super.toString() + "data=" + Arrays.toString(data) + ", readType=" + readType + '}';
+    }
+
 }

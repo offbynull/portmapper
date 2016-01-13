@@ -30,4 +30,9 @@ public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
         super(id);
     }
 
+    @Override
+    public String toString() {
+        return "CloseNetworkRequest{super=" + super.toString() + '}';
+    }
+
 }

@@ -73,7 +73,7 @@ public final class NatPmpPortMapper implements PortMapper {
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static Set<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
         
@@ -142,7 +142,7 @@ public final class NatPmpPortMapper implements PortMapper {
         
         
         // Create mappers and returns
-        Set<NatPmpPortMapper> mappers = new HashSet<>();
+        List<NatPmpPortMapper> mappers = new LinkedList<>();
         for (UdpRequest udpReq : udpReqs) {
             if (udpReq.getRespMsg() != null) {
                 NatPmpPortMapper portMapper = new NatPmpPortMapper(
@@ -333,6 +333,12 @@ public final class NatPmpPortMapper implements PortMapper {
     @Override
     public InetAddress getSourceAddress() {
         return internalAddress;
+    }
+
+    @Override
+    public String toString() {
+        return "NatPmpPortMapper{" + "networkBus=" + networkBus + ", internalAddress=" + internalAddress + ", gatewayAddress="
+                + gatewayAddress + '}';
     }
 
 }

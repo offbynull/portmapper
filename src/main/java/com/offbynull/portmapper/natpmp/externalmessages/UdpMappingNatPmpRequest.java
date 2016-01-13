@@ -145,4 +145,9 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
     public UdpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
         super(OP, internalPort, suggestedExternalPort, lifetime);
     }
+
+    @Override
+    public String toString() {
+        return "UdpMappingNatPmpRequest{super=" + super.toString() + '}';
+    }
 }
