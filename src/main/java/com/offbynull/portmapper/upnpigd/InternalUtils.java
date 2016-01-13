@@ -79,7 +79,7 @@ final class InternalUtils {
             throws InterruptedException {
         ArrayListValuedHashMap<String, HttpRequest> ret = new ArrayListValuedHashMap<>();
         for (HttpRequest req : reqs) {
-            String authority = req.location.getAuthority();
+            String authority = req.getLocation().getAuthority();
             ret.put(authority, req);
         }
         
@@ -138,10 +138,10 @@ final class InternalUtils {
                     continue;
                 }
 
-                InetAddress destinationAddress = NetworkUtils.toAddress(req.location.getHost());
-                int destinationPort = req.location.getPort();
+                InetAddress destinationAddress = NetworkUtils.toAddress(req.getLocation().getHost());
+                int destinationPort = req.getLocation().getPort();
 
-                networkBus.send(new CreateTcpNetworkRequest(selfBus, req.sourceAddress, destinationAddress, destinationPort));
+                networkBus.send(new CreateTcpNetworkRequest(selfBus, req.getSourceAddress(), destinationAddress, destinationPort));
 
                 int id;
                 while (true) {
@@ -171,7 +171,7 @@ final class InternalUtils {
                 // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
                 sockets.put(id, req);
                 readBuffers.put(id, new ByteArrayOutputStream());
-                networkBus.send(new WriteTcpNetworkRequest(id, req.sendMsg.dump()));
+                networkBus.send(new WriteTcpNetworkRequest(id, req.getSendMsg().dump()));
             }
 
 
@@ -222,7 +222,7 @@ final class InternalUtils {
 
                 byte[] respData = entry.getValue().toByteArray();
                 try {
-                    req.respMsg = req.respCreator.create(respData);
+                    req.setRespMsg(req.getRespCreator().create(respData));
                     remainingReqs.remove(req);
                 } catch (RuntimeException e) {
                     // do nothing
@@ -245,11 +245,11 @@ final class InternalUtils {
         long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
         next:
         for (UdpRequest req : reqs) {
-            if (addressToSocketId.containsKey(req.sourceAddress)) {
+            if (addressToSocketId.containsKey(req.getSourceAddress())) {
                 continue;
             }
 
-            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.sourceAddress));
+            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.getSourceAddress()));
 
             Object createResp;
             while (true) {
@@ -269,14 +269,14 @@ final class InternalUtils {
             }
 
             int id = ((CreateUdpNetworkResponse) createResp).getId();
-            addressToSocketId.put(req.sourceAddress, id);
+            addressToSocketId.put(req.getSourceAddress(), id);
         }
         
         
         
         // Queue up requests to send out
         for (UdpRequest req : reqs) {
-            int id = addressToSocketId.get(req.sourceAddress);
+            int id = addressToSocketId.get(req.getSourceAddress());
             socketIdToRequests.put(id, req);
         }
 
@@ -289,8 +289,8 @@ final class InternalUtils {
         while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
             // Send requests to whoever hasn't responded yet
             for (UdpRequest req : socketIdToRequests.values()) {
-                int id = addressToSocketId.get(req.sourceAddress);
-                networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
+                int id = addressToSocketId.get(req.getSourceAddress());
+                networkBus.send(new WriteUdpNetworkRequest(id, req.getDestinationSocketAddress(), req.getSendMsg().dump()));
             }
 
             // Wait for responses
@@ -319,7 +319,7 @@ final class InternalUtils {
                     UdpRequest pendingReq = it.next();
                     byte[] respData = readNetResp.getData();
                     try {
-                        pendingReq.respMsges.add(pendingReq.respCreator.create(respData));
+                        pendingReq.getRespMsges().add(pendingReq.getRespCreator().create(respData));
                         it.remove();
                     } catch (RuntimeException e) {
                         // do nothing
@@ -339,21 +339,119 @@ final class InternalUtils {
     
     
     static final class HttpRequest {
-        Object other;
-        InetAddress sourceAddress;
-        URL location;
-        UpnpIgdHttpRequest sendMsg;
-        UpnpIgdHttpResponse respMsg;
-        ResponseCreator respCreator;
+        private Object other;
+        private InetAddress sourceAddress;
+        private URL location;
+        private UpnpIgdHttpRequest sendMsg;
+        private UpnpIgdHttpResponse respMsg;
+        private ResponseCreator respCreator;
+
+        Object getOther() {
+            return other;
+        }
+
+        void setOther(Object other) {
+            this.other = other;
+        }
+
+        InetAddress getSourceAddress() {
+            return sourceAddress;
+        }
+
+        void setSourceAddress(InetAddress sourceAddress) {
+            this.sourceAddress = sourceAddress;
+        }
+
+        URL getLocation() {
+            return location;
+        }
+
+        void setLocation(URL location) {
+            this.location = location;
+        }
+
+        UpnpIgdHttpRequest getSendMsg() {
+            return sendMsg;
+        }
+
+        void setSendMsg(UpnpIgdHttpRequest sendMsg) {
+            this.sendMsg = sendMsg;
+        }
+
+        UpnpIgdHttpResponse getRespMsg() {
+            return respMsg;
+        }
+
+        void setRespMsg(UpnpIgdHttpResponse respMsg) {
+            this.respMsg = respMsg;
+        }
+
+        ResponseCreator getRespCreator() {
+            return respCreator;
+        }
+
+        void setRespCreator(ResponseCreator respCreator) {
+            this.respCreator = respCreator;
+        }
+        
     }
 
     static final class UdpRequest {
-        Object other;
-        InetAddress sourceAddress;
-        InetSocketAddress destinationSocketAddress;
-        UpnpIgdHttpRequest sendMsg;
-        List<UpnpIgdHttpResponse> respMsges = new ArrayList<>();
-        ResponseCreator respCreator;
+        private Object other;
+        private InetAddress sourceAddress;
+        private InetSocketAddress destinationSocketAddress;
+        private UpnpIgdHttpRequest sendMsg;
+        private List<UpnpIgdHttpResponse> respMsges = new ArrayList<>();
+        private ResponseCreator respCreator;
+
+        Object getOther() {
+            return other;
+        }
+
+        void setOther(Object other) {
+            this.other = other;
+        }
+
+        InetAddress getSourceAddress() {
+            return sourceAddress;
+        }
+
+        void setSourceAddress(InetAddress sourceAddress) {
+            this.sourceAddress = sourceAddress;
+        }
+
+        InetSocketAddress getDestinationSocketAddress() {
+            return destinationSocketAddress;
+        }
+
+        void setDestinationSocketAddress(InetSocketAddress destinationSocketAddress) {
+            this.destinationSocketAddress = destinationSocketAddress;
+        }
+
+        UpnpIgdHttpRequest getSendMsg() {
+            return sendMsg;
+        }
+
+        void setSendMsg(UpnpIgdHttpRequest sendMsg) {
+            this.sendMsg = sendMsg;
+        }
+
+        List<UpnpIgdHttpResponse> getRespMsges() {
+            return respMsges;
+        }
+
+        void setRespMsges(List<UpnpIgdHttpResponse> respMsges) {
+            this.respMsges = respMsges;
+        }
+
+        ResponseCreator getRespCreator() {
+            return respCreator;
+        }
+
+        void setRespCreator(ResponseCreator respCreator) {
+            this.respCreator = respCreator;
+        }
+        
     }
     
     interface ResponseCreator {

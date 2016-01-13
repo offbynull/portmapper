@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,7 +44,7 @@ public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoap
     public GetSpecificPortMappingEntryUpnpIgdRequest(String host, String controlLocation, String serviceType,
             InetAddress remoteHost,
             int externalPort,
-            Protocol protocol) {
+            PortType protocol) {
         super(host, controlLocation, serviceType, "GetSpecificPortMappingEntry",
                 generateArguments(remoteHost, externalPort, protocol));
     }
@@ -51,7 +52,7 @@ public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoap
     private static Map<String, String> generateArguments(
             InetAddress remoteHost,
             int externalPort,
-            Protocol protocol) {
+            PortType protocol) {
         
         Map<String, String> ret = new LinkedHashMap<>();
         

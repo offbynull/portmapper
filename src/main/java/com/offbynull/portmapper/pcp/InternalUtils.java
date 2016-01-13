@@ -330,9 +330,7 @@ final class InternalUtils {
         for (RunProcessRequest req : reqs) {
             processBus.send(
                     new CreateProcessRequest(
-                            selfBus,
-                            req.executable,
-                            req.parameters));
+                            selfBus, req.getExecutable(), req.getParameters()));
         }
 
         // Read data from sockets
@@ -403,11 +401,11 @@ final class InternalUtils {
         long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
         next:
         for (UdpRequest req : reqs) {
-            if (addressToSocketId.containsKey(req.sourceAddress)) {
+            if (addressToSocketId.containsKey(req.getSourceAddress())) {
                 continue;
             }
 
-            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.sourceAddress));
+            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.getSourceAddress()));
 
             Object createResp;
             while (true) {
@@ -427,16 +425,16 @@ final class InternalUtils {
             }
 
             int id = ((CreateUdpNetworkResponse) createResp).getId();
-            addressToSocketId.put(req.sourceAddress, id);
+            addressToSocketId.put(req.getSourceAddress(), id);
         }
         
         
         
         // Queue up requests to send out
         for (UdpRequest req : reqs) {
-            int id = addressToSocketId.get(req.sourceAddress);
-            if (req.destinationSocketAddress.getAddress().equals(ZERO_IPV4)
-                    || req.destinationSocketAddress.getAddress().equals(ZERO_IPV6)) {
+            int id = addressToSocketId.get(req.getSourceAddress());
+            if (req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV4)
+                    || req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV6)) {
                 // skip if 0.0.0.0 or :: -- seems to cause a socketexception if you try to send to these addresses, which in turn causes the
                 // networkgateway to close the socket
                 continue;
@@ -454,8 +452,8 @@ final class InternalUtils {
         while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
             // Send requests to whoever hasn't responded yet
             for (UdpRequest req : socketIdToRequests.values()) {
-                int id = addressToSocketId.get(req.sourceAddress);
-                networkBus.send(new WriteUdpNetworkRequest(id, req.destinationSocketAddress, req.sendMsg.dump()));
+                int id = addressToSocketId.get(req.getSourceAddress());
+                networkBus.send(new WriteUdpNetworkRequest(id, req.getDestinationSocketAddress(), req.getSendMsg().dump()));
             }
 
             // Wait for responses
@@ -483,10 +481,10 @@ final class InternalUtils {
                 Iterator<UdpRequest> it = socketIdToRequests.get(id).iterator();
                 while (it.hasNext()) {
                     UdpRequest pendingReq = it.next();
-                    if (pendingReq.destinationSocketAddress.equals(remoteSocketAddress)) {
+                    if (pendingReq.getDestinationSocketAddress().equals(remoteSocketAddress)) {
                         byte[] respData = readNetResp.getData();
                         try {
-                            pendingReq.respMsg = pendingReq.respCreator.create(respData);
+                            pendingReq.setRespMsg(pendingReq.getRespCreator().create(respData));
                             it.remove();
                         } catch (RuntimeException e) {
                             // do nothing
@@ -518,22 +516,88 @@ final class InternalUtils {
     }
 
     static final class RunProcessRequest {
-        String executable;
-        String[] parameters;
+        private String executable;
+        private String[] parameters;
         
         RunProcessRequest(String executable, String ... parameters) {
             this.executable = executable;
             this.parameters = parameters;
         }
+
+        public String[] getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(String[] parameters) {
+            this.parameters = parameters;
+        }
+
+        public String getExecutable() {
+            return executable;
+        }
+
+        public void setExecutable(String executable) {
+            this.executable = executable;
+        }
+        
     }
 
     static final class UdpRequest {
-        Object other;
-        InetAddress sourceAddress;
-        InetSocketAddress destinationSocketAddress;
-        PcpRequest sendMsg;
-        PcpResponse respMsg;
-        ResponseCreator respCreator;
+        private Object other;
+        private InetAddress sourceAddress;
+        private InetSocketAddress destinationSocketAddress;
+        private PcpRequest sendMsg;
+        private PcpResponse respMsg;
+        private ResponseCreator respCreator;
+
+        public Object getOther() {
+            return other;
+        }
+
+        public void setOther(Object other) {
+            this.other = other;
+        }
+
+        public InetAddress getSourceAddress() {
+            return sourceAddress;
+        }
+
+        public void setSourceAddress(InetAddress sourceAddress) {
+            this.sourceAddress = sourceAddress;
+        }
+
+        public InetSocketAddress getDestinationSocketAddress() {
+            return destinationSocketAddress;
+        }
+
+        public void setDestinationSocketAddress(InetSocketAddress destinationSocketAddress) {
+            this.destinationSocketAddress = destinationSocketAddress;
+        }
+
+        public PcpRequest getSendMsg() {
+            return sendMsg;
+        }
+
+        public void setSendMsg(PcpRequest sendMsg) {
+            this.sendMsg = sendMsg;
+        }
+
+        public PcpResponse getRespMsg() {
+            return respMsg;
+        }
+
+        public void setRespMsg(PcpResponse respMsg) {
+            this.respMsg = respMsg;
+        }
+
+        public ResponseCreator getRespCreator() {
+            return respCreator;
+        }
+
+        public void setRespCreator(ResponseCreator respCreator) {
+            this.respCreator = respCreator;
+        }
+        
     }
     
     interface ResponseCreator {

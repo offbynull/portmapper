@@ -1,5 +1,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -9,7 +10,7 @@ public class AddPortMappingUpnpIgdRequestTest {
     @Test
     public void mustGenerateTcpRequest() throws Exception {
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
-                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, Protocol.TCP, 12345,
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, PortType.TCP, 12345,
                 InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), true, "desc", 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
 
@@ -46,7 +47,7 @@ public class AddPortMappingUpnpIgdRequestTest {
         // because some routers may not follow the spec
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
                 "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), 15,
-                Protocol.UDP, 12345,
+                PortType.UDP, 12345,
                 InetAddress.getByAddress(new byte[]{-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16}), false, "desc",
                 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
@@ -82,7 +83,7 @@ public class AddPortMappingUpnpIgdRequestTest {
     @Test
     public void mustGenerateRequestWithWildcardRemoteAddressAndPortAndLeaseTime() throws Exception {
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
-                "service:type", null, 0, Protocol.TCP, 12345,
+                "service:type", null, 0, PortType.TCP, 12345,
                 InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), true, "desc", 0);
         String bufferText = new String(req.dump(), "US-ASCII");
 
@@ -116,21 +117,21 @@ public class AddPortMappingUpnpIgdRequestTest {
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenInternalPortIsWildcard() throws Exception {
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
-                "service:type", null, 0, Protocol.TCP, 0,
+                "service:type", null, 0, PortType.TCP, 0,
                 InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), true, "desc", 1000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenInternalPortIsOutOfRange() throws Exception {
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
-                "service:type", null, 0, Protocol.TCP, 100000,
+                "service:type", null, 0, PortType.TCP, 100000,
                 InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), true, "desc", 1000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenLeaseTimeIsOutOfRange() throws Exception {
         AddPortMappingUpnpIgdRequest req = new AddPortMappingUpnpIgdRequest("fake", "/controllink",
-                "service:type", null, 0, Protocol.TCP, 1000,
+                "service:type", null, 0, PortType.TCP, 1000,
                 InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), true, "desc", -1);
     }
 

@@ -184,38 +184,38 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         for (InetAddress sourceAddress : sourceAddresses) {
             if (sourceAddress instanceof Inet4Address) {
                 UdpRequest req = new UdpRequest();
-                req.sourceAddress = sourceAddress;
-                req.destinationSocketAddress = ProbeDeviceType.IPV4.getMulticastSocketAddress();
-                req.respCreator = new ServiceDiscoveryUpnpIgdResponseCreator();
-                req.sendMsg = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV4, null, 3, "ssdp:all");
+                req.setSourceAddress(sourceAddress);
+                req.setDestinationSocketAddress(ProbeDeviceType.IPV4.getMulticastSocketAddress());
+                req.setRespCreator(new ServiceDiscoveryUpnpIgdResponseCreator());
+                req.setSendMsg(new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV4, null, 3, "ssdp:all"));
                 discoveryRequests.add(req);
             } else if (sourceAddress instanceof Inet6Address) {
                 UdpRequest v6LocalReq = new UdpRequest();
-                v6LocalReq.sourceAddress = sourceAddress;
-                v6LocalReq.destinationSocketAddress = ProbeDeviceType.IPV6_LINK_LOCAL.getMulticastSocketAddress();
-                v6LocalReq.respCreator = new ServiceDiscoveryUpnpIgdResponseCreator();
-                v6LocalReq.sendMsg = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_LINK_LOCAL, null, 3, "ssdp:all");
+                v6LocalReq.setSourceAddress(sourceAddress);
+                v6LocalReq.setDestinationSocketAddress(ProbeDeviceType.IPV6_LINK_LOCAL.getMulticastSocketAddress());
+                v6LocalReq.setRespCreator(new ServiceDiscoveryUpnpIgdResponseCreator());
+                v6LocalReq.setSendMsg(new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_LINK_LOCAL, null, 3, "ssdp:all"));
                 discoveryRequests.add(v6LocalReq);
 
                 UdpRequest v6SiteReq = new UdpRequest();
-                v6SiteReq.sourceAddress = sourceAddress;
-                v6SiteReq.destinationSocketAddress = ProbeDeviceType.IPV6_SITE_LOCAL.getMulticastSocketAddress();
-                v6SiteReq.respCreator = new ServiceDiscoveryUpnpIgdResponseCreator();
-                v6SiteReq.sendMsg = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_SITE_LOCAL, null, 3, "ssdp:all");
+                v6SiteReq.setSourceAddress(sourceAddress);
+                v6SiteReq.setDestinationSocketAddress(ProbeDeviceType.IPV6_SITE_LOCAL.getMulticastSocketAddress());
+                v6SiteReq.setRespCreator(new ServiceDiscoveryUpnpIgdResponseCreator());
+                v6SiteReq.setSendMsg(new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_SITE_LOCAL, null, 3, "ssdp:all"));
                 discoveryRequests.add(v6SiteReq);
 
                 UdpRequest v6OrgReq = new UdpRequest();
-                v6OrgReq.sourceAddress = sourceAddress;
-                v6OrgReq.destinationSocketAddress = ProbeDeviceType.IPV6_ORGANIZATION_LOCAL.getMulticastSocketAddress();
-                v6OrgReq.respCreator = new ServiceDiscoveryUpnpIgdResponseCreator();
-                v6OrgReq.sendMsg = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_ORGANIZATION_LOCAL, null, 3, "ssdp:all");
+                v6OrgReq.setSourceAddress(sourceAddress);
+                v6OrgReq.setDestinationSocketAddress(ProbeDeviceType.IPV6_ORGANIZATION_LOCAL.getMulticastSocketAddress());
+                v6OrgReq.setRespCreator(new ServiceDiscoveryUpnpIgdResponseCreator());
+                v6OrgReq.setSendMsg(new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_ORGANIZATION_LOCAL, null, 3, "ssdp:all"));
                 discoveryRequests.add(v6OrgReq);
 
                 UdpRequest v6GlobalReq = new UdpRequest();
-                v6GlobalReq.sourceAddress = sourceAddress;
-                v6GlobalReq.destinationSocketAddress = ProbeDeviceType.IPV6_GLOBAL.getMulticastSocketAddress();
-                v6GlobalReq.respCreator = new ServiceDiscoveryUpnpIgdResponseCreator();
-                v6GlobalReq.sendMsg = new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_GLOBAL, null, 3, "ssdp:all");
+                v6GlobalReq.setSourceAddress(sourceAddress);
+                v6GlobalReq.setDestinationSocketAddress(ProbeDeviceType.IPV6_GLOBAL.getMulticastSocketAddress());
+                v6GlobalReq.setRespCreator(new ServiceDiscoveryUpnpIgdResponseCreator());
+                v6GlobalReq.setSendMsg(new ServiceDiscoveryUpnpIgdRequest(ProbeDeviceType.IPV6_GLOBAL, null, 3, "ssdp:all"));
                 discoveryRequests.add(v6GlobalReq);
             } else {
                 throw new IllegalStateException();
@@ -226,22 +226,22 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         // Get root XMLs
         Collection<HttpRequest> rootRequests = new ArrayList<>(discoveryRequests.size());
         for (UdpRequest discoveryReq : discoveryRequests) {
-            for (UpnpIgdHttpResponse respMsg : discoveryReq.respMsges) {
+            for (UpnpIgdHttpResponse respMsg : discoveryReq.getRespMsges()) {
                 try {
                     ServiceDiscoveryUpnpIgdResponse discoveryResp = (ServiceDiscoveryUpnpIgdResponse) respMsg;
 
                     HttpRequest req = new HttpRequest();
 
                     ProbeResult other = new ProbeResult();
-                    other.source = discoveryReq.sourceAddress;
+                    other.source = discoveryReq.getSourceAddress();
                     other.location = discoveryResp.getLocation();
                     other.serverName = discoveryResp.getServer();
 
-                    req.other = other;
-                    req.sourceAddress = other.source;
-                    req.location = other.location;
-                    req.respCreator = new RootUpnpIgdResponseCreator(other.location);
-                    req.sendMsg = new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile());
+                    req.setOther(other);
+                    req.setSourceAddress(other.source);
+                    req.setLocation(other.location);
+                    req.setRespCreator(new RootUpnpIgdResponseCreator(other.location));
+                    req.setSendMsg(new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile()));
                     rootRequests.add(req);
                 } catch (RuntimeException iae) {
                     // failed to parse, so skip to next
@@ -254,21 +254,21 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         Collection<HttpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
         for (HttpRequest rootRequest : rootRequests) {
             try {
-                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.respMsg;
+                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.getRespMsg();
 
                 for (ServiceReference serviceReference : rootResp.getServices()) {
                     URL scpdUrl = serviceReference.getScpdUrl();
 
                     RootRequestResult other = new RootRequestResult();
-                    other.probeResult = (ProbeResult) rootRequest.other;
+                    other.probeResult = (ProbeResult) rootRequest.getOther();
                     other.serviceReference = serviceReference;
 
                     HttpRequest req = new HttpRequest();
-                    req.other = other;
-                    req.sourceAddress = rootRequest.sourceAddress;
-                    req.location = scpdUrl;
-                    req.respCreator = new ServiceDescriptionUpnpIgdResponseCreator();
-                    req.sendMsg = new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile());
+                    req.setOther(other);
+                    req.setSourceAddress(rootRequest.getSourceAddress());
+                    req.setLocation(scpdUrl);
+                    req.setRespCreator(new ServiceDescriptionUpnpIgdResponseCreator());
+                    req.setSendMsg(new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()));
                     serviceDescRequests.add(req);
                 }
             } catch (RuntimeException iae) {
@@ -281,9 +281,9 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         Set<UpnpIgdPortMapper> ret = new HashSet<>();
         for (HttpRequest serviceDescRequest : serviceDescRequests) {
             try {
-                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.respMsg;
+                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.getRespMsg();
 
-                RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.other;
+                RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.getOther();
                 for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
                     ServiceType serviceType = e.getKey();
                     IdentifiedService identifiedService = e.getValue();
@@ -292,8 +292,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                     switch (serviceType) {
                         case OLD_PORT_MAPPER:
                             upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
-                                    networkBus,
-                                    serviceDescRequest.sourceAddress,
+                                    networkBus, serviceDescRequest.getSourceAddress(),
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
                                     rootReqRes.serviceReference.getServiceType(),
@@ -303,8 +302,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                             break;
                         case NEW_PORT_MAPPER:
                             upnpIgdPortMapper = new PortMapperUpnpIgdPortMapper(
-                                    networkBus,
-                                    serviceDescRequest.sourceAddress,
+                                    networkBus, serviceDescRequest.getSourceAddress(),
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
                                     rootReqRes.serviceReference.getServiceType(),
@@ -314,8 +312,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                             break;
                         case FIREWALL:
                             upnpIgdPortMapper = new FirewallUpnpIgdPortMapper(
-                                    networkBus,
-                                    serviceDescRequest.sourceAddress,
+                                    networkBus, serviceDescRequest.getSourceAddress(),
                                     rootReqRes.serviceReference.getControlUrl(),
                                     rootReqRes.probeResult.serverName,
                                     rootReqRes.serviceReference.getServiceType(),

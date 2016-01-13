@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
@@ -49,7 +50,7 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
             int remotePort,
             InetAddress internalClient,
             int internalPort,
-            Protocol protocol,
+            PortType protocol,
             long leaseDuration) {
         super(host, controlLocation, serviceType, "AddPinhole",
                 generateArguments(remoteHost, remotePort, protocol, internalPort, internalClient, leaseDuration));
@@ -58,7 +59,7 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
     private static Map<String, String> generateArguments(
             InetAddress remoteHost, // must be IPv6 address (don't bother checking) -- null means wildcard ("")
             int externalPort, // 0 to 65535 -- 0 means wildcard 
-            Protocol protocol, // must be either "TCP" or "UDP" -- null means wildcard
+            PortType protocol, // must be either "TCP" or "UDP" -- null means wildcard
             int internalPort, //  0 to 65535 -- 0 means wildcard
             InetAddress internalClient, // must be IPv6 address of interface accessing server (don't bother checking)
             long leaseDuration) { // 1 to max 0xFFFFFFFF
@@ -83,7 +84,7 @@ public final class AddPinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
         Validate.inclusiveBetween(0, 65535, internalPort);
         ret.put("InternalPort", "" + internalPort);
         
-        ret.put("Protocol", (protocol == null ? "65535" : "" + protocol.getIana())); // 65535 is wildcard
+        ret.put("Protocol", (protocol == null ? "65535" : "" + protocol.getProtocolNumber())); // 65535 is wildcard
         
         Validate.inclusiveBetween(1L, 0xFFFFFFFFL, leaseDuration);
         ret.put("LeaseTime", "" + leaseDuration);

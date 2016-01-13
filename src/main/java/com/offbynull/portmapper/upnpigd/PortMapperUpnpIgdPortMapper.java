@@ -30,7 +30,6 @@ import com.offbynull.portmapper.upnpigd.externalmessages.DeletePortMappingUpnpIg
 import com.offbynull.portmapper.upnpigd.externalmessages.DeletePortMappingUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdResponse;
-import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
 import java.net.InetAddress;
 import java.net.URL;
@@ -92,29 +91,29 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         // GET EXTERNAL IP
         //
         HttpRequest externalIpHttpRequest = new HttpRequest();
-        externalIpHttpRequest.location = controlUrl;
-        externalIpHttpRequest.sourceAddress = internalAddress;
-        externalIpHttpRequest.sendMsg = new GetExternalIpAddressUpnpIgdRequest(
+        externalIpHttpRequest.setLocation(controlUrl);
+        externalIpHttpRequest.setSourceAddress(internalAddress);
+        externalIpHttpRequest.setSendMsg(new GetExternalIpAddressUpnpIgdRequest(
                 controlUrl.getAuthority(),
                 controlUrl.getFile(),
-                serviceType);
-        externalIpHttpRequest.respCreator = new ResponseCreator() {
+                serviceType));
+        externalIpHttpRequest.setRespCreator(new ResponseCreator() {
             @Override
             public UpnpIgdHttpResponse create(byte[] buffer) {
                 return new GetExternalIpAddressUpnpIgdResponse(buffer);
             }
-        };
+        });
 
         performHttpRequests(
                 networkBus,
                 Collections.singleton(externalIpHttpRequest),
                 5000L, 5000L, 5000L);
         
-        if (externalIpHttpRequest.respMsg == null) {
+        if (externalIpHttpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to getting external IP");
         }
         
-        InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.respMsg).getIpAddress();
+        InetAddress externalAddress = ((GetExternalIpAddressUpnpIgdResponse) externalIpHttpRequest.getRespMsg()).getIpAddress();
 
 
 
@@ -134,18 +133,6 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         URL controlUrl = getControlUrl();
         String serviceType = getServiceType();
         InetAddress internalAddress = getInternalAddress();
-        
-        Protocol protocol;
-        switch (portType) {
-            case TCP:
-                protocol = Protocol.TCP;
-                break;
-            case UDP:
-                protocol = Protocol.UDP;
-                break;
-            default:
-                throw new IllegalStateException(); // shuold never happend
-        }
         Range<Long> externalPortRange = getExternalPortRange();
         Range<Long> leaseDurationRange = getLeaseDurationRange();
         long leaseDuration;
@@ -161,39 +148,39 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 "Router reports external port mappings as %s", externalPortRange);
         
         HttpRequest mapHttpRequest = new HttpRequest();
-        mapHttpRequest.location = controlUrl;
-        mapHttpRequest.sourceAddress = internalAddress;
-        mapHttpRequest.sendMsg = new AddAnyPortMappingUpnpIgdRequest(
+        mapHttpRequest.setLocation(controlUrl);
+        mapHttpRequest.setSourceAddress(internalAddress);
+        mapHttpRequest.setSendMsg(new AddAnyPortMappingUpnpIgdRequest(
                 controlUrl.getAuthority(),
                 controlUrl.getFile(),
                 serviceType,
                 null,
                 externalPort,
-                protocol,
+                portType,
                 internalPort,
                 internalAddress,
                 true,
                 "",
-                leaseDuration);
-        mapHttpRequest.respCreator = new ResponseCreator() {
+                leaseDuration));
+        mapHttpRequest.setRespCreator(new ResponseCreator() {
             @Override
             public UpnpIgdHttpResponse create(byte[] buffer) {
                 return new AddAnyPortMappingUpnpIgdResponse(buffer);
             }
-        };
+        });
 
         performHttpRequests(
                 networkBus,
                 Collections.singleton(mapHttpRequest),
                 5000L, 5000L, 5000L);
         
-        if (mapHttpRequest.respMsg == null) {
+        if (mapHttpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to mapping");
         }
         
         
         
-        int reservedExternalPort = ((AddAnyPortMappingUpnpIgdResponse) mapHttpRequest.respMsg).getReservedPort();
+        int reservedExternalPort = ((AddAnyPortMappingUpnpIgdResponse) mapHttpRequest.getRespMsg()).getReservedPort();
         return new PortMapperMappedPort(
                 internalPort,
                 reservedExternalPort,
@@ -213,17 +200,6 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         // to map a randomized externalPort
         long[] retryDurations = new long[] {5000L, 5000L, 5000L};
         for (int i = 0; i < 5; i++) {
-            Protocol protocol;
-            switch (portType) {
-                case TCP:
-                    protocol = Protocol.TCP;
-                    break;
-                case UDP:
-                    protocol = Protocol.UDP;
-                    break;
-                default:
-                    throw new IllegalStateException(); // shuold never happend
-            }
             Range<Long> externalPortRange = getExternalPortRange();
             Range<Long> leaseDurationRange = getLeaseDurationRange();
             long leaseDuration;
@@ -239,33 +215,33 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                     "Router reports external port mappings as %s", externalPortRange);
 
             HttpRequest mapHttpRequest = new HttpRequest();
-            mapHttpRequest.location = controlUrl;
-            mapHttpRequest.sourceAddress = internalAddress;
-            mapHttpRequest.sendMsg = new AddPortMappingUpnpIgdRequest(
+            mapHttpRequest.setLocation(controlUrl);
+            mapHttpRequest.setSourceAddress(internalAddress);
+            mapHttpRequest.setSendMsg(new AddPortMappingUpnpIgdRequest(
                     controlUrl.getAuthority(),
                     controlUrl.getFile(),
                     serviceType,
                     null,
                     externalPort,
-                    protocol,
+                    portType,
                     internalPort,
                     internalAddress,
                     true,
                     "",
-                    leaseDuration);
-            mapHttpRequest.respCreator = new ResponseCreator() {
+                    leaseDuration));
+            mapHttpRequest.setRespCreator(new ResponseCreator() {
                 @Override
                 public UpnpIgdHttpResponse create(byte[] buffer) {
                     return new AddPortMappingUpnpIgdResponse(buffer);
                 }
-            };
+            });
 
             performHttpRequests(
                     networkBus,
                     Collections.singleton(mapHttpRequest),
                     retryDurations);
 
-            if (mapHttpRequest.respMsg != null) {
+            if (mapHttpRequest.getRespMsg() != null) {
                 // server responded, so we're good to go
                 return new PortMapperMappedPort(
                         internalPort,
@@ -295,43 +271,33 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         Bus networkBus = getNetworkBus();
         URL controlUrl = getControlUrl();
         String serviceType = getServiceType();
-        Protocol protocol;
-        switch (mappedPort.getPortType()) {
-            case TCP:
-                protocol = Protocol.TCP;
-                break;
-            case UDP:
-                protocol = Protocol.UDP;
-                break;
-            default:
-                throw new IllegalStateException(); // shuold never happend
-        }
         int externalPort = mappedPort.getExternalPort();
         InetAddress internalAddress = getInternalAddress();
+        PortType portType = mappedPort.getPortType();
         
         HttpRequest httpRequest = new HttpRequest();
-        httpRequest.location = controlUrl;
-        httpRequest.sourceAddress = internalAddress;
-        httpRequest.sendMsg = new DeletePortMappingUpnpIgdRequest(
+        httpRequest.setLocation(controlUrl);
+        httpRequest.setSourceAddress(internalAddress);
+        httpRequest.setSendMsg(new DeletePortMappingUpnpIgdRequest(
                 controlUrl.getAuthority(),
                 controlUrl.getFile(),
                 serviceType,
                 null,
                 externalPort,
-                protocol);
-        httpRequest.respCreator = new ResponseCreator() {
+                portType));
+        httpRequest.setRespCreator(new ResponseCreator() {
             @Override
             public UpnpIgdHttpResponse create(byte[] buffer) {
                 return new DeletePortMappingUpnpIgdResponse(buffer);
             }
-        };
+        });
         
         performHttpRequests(
                 networkBus,
                 Collections.singleton(httpRequest),
                 5000L, 5000L, 5000L);
         
-        if (httpRequest.respMsg == null) {
+        if (httpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");
         }
     }

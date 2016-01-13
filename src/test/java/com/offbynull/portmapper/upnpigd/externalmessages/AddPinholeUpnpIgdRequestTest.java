@@ -1,5 +1,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -11,7 +12,7 @@ public class AddPinholeUpnpIgdRequestTest {
         // NOTE: technically port mapping services should not be dealing with IPv4 (firewall requires IPv6) -- but allow it anyways because
         // some routers may not follow the spec
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type",
-                InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 12345, Protocol.TCP,
+                InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 12345, PortType.TCP,
                 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
 
@@ -45,7 +46,7 @@ public class AddPinholeUpnpIgdRequestTest {
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type",
                 InetAddress.getByAddress(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), 15,
                 InetAddress.getByAddress(new byte[]{-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16}), 12345,
-                Protocol.UDP, 1000);
+                PortType.UDP, 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
@@ -77,7 +78,7 @@ public class AddPinholeUpnpIgdRequestTest {
     @Test
     public void mustGenerateRequestWithWildcardAddressesAndPorts() throws Exception {
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type",
-                null, 0, null, 0, Protocol.UDP, 1000);
+                null, 0, null, 0, PortType.UDP, 1000);
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
@@ -108,19 +109,19 @@ public class AddPinholeUpnpIgdRequestTest {
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenInternalPortIsOutOfRange() throws Exception {
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type", null, 0,
-                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 100000, Protocol.TCP, 1000);
+                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 100000, PortType.TCP, 1000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenExtenralPortIsOutOfRange() throws Exception {
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type", null, 100000,
-                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 0, Protocol.TCP, 1000);
+                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 0, PortType.TCP, 1000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenLeaseTimeIsOutOfRange() throws Exception {
         AddPinholeUpnpIgdRequest req = new AddPinholeUpnpIgdRequest("fake", "/controllink", "service:type", null, 0,
-                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 1000, Protocol.TCP, -1);
+                InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 1000, PortType.TCP, -1);
     }
 
 }

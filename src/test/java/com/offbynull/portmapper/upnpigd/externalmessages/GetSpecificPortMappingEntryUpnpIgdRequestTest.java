@@ -1,7 +1,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.upnpigd.externalmessages.GetSpecificPortMappingEntryUpnpIgdRequest;
-import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
+import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -11,7 +10,7 @@ public class GetSpecificPortMappingEntryUpnpIgdRequestTest {
     @Test
     public void mustGenerateTcpRequest() throws Exception {
         GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
-                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, Protocol.TCP);
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 15, PortType.TCP);
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
@@ -42,7 +41,7 @@ public class GetSpecificPortMappingEntryUpnpIgdRequestTest {
         // because some routers may not follow the spec
         GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
                 "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), 20000,
-                Protocol.UDP);
+                PortType.UDP);
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
@@ -70,7 +69,7 @@ public class GetSpecificPortMappingEntryUpnpIgdRequestTest {
     @Test
     public void mustGenerateRequestWithWildcardAddress() throws Exception {
         GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
-                "service:type", null, 15, Protocol.TCP);
+                "service:type", null, 15, PortType.TCP);
         String bufferText = new String(req.dump(), "US-ASCII");
 
         assertEquals("POST /controllink HTTP/1.1\r\n"
@@ -98,7 +97,7 @@ public class GetSpecificPortMappingEntryUpnpIgdRequestTest {
     @Test(expected = IllegalArgumentException.class)
     public void mustFailToGenerateWhenPortIsOutOfRange() throws Exception {
         GetSpecificPortMappingEntryUpnpIgdRequest req = new GetSpecificPortMappingEntryUpnpIgdRequest("fake", "/controllink",
-                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 5555555, Protocol.UDP);
+                "service:type", InetAddress.getByAddress(new byte[]{1, 2, 3, 4}), 5555555, PortType.UDP);
     }
 
 }

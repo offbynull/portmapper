@@ -16,6 +16,7 @@
  */
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
+import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,7 +50,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
     public AddPortMappingUpnpIgdRequest(String host, String controlLocation, String serviceType,
             InetAddress remoteHost,
             int externalPort,
-            Protocol protocol,
+            PortType protocol,
             int internalPort,
             InetAddress internalClient,
             boolean enabled,
@@ -63,7 +64,7 @@ public final class AddPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
     private static Map<String, String> generateArguments(
             InetAddress remoteHost, // must be IPv4 address (don't bother checking) -- null means wildcard ("")
             int externalPort, // 0 to 65535 -- 0 means wildcard 
-            Protocol protocol, // must be either "TCP" or "UDP"
+            PortType protocol, // must be either "TCP" or "UDP"
             int internalPort, //  1 to 65535
             InetAddress internalClient, // must be IPv4 address of interface accessing server (don't bother checking)
             boolean enabled,

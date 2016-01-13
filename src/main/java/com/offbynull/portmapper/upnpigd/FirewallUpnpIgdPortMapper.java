@@ -24,7 +24,6 @@ import com.offbynull.portmapper.upnpigd.externalmessages.AddPinholeUpnpIgdReques
 import com.offbynull.portmapper.upnpigd.externalmessages.AddPinholeUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.DeletePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.DeletePortMappingUpnpIgdResponse;
-import com.offbynull.portmapper.upnpigd.externalmessages.Protocol;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpdatePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpdatePinholeUpnpIgdResponse;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
@@ -79,17 +78,6 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         // to map a randomized externalPort
         long[] retryDurations = new long[] {5000L, 5000L, 5000L};
         for (int i = 0; i < 5; i++) {
-            Protocol protocol;
-            switch (portType) {
-                case TCP:
-                    protocol = Protocol.TCP;
-                    break;
-                case UDP:
-                    protocol = Protocol.UDP;
-                    break;
-                default:
-                    throw new IllegalStateException(); // shuold never happend
-            }
             Range<Long> externalPortRange = getExternalPortRange();
             Range<Long> leaseDurationRange = getLeaseDurationRange();
             long leaseDuration;
@@ -105,9 +93,9 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
                     "Router reports external port mappings as %s", externalPortRange);
 
             InternalUtils.HttpRequest mapHttpRequest = new InternalUtils.HttpRequest();
-            mapHttpRequest.location = controlUrl;
-            mapHttpRequest.sourceAddress = internalAddress;
-            mapHttpRequest.sendMsg = new AddPinholeUpnpIgdRequest(
+            mapHttpRequest.setLocation(controlUrl);
+            mapHttpRequest.setSourceAddress(internalAddress);
+            mapHttpRequest.setSendMsg(new AddPinholeUpnpIgdRequest(
                     controlUrl.getAuthority(),
                     controlUrl.getFile(),
                     serviceType,
@@ -115,23 +103,23 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
                     externalPort,
                     internalAddress,
                     internalPort,
-                    protocol,
-                    leaseDuration);
-            mapHttpRequest.respCreator = new InternalUtils.ResponseCreator() {
+                    portType,
+                    leaseDuration));
+            mapHttpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
                 @Override
                 public UpnpIgdHttpResponse create(byte[] buffer) {
                     return new AddPinholeUpnpIgdResponse(buffer);
                 }
-            };
+            });
 
             performHttpRequests(
                     networkBus,
                     Collections.singleton(mapHttpRequest),
                     retryDurations);
 
-            if (mapHttpRequest.respMsg != null) {
+            if (mapHttpRequest.getRespMsg() != null) {
                 // server responded, so we're good to go
-                String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.respMsg).getUniqueId();
+                String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.getRespMsg()).getUniqueId();
                 return new FirewallMappedPort(key, internalPort, externalPort, null, portType, leaseDuration);
             }
             
@@ -159,26 +147,26 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         InetAddress internalAddress = getInternalAddress();
         
         InternalUtils.HttpRequest httpRequest = new InternalUtils.HttpRequest();
-        httpRequest.location = controlUrl;
-        httpRequest.sourceAddress = internalAddress;
-        httpRequest.sendMsg = new DeletePinholeUpnpIgdRequest(
+        httpRequest.setLocation(controlUrl);
+        httpRequest.setSourceAddress(internalAddress);
+        httpRequest.setSendMsg(new DeletePinholeUpnpIgdRequest(
                 controlUrl.getAuthority(),
                 controlUrl.getFile(),
                 serviceType,
-                key);
-        httpRequest.respCreator = new InternalUtils.ResponseCreator() {
+                key));
+        httpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
             @Override
             public UpnpIgdHttpResponse create(byte[] buffer) {
                 return new DeletePortMappingUpnpIgdResponse(buffer);
             }
-        };
+        });
         
         performHttpRequests(
                 networkBus,
                 Collections.singleton(httpRequest),
                 5000L, 5000L, 5000L);
         
-        if (httpRequest.respMsg == null) {
+        if (httpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");
         }
     }
@@ -204,27 +192,27 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         InetAddress internalAddress = getInternalAddress();
         
         InternalUtils.HttpRequest httpRequest = new InternalUtils.HttpRequest();
-        httpRequest.location = controlUrl;
-        httpRequest.sourceAddress = internalAddress;
-        httpRequest.sendMsg = new UpdatePinholeUpnpIgdRequest(
+        httpRequest.setLocation(controlUrl);
+        httpRequest.setSourceAddress(internalAddress);
+        httpRequest.setSendMsg(new UpdatePinholeUpnpIgdRequest(
                 controlUrl.getAuthority(),
                 controlUrl.getFile(),
                 serviceType,
                 key,
-                leaseDuration);
-        httpRequest.respCreator = new InternalUtils.ResponseCreator() {
+                leaseDuration));
+        httpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
             @Override
             public UpnpIgdHttpResponse create(byte[] buffer) {
                 return new UpdatePinholeUpnpIgdResponse(buffer);
             }
-        };
+        });
         
         performHttpRequests(
                 networkBus,
                 Collections.singleton(httpRequest),
                 5000L, 5000L, 5000L);
         
-        if (httpRequest.respMsg == null) {
+        if (httpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to refresh");
         }
         
