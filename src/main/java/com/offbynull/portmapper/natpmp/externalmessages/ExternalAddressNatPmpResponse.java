@@ -117,32 +117,4 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
     public InetAddress getAddress() {
         return inetAddress;
     }
-
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 79 * hash + Objects.hashCode(this.inetAddress);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final ExternalAddressNatPmpResponse other = (ExternalAddressNatPmpResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (!Objects.equals(this.inetAddress, other.inetAddress)) {
-            return false;
-        }
-        return true;
-    }
 }

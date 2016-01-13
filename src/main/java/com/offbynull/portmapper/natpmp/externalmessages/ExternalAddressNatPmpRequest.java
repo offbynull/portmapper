@@ -67,27 +67,4 @@ public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
     public byte[] dump() {
         return new byte[] {0, OP};
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        // final ExternalAddressNatPmpRequest other = (ExternalAddressNatPmpRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

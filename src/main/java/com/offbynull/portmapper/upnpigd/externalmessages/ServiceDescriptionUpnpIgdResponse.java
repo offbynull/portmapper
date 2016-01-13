@@ -263,34 +263,6 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         return null;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 97 * hash + Objects.hashCode(this.identifiedServices);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final ServiceDescriptionUpnpIgdResponse other = (ServiceDescriptionUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (!Objects.equals(this.identifiedServices, other.identifiedServices)) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Bean that identifies which type of UPNP-IGD service is being described.
      */
@@ -324,35 +296,6 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
          */
         public Range<Long> getExternalPortRange() {
             return externalPortRange;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 73 * hash + Objects.hashCode(this.leaseDurationRange);
-            hash = 73 * hash + Objects.hashCode(this.externalPortRange);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final IdentifiedService other = (IdentifiedService) obj;
-            if (!Objects.equals(this.leaseDurationRange, other.leaseDurationRange)) {
-                return false;
-            }
-            if (!Objects.equals(this.externalPortRange, other.externalPortRange)) {
-                return false;
-            }
-            return true;
         }
 
     }

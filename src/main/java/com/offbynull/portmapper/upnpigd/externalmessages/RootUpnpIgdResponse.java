@@ -96,34 +96,6 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
         return services;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 41 * hash + Objects.hashCode(this.services);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final RootUpnpIgdResponse other = (RootUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (!Objects.equals(this.services, other.services)) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Bean that represents a UPNP-IGD root XML service tag.
      */
@@ -183,41 +155,6 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
          */
         public URL getScpdUrl() {
             return scpdUrl;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 19 * hash + Objects.hashCode(this.serviceType);
-            hash = 19 * hash + Objects.hashCode(this.controlUrl);
-            hash = 19 * hash + Objects.hashCode(this.scpdUrl);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final ServiceReference other = (ServiceReference) obj;
-            if (!Objects.equals(this.serviceType, other.serviceType)) {
-                return false;
-            }
-            if (!Objects.equals(this.controlUrl, other.controlUrl)) {
-                return false;
-            }
-            if (!Objects.equals(this.scpdUrl, other.scpdUrl)) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "ServiceReference{" + ", serviceType=" + serviceType + ", controlUrl=" + controlUrl + ", scpdUrl=" + scpdUrl + '}';
         }
     }
 }

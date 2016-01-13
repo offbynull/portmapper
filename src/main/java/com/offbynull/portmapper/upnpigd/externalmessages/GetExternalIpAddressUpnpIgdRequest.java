@@ -36,27 +36,4 @@ public final class GetExternalIpAddressUpnpIgdRequest extends UpnpIgdSoapRequest
     public GetExternalIpAddressUpnpIgdRequest(String host, String controlLocation, String serviceType) {
         super(host, controlLocation, serviceType, "GetExternalIPAddress", Collections.<String, String>emptyMap());
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GetExternalIpAddressUpnpIgdRequest other = (GetExternalIpAddressUpnpIgdRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

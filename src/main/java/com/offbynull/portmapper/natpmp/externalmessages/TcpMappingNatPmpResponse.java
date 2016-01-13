@@ -153,27 +153,4 @@ public final class TcpMappingNatPmpResponse extends MappingNatPmpResponse {
     public TcpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        // final TcpMappingNatPmpResponse other = (TcpMappingNatPmpResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

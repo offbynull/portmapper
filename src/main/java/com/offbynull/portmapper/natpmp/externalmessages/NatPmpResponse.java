@@ -86,39 +86,4 @@ public abstract class NatPmpResponse implements NatPmpMessage {
     public final long getSecondsSinceStartOfEpoch() {
         return secondsSinceStartOfEpoch;
     }
-
-    // CHECKSTYLE:OFF:DesignForExtension
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 59 * hash + this.op;
-        hash = 59 * hash + this.resultCode;
-        hash = 59 * hash + (int) (this.secondsSinceStartOfEpoch ^ (this.secondsSinceStartOfEpoch >>> 32));
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final NatPmpResponse other = (NatPmpResponse) obj;
-        if (this.op != other.op) {
-            return false;
-        }
-        if (this.resultCode != other.resultCode) {
-            return false;
-        }
-        if (this.secondsSinceStartOfEpoch != other.secondsSinceStartOfEpoch) {
-            return false;
-        }
-        return true;
-    }
-    // CHECKSTYLE:ON:DesignForExtension
 }

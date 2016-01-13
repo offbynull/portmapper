@@ -54,27 +54,4 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
             throw new IllegalStateException(e);
         }
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GetExternalIpAddressUpnpIgdResponse other = (GetExternalIpAddressUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

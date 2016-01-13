@@ -35,27 +35,4 @@ public final class UpdatePinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     public UpdatePinholeUpnpIgdResponse(byte[] buffer) {
         super("UpdatePinholeResponse", Collections.<String>emptySet(), buffer);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final UpdatePinholeUpnpIgdResponse other = (UpdatePinholeUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

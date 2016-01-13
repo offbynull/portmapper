@@ -137,38 +137,4 @@ public abstract class UpnpIgdHttpResponse {
         return content;
     }
 
-    // CHECKSTYLE:OFF:DesignForExtension
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 97 * hash + Objects.hashCode(this.headers);
-        hash = 97 * hash + this.responseCode;
-        hash = 97 * hash + Objects.hashCode(this.content);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final UpnpIgdHttpResponse other = (UpnpIgdHttpResponse) obj;
-        if (this.responseCode != other.responseCode) {
-            return false;
-        }
-        if (!Objects.equals(this.content, other.content)) {
-            return false;
-        }
-        if (!Objects.equals(this.headers, other.headers)) {
-            return false;
-        }
-        return true;
-    }
-    // CHECKSTYLE:ON:DesignForExtension
 }

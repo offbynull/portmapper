@@ -74,27 +74,4 @@ public final class PreferFailurePcpOption extends PcpOption {
     public byte[] getData() {
         return new byte[0];
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        // final PreferFailurePcpOption other = (PreferFailurePcpOption) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

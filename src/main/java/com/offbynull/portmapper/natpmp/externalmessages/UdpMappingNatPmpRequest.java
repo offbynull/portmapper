@@ -145,27 +145,4 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
     public UdpMappingNatPmpRequest(int internalPort, int suggestedExternalPort, long lifetime) {
         super(OP, internalPort, suggestedExternalPort, lifetime);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        // final UdpMappingNatPmpRequest other = (UdpMappingNatPmpRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

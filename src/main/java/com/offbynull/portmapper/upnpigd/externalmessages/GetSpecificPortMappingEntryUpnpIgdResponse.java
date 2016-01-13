@@ -116,27 +116,4 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
         Validate.inclusiveBetween(0L, 0xFFFFFFFFL, leaseDuration);
         return leaseDuration;
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GetSpecificPortMappingEntryUpnpIgdResponse other = (GetSpecificPortMappingEntryUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

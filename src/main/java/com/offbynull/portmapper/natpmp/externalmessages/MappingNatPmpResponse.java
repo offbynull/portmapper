@@ -225,42 +225,4 @@ public abstract class MappingNatPmpResponse extends NatPmpResponse {
     public final long getLifetime() {
         return lifetime;
     }
-
-    // CHECKSTYLE:OFF:DesignForExtension
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 47 * hash + this.internalPort;
-        hash = 47 * hash + this.externalPort;
-        hash = 47 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MappingNatPmpResponse other = (MappingNatPmpResponse) obj;
-        if (super.equals(obj)) {
-            return false;
-        }
-        if (this.internalPort != other.internalPort) {
-            return false;
-        }
-        if (this.externalPort != other.externalPort) {
-            return false;
-        }
-        if (this.lifetime != other.lifetime) {
-            return false;
-        }
-        return true;
-    }
-    // CHECKSTYLE:ON:DesignForExtension
 }

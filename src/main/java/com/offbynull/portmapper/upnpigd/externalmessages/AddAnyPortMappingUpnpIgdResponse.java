@@ -54,27 +54,4 @@ public final class AddAnyPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
         Validate.validState(reservedPort >= 1 && reservedPort <= 65535);
         return reservedPort;
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final AddAnyPortMappingUpnpIgdResponse other = (AddAnyPortMappingUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

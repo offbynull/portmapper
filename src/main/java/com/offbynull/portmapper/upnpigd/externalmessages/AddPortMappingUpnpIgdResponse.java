@@ -35,27 +35,4 @@ public final class AddPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse {
     public AddPortMappingUpnpIgdResponse(byte[] buffer) {
         super("AddPortMappingResponse", Collections.<String>emptySet(), buffer);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final AddPortMappingUpnpIgdResponse other = (AddPortMappingUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

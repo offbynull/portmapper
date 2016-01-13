@@ -97,29 +97,5 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
 
         return sb.toString();
     }
-    
-    // CHECKSTYLE:OFF:DesignForExtension
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final UpnpIgdHttpRequest other = (UpnpIgdHttpRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
-    // CHECKSTYLE:ON:DesignForExtension
 }

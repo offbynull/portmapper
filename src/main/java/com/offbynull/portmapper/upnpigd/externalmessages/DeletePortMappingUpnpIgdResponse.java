@@ -35,27 +35,4 @@ public final class DeletePortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
     public DeletePortMappingUpnpIgdResponse(byte[] buffer) {
         super("DeletePortMappingResponse", Collections.<String>emptySet(), buffer);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DeletePortMappingUpnpIgdResponse other = (DeletePortMappingUpnpIgdResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

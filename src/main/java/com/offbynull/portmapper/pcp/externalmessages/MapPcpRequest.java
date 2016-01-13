@@ -252,48 +252,4 @@ public final class MapPcpRequest extends PcpRequest {
     public InetAddress getSuggestedExternalIpAddress() {
         return suggestedExternalIpAddress;
     }
-
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 13 * hash + Arrays.hashCode(this.mappingNonce);
-        hash = 13 * hash + this.protocol;
-        hash = 13 * hash + this.internalPort;
-        hash = 13 * hash + this.suggestedExternalPort;
-        hash = 13 * hash + Objects.hashCode(this.suggestedExternalIpAddress);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MapPcpRequest other = (MapPcpRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (this.protocol != other.protocol) {
-            return false;
-        }
-        if (this.internalPort != other.internalPort) {
-            return false;
-        }
-        if (this.suggestedExternalPort != other.suggestedExternalPort) {
-            return false;
-        }
-        if (!Arrays.equals(this.mappingNonce, other.mappingNonce)) {
-            return false;
-        }
-        if (!Objects.equals(this.suggestedExternalIpAddress, other.suggestedExternalIpAddress)) {
-            return false;
-        }
-        return true;
-    }
 }

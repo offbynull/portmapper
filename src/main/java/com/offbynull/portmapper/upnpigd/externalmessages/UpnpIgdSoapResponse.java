@@ -101,35 +101,5 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         }
         return null;
     }
-
-    // CHECKSTYLE:OFF:DesignForExtension
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 19 * hash + Objects.hashCode(this.arguments);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final UpnpIgdSoapResponse other = (UpnpIgdSoapResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (!Objects.equals(this.arguments, other.arguments)) {
-            return false;
-        }
-        return true;
-    }
-    // CHECKSTYLE:ON:DesignForExtension
-    
+ 
 }

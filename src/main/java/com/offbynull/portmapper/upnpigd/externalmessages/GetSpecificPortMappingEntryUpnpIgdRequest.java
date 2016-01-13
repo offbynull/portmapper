@@ -70,27 +70,4 @@ public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoap
         
         return ret;
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GetSpecificPortMappingEntryUpnpIgdRequest other = (GetSpecificPortMappingEntryUpnpIgdRequest) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }

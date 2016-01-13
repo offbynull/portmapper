@@ -154,27 +154,4 @@ public final class UdpMappingNatPmpResponse extends MappingNatPmpResponse {
     public UdpMappingNatPmpResponse(int resultCode, long secondsSinceStartOfEpoch, int internalPort, int externalPort, long lifetime) {
         super(OP, resultCode, secondsSinceStartOfEpoch, internalPort, externalPort, lifetime);
     }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        // final UdpMappingNatPmpResponse other = (UdpMappingNatPmpResponse) obj;
-        if (!super.equals(obj)) {
-            return false;
-        }
-        return true;
-    }
 }
