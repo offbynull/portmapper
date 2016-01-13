@@ -8,6 +8,7 @@ import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequ
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.ConnectedTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
@@ -64,8 +65,7 @@ public class NetworkGatewayTest {
                     12345));
             CreateTcpNetworkResponse resp1 = (CreateTcpNetworkResponse) queue.take();
             id = resp1.getId();
-
-
+            ConnectedTcpNetworkNotification connectedResp = (ConnectedTcpNetworkNotification) queue.take();
             
             fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
             int remainingWriteBytes = 5;
