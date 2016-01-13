@@ -127,7 +127,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
     /**
      * Bean that represents a UPNP-IGD root XML service tag.
      */
-    public final class ServiceReference {
+    public static final class ServiceReference {
 
         private final String serviceType;
         private final URL controlUrl;

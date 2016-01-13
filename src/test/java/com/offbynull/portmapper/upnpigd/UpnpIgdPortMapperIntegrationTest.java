@@ -1,63 +1,60 @@
-package com.offbynull.portmapper.pcp;
+package com.offbynull.portmapper.upnpigd;
 
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
 import com.offbynull.portmapper.io.network.NetworkGateway;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
-import com.offbynull.portmapper.io.process.ProcessGateway;
-import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
-import java.net.InetAddress;
+import java.util.HashSet;
 import java.util.Set;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
-//@Ignore("REQUIRES MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH AN APPLE AIRPORT ROUTER")
-public final class PcpPortMapperTest {
+//@Ignore("REQUIRES MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH NO OTHER UPNP-ENABLED ROUTERS")
+public class UpnpIgdPortMapperIntegrationTest {
 
     private NetworkGateway network;
     private Bus networkBus;
-    private ProcessGateway process;
-    private Bus processBus;
 
     @Before
     public void before() {
         network = NetworkGateway.create();
         networkBus = network.getBus();
-        process = ProcessGateway.create();
-        processBus = process.getBus();
     }
 
     @After
     public void after() {
         networkBus.send(new KillNetworkRequest());
-        processBus.send(new KillProcessRequest());
     }
-    
+
     @Test
     public void mustFindAndControlPortMappers() throws Throwable {
-        Set<PcpPortMapper> mappers = PcpPortMapper.identify(networkBus, processBus);
-        PcpPortMapper miniupnpdMapper = new PcpPortMapper(
-                networkBus,
-                InetAddress.getByName("192.168.75.1"),
-                InetAddress.getByName("192.168.75.128"));
-        mappers.add(miniupnpdMapper);
-
-        assertEquals(2, mappers.size()); // 1 discovered apple airport router and 1 miniupnpd router forcefully added in
-                                         // miniupnpd router is not picked up by discovery because its running in a vm
+        Set<UpnpIgdPortMapper> mappers = UpnpIgdPortMapper.identify(networkBus);
+        assertEquals(2, mappers.size());
         
-        for (PcpPortMapper mapper : mappers) {
-            MappedPort tcpPort = mapper.mapPort(PortType.TCP, 12345, 12345, 4294967295L);
+        Set<Class<?>> expectedTypes = new HashSet<>();
+        
+        for (UpnpIgdPortMapper mapper : mappers) {
+            expectedTypes.add(mapper.getClass());
+        }
+        
+        for (UpnpIgdPortMapper mapper : mappers) {
+            if (mapper instanceof FirewallUpnpIgdPortMapper) {
+                continue; // this port mapper will complain about no IPv6 address being available due to the way the VM is set up
+            }
+
+            MappedPort tcpPort = mapper.mapPort(PortType.TCP, 12345, 12345, 999999999999999999L);
             assertEquals(PortType.TCP, tcpPort.getPortType());
             assertEquals(12345, tcpPort.getInternalPort());
-            // assertNotEquals(4294967295L, tcpPort.getLifetime()); // may be equal
+            assertNotEquals(999999999999999999L, tcpPort.getLifetime());
             // external port/external ip/etc.. may all be different
 
-            MappedPort udpPort = mapper.mapPort(PortType.UDP, 12345, 12345, 4294967295L);
+            MappedPort udpPort = mapper.mapPort(PortType.UDP, 12345, 12345, 999999999999999999L);
             assertEquals(PortType.UDP, udpPort.getPortType());
-            // assertNotEquals(4294967295L, udpPort.getLifetime()); // may be equal
+            assertNotEquals(999999999999999999L, udpPort.getLifetime());
             // external port/external ip/etc.. may all be different
 
 
@@ -81,5 +78,13 @@ public final class PcpPortMapperTest {
             mapper.unmapPort(tcpPort);
             mapper.unmapPort(udpPort);
         }
+        
+        
+        
+        Set<Class<?>> actualTypes = new HashSet<>();
+        actualTypes.add(FirewallUpnpIgdPortMapper.class);
+        actualTypes.add(PortMapperUpnpIgdPortMapper.class);
+        
+        assertEquals(expectedTypes, actualTypes);
     }
 }

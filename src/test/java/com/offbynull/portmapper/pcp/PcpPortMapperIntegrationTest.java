@@ -1,6 +1,4 @@
-package com.offbynull.portmapper.natpmp;
-
-//@Ignore("REQUIRES MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH AN APPLE AIRPORT ROUTER")
+package com.offbynull.portmapper.pcp;
 
 import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.MappedPort;
@@ -12,11 +10,12 @@ import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import java.net.InetAddress;
 import java.util.Set;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-public final class NatPmpPortMapperTest {
+//@Ignore("REQUIRES MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH AN APPLE AIRPORT ROUTER")
+public final class PcpPortMapperIntegrationTest {
 
     private NetworkGateway network;
     private Bus networkBus;
@@ -39,8 +38,8 @@ public final class NatPmpPortMapperTest {
     
     @Test
     public void mustFindAndControlPortMappers() throws Throwable {
-        Set<NatPmpPortMapper> mappers = NatPmpPortMapper.identify(networkBus, processBus);
-        NatPmpPortMapper miniupnpdMapper = new NatPmpPortMapper(
+        Set<PcpPortMapper> mappers = PcpPortMapper.identify(networkBus, processBus);
+        PcpPortMapper miniupnpdMapper = new PcpPortMapper(
                 networkBus,
                 InetAddress.getByName("192.168.75.1"),
                 InetAddress.getByName("192.168.75.128"));
@@ -49,7 +48,7 @@ public final class NatPmpPortMapperTest {
         assertEquals(2, mappers.size()); // 1 discovered apple airport router and 1 miniupnpd router forcefully added in
                                          // miniupnpd router is not picked up by discovery because its running in a vm
         
-        for (NatPmpPortMapper mapper : mappers) {
+        for (PcpPortMapper mapper : mappers) {
             MappedPort tcpPort = mapper.mapPort(PortType.TCP, 12345, 12345, 4294967295L);
             assertEquals(PortType.TCP, tcpPort.getPortType());
             assertEquals(12345, tcpPort.getInternalPort());

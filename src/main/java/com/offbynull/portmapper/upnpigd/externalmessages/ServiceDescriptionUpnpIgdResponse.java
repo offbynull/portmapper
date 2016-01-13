@@ -221,7 +221,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
             min = maxRange.getMinimum();
         } else {
             try {
-                min = Long.valueOf(minStr.trim());
+                min = Long.parseLong(minStr.trim());
             } catch (NumberFormatException nfe) {
                 min = maxRange.getMinimum();
             }
@@ -233,7 +233,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
             max = maxRange.getMaximum();
         } else {
             try {
-                max = Long.valueOf(maxStr.trim());
+                max = Long.parseLong(maxStr.trim());
             } catch (NumberFormatException nfe) {
                 max = maxRange.getMaximum();
             }

@@ -61,7 +61,7 @@ public final class WriteUdpNetworkRequest extends IdentifiableNetworkRequest {
 
     @Override
     public String toString() {
-        return "WriteUdpNetworkRequest{" + "remoteAddress=" + remoteAddress + ", data=" + data + '}';
+        return "WriteUdpNetworkRequest{" + "remoteAddress=" + remoteAddress + ", data=" + Arrays.toString(data) + '}';
     }
 
 }
