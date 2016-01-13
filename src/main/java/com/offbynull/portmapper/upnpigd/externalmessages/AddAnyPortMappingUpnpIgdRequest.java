@@ -106,4 +106,6 @@ public final class AddAnyPortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
     public String toString() {
         return "AddAnyPortMappingUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

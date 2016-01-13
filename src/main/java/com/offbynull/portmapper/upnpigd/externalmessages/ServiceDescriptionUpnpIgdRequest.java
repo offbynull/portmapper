@@ -53,4 +53,6 @@ public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {
     public String toString() {
         return "ServiceDescriptionUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

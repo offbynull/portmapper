@@ -40,4 +40,6 @@ public final class DeletePortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
     public String toString() {
         return "DeletePortMappingUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

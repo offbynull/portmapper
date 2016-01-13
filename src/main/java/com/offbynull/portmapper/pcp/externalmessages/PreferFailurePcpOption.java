@@ -79,4 +79,6 @@ public final class PreferFailurePcpOption extends PcpOption {
     public String toString() {
         return "PreferFailurePcpOption{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

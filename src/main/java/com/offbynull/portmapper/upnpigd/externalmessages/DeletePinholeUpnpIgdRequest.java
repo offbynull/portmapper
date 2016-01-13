@@ -55,4 +55,6 @@ public final class DeletePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
     public String toString() {
         return "DeletePinholeUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

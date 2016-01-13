@@ -232,5 +232,38 @@ public abstract class MappingNatPmpResponse extends NatPmpResponse {
         return "MappingNatPmpResponse{super=" + super.toString() + "internalPort=" + internalPort + ", externalPort=" + externalPort
                 + ", lifetime=" + lifetime + '}';
     }
+    
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 97 * hash + this.internalPort;
+        hash = 97 * hash + this.externalPort;
+        hash = 97 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MappingNatPmpResponse other = (MappingNatPmpResponse) obj;
+        if (this.internalPort != other.internalPort) {
+            return false;
+        }
+        if (this.externalPort != other.externalPort) {
+            return false;
+        }
+        if (this.lifetime != other.lifetime) {
+            return false;
+        }
+        return true;
+    }
     // CHECKSTYLE:ON:DesignForExtension
 }

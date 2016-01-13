@@ -61,4 +61,6 @@ public final class UpdatePinholeUpnpIgdRequest extends UpnpIgdSoapRequest {
     public String toString() {
         return "UpdatePinholeUpnpIgdRequest{super=" + super.toString() +  '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

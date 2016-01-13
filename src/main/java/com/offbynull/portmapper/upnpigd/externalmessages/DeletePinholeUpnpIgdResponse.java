@@ -40,4 +40,6 @@ public final class DeletePinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     public String toString() {
         return "DeletePinholeUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

@@ -64,4 +64,6 @@ public final class AnnouncePcpResponse extends PcpResponse {
     public String toString() {
         return "AnnouncePcpResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

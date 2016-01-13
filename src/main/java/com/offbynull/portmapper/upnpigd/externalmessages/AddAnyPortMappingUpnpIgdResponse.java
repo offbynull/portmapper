@@ -59,4 +59,6 @@ public final class AddAnyPortMappingUpnpIgdResponse extends UpnpIgdSoapResponse 
     public String toString() {
         return "AddAnyPortMappingUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

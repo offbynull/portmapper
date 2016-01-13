@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.StringTokenizer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -140,6 +141,39 @@ public abstract class UpnpIgdHttpResponse {
     @Override
     public String toString() {
         return "UpnpIgdHttpResponse{" + "headers=" + headers + ", responseCode=" + responseCode + ", content=" + content + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 29 * hash + Objects.hashCode(this.headers);
+        hash = 29 * hash + this.responseCode;
+        hash = 29 * hash + Objects.hashCode(this.content);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UpnpIgdHttpResponse other = (UpnpIgdHttpResponse) obj;
+        if (this.responseCode != other.responseCode) {
+            return false;
+        }
+        if (!Objects.equals(this.content, other.content)) {
+            return false;
+        }
+        if (!Objects.equals(this.headers, other.headers)) {
+            return false;
+        }
+        return true;
     }
     // CHECKSTYLE:ON:DesignForExtension
 }

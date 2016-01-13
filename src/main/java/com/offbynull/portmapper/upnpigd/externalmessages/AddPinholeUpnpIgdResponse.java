@@ -54,4 +54,6 @@ public final class AddPinholeUpnpIgdResponse extends UpnpIgdSoapResponse {
     public String toString() {
         return "AddPinholeUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

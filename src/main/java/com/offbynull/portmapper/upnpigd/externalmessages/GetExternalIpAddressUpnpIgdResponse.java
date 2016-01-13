@@ -59,4 +59,6 @@ public final class GetExternalIpAddressUpnpIgdResponse extends UpnpIgdSoapRespon
     public String toString() {
         return "GetExternalIpAddressUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

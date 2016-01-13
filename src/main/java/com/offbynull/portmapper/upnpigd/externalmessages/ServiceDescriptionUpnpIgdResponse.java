@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
 
@@ -262,6 +263,36 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         return null;
     }
 
+    @Override
+    public String toString() {
+        return "ServiceDescriptionUpnpIgdResponse{super=" + super.toString() + "identifiedServices=" + identifiedServices + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 17 * hash + Objects.hashCode(this.identifiedServices);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ServiceDescriptionUpnpIgdResponse other = (ServiceDescriptionUpnpIgdResponse) obj;
+        if (!Objects.equals(this.identifiedServices, other.identifiedServices)) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Bean that identifies which type of UPNP-IGD service is being described.
      */
@@ -301,6 +332,35 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
         public String toString() {
             return "IdentifiedService{super=" + super.toString() +  "leaseDurationRange=" + leaseDurationRange + ", externalPortRange="
                     + externalPortRange + '}';
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 59 * hash + Objects.hashCode(this.leaseDurationRange);
+            hash = 59 * hash + Objects.hashCode(this.externalPortRange);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final IdentifiedService other = (IdentifiedService) obj;
+            if (!Objects.equals(this.leaseDurationRange, other.leaseDurationRange)) {
+                return false;
+            }
+            if (!Objects.equals(this.externalPortRange, other.externalPortRange)) {
+                return false;
+            }
+            return true;
         }
 
     }

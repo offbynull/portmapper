@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -292,6 +293,51 @@ public abstract class PcpRequest implements PcpMessage {
     public String toString() {
         return "PcpRequest{" + "op=" + op + ", lifetime=" + lifetime + ", internalIp=" + internalIp + ", options=" + options
                 + ", dataLength=" + dataLength + ", optionsLength=" + optionsLength + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + this.op;
+        hash = 97 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        hash = 97 * hash + Objects.hashCode(this.internalIp);
+        hash = 97 * hash + Objects.hashCode(this.options);
+        hash = 97 * hash + this.dataLength;
+        hash = 97 * hash + this.optionsLength;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PcpRequest other = (PcpRequest) obj;
+        if (this.op != other.op) {
+            return false;
+        }
+        if (this.lifetime != other.lifetime) {
+            return false;
+        }
+        if (this.dataLength != other.dataLength) {
+            return false;
+        }
+        if (this.optionsLength != other.optionsLength) {
+            return false;
+        }
+        if (!Objects.equals(this.internalIp, other.internalIp)) {
+            return false;
+        }
+        if (!Objects.equals(this.options, other.options)) {
+            return false;
+        }
+        return true;
     }
     // CHECKSTYLE:ON:DesignForExtension
 }

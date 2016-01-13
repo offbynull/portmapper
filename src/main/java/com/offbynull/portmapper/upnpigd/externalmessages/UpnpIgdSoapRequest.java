@@ -103,5 +103,7 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
     public String toString() {
         return "UpnpIgdSoapRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
     // CHECKSTYLE:ON:DesignForExtension
 }

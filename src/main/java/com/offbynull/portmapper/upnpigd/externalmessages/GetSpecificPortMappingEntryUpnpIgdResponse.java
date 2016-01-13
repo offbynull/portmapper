@@ -121,4 +121,6 @@ public final class GetSpecificPortMappingEntryUpnpIgdResponse extends UpnpIgdSoa
     public String toString() {
         return "GetSpecificPortMappingEntryUpnpIgdResponse{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

@@ -126,4 +126,6 @@ public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
     public String toString() {
         return "ServiceDiscoveryUpnpIgdResponse{super=" + super.toString() +  '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

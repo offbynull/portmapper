@@ -70,4 +70,29 @@ public final class UnknownPcpOption extends PcpOption {
     public String toString() {
         return "UnknownPcpOption{super=" + super.toString() + "data=" + Arrays.toString(data) + '}';
     }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 37 * hash + Arrays.hashCode(this.data);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UnknownPcpOption other = (UnknownPcpOption) obj;
+        if (!Arrays.equals(this.data, other.data)) {
+            return false;
+        }
+        return true;
+    }
 }

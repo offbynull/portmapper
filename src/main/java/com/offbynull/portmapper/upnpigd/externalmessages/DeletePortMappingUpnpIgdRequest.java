@@ -75,4 +75,6 @@ public final class DeletePortMappingUpnpIgdRequest extends UpnpIgdSoapRequest {
     public String toString() {
         return "DeletePortMappingUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

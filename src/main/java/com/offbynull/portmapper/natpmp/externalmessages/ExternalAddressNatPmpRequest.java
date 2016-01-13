@@ -72,4 +72,6 @@ public final class ExternalAddressNatPmpRequest extends NatPmpRequest {
     public String toString() {
         return "ExternalAddressNatPmpRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

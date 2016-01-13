@@ -19,6 +19,7 @@ package com.offbynull.portmapper.natpmp.externalmessages;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -120,5 +121,30 @@ public final class ExternalAddressNatPmpResponse extends NatPmpResponse {
     @Override
     public String toString() {
         return "ExternalAddressNatPmpResponse{super=" + super.toString() + "inetAddress=" + inetAddress + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 53 * hash + Objects.hashCode(this.inetAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ExternalAddressNatPmpResponse other = (ExternalAddressNatPmpResponse) obj;
+        if (!Objects.equals(this.inetAddress, other.inetAddress)) {
+            return false;
+        }
+        return true;
     }
 }

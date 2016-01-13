@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -94,6 +95,43 @@ public abstract class UpnpIgdHttpRequest {
     public String toString() {
         return "UpnpIgdHttpRequest{" + "method=" + method + ", location=" + location + ", headers=" + headers + ", content=" + content
                 + '}';
+    }
+    
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 11 * hash + Objects.hashCode(this.method);
+        hash = 11 * hash + Objects.hashCode(this.location);
+        hash = 11 * hash + Objects.hashCode(this.headers);
+        hash = 11 * hash + Objects.hashCode(this.content);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UpnpIgdHttpRequest other = (UpnpIgdHttpRequest) obj;
+        if (!Objects.equals(this.method, other.method)) {
+            return false;
+        }
+        if (!Objects.equals(this.location, other.location)) {
+            return false;
+        }
+        if (!Objects.equals(this.content, other.content)) {
+            return false;
+        }
+        if (!Objects.equals(this.headers, other.headers)) {
+            return false;
+        }
+        return true;
     }
     // CHECKSTYLE:ON:DesignForExtension
 }

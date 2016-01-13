@@ -18,6 +18,7 @@ package com.offbynull.portmapper.pcp.externalmessages;
 
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -171,5 +172,38 @@ public final class FilterPcpOption extends PcpOption {
     public String toString() {
         return "FilterPcpOption{super=" + super.toString() + "prefixLength=" + prefixLength + ", remotePeerPort=" + remotePeerPort
                 + ", remotePeerIpAddress=" + remotePeerIpAddress + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 97 * hash + this.prefixLength;
+        hash = 97 * hash + this.remotePeerPort;
+        hash = 97 * hash + Objects.hashCode(this.remotePeerIpAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FilterPcpOption other = (FilterPcpOption) obj;
+        if (this.prefixLength != other.prefixLength) {
+            return false;
+        }
+        if (this.remotePeerPort != other.remotePeerPort) {
+            return false;
+        }
+        if (!Objects.equals(this.remotePeerIpAddress, other.remotePeerIpAddress)) {
+            return false;
+        }
+        return true;
     }
 }

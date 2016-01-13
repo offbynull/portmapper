@@ -150,4 +150,6 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
     public String toString() {
         return "UdpMappingNatPmpRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

@@ -169,5 +169,34 @@ public abstract class PcpOption {
     public String toString() {
         return "PcpOption{" + "code=" + code + ", dataLength=" + dataLength + '}';
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 89 * hash + this.code;
+        hash = 89 * hash + this.dataLength;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PcpOption other = (PcpOption) obj;
+        if (this.code != other.code) {
+            return false;
+        }
+        if (this.dataLength != other.dataLength) {
+            return false;
+        }
+        return true;
+    }
     // CHECKSTYLE:ON:DesignForExtension
 }

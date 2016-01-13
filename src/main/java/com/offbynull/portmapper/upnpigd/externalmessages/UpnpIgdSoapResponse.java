@@ -106,5 +106,7 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
     public String toString() {
         return "UpnpIgdSoapResponse{super=" + super.toString() + "arguments=" + arguments + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
     // CHECKSTYLE:ON:DesignForExtension
 }

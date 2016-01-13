@@ -93,6 +93,8 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
         return "ServiceDiscoveryUpnpIgdRequest{super=" + super.toString() + '}';
     }
     
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
+    
     /**
      * Type of device to probe.
      */

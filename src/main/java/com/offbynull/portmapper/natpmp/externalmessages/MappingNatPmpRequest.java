@@ -222,5 +222,38 @@ public abstract class MappingNatPmpRequest extends NatPmpRequest {
         return "MappingNatPmpRequest{super=" + super.toString() + "internalPort=" + internalPort + ", suggestedExternalPort="
                 + suggestedExternalPort + ", lifetime=" + lifetime + '}';
     }
+    
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 97 * hash + this.internalPort;
+        hash = 97 * hash + this.suggestedExternalPort;
+        hash = 97 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MappingNatPmpRequest other = (MappingNatPmpRequest) obj;
+        if (this.internalPort != other.internalPort) {
+            return false;
+        }
+        if (this.suggestedExternalPort != other.suggestedExternalPort) {
+            return false;
+        }
+        if (this.lifetime != other.lifetime) {
+            return false;
+        }
+        return true;
+    }
     // CHECKSTYLE:ON:DesignForExtension
 }

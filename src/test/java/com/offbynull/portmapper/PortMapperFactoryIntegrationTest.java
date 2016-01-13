@@ -8,7 +8,6 @@ import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
 import com.offbynull.portmapper.pcp.PcpPortMapper;
 import com.offbynull.portmapper.upnpigd.FirewallUpnpIgdPortMapper;
 import com.offbynull.portmapper.upnpigd.PortMapperUpnpIgdPortMapper;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +42,7 @@ public class PortMapperFactoryIntegrationTest {
     public void mustDiscoverPortMappers() throws Exception {
         List<PortMapper> mappers = PortMapperFactory.create(networkBus, processBus);
         
-        List<Class<?>> expectedTypes = new ArrayList<>();
+        Set<Class<?>> expectedTypes = new HashSet<>();
         
         for (PortMapper mapper : mappers) {
             expectedTypes.add(mapper.getClass());

@@ -50,4 +50,6 @@ public final class TcpMappingNatPmpRequest extends MappingNatPmpRequest {
     public String toString() {
         return "TcpMappingNatPmpRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

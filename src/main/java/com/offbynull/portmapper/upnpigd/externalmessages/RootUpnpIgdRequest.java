@@ -52,4 +52,6 @@ public final class RootUpnpIgdRequest extends UpnpIgdHttpRequest {
     public String toString() {
         return "RootUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }

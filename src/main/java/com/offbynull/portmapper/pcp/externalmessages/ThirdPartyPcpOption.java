@@ -18,6 +18,7 @@ package com.offbynull.portmapper.pcp.externalmessages;
 
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -126,4 +127,30 @@ public final class ThirdPartyPcpOption extends PcpOption {
     public String toString() {
         return "ThirdPartyPcpOption{super=" + super.toString() + "internalIpAddress=" + internalIpAddress + '}';
     }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 23 * hash + Objects.hashCode(this.internalIpAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ThirdPartyPcpOption other = (ThirdPartyPcpOption) obj;
+        if (!Objects.equals(this.internalIpAddress, other.internalIpAddress)) {
+            return false;
+        }
+        return true;
+    }
+    
 }

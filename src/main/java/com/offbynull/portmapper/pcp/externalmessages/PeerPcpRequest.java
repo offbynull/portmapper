@@ -19,6 +19,7 @@ package com.offbynull.portmapper.pcp.externalmessages;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -323,5 +324,54 @@ public final class PeerPcpRequest extends PcpRequest {
         return "PeerPcpRequest{super=" + super.toString() + "mappingNonce=" + Arrays.toString(mappingNonce) + ", protocol=" + protocol
                 + ", internalPort=" + internalPort + ", suggestedExternalPort=" + suggestedExternalPort + ", suggestedExternalIpAddress="
                 + suggestedExternalIpAddress + ", remotePeerPort=" + remotePeerPort + ", remotePeerIpAddress=" + remotePeerIpAddress + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 43 * hash + Arrays.hashCode(this.mappingNonce);
+        hash = 43 * hash + this.protocol;
+        hash = 43 * hash + this.internalPort;
+        hash = 43 * hash + this.suggestedExternalPort;
+        hash = 43 * hash + Objects.hashCode(this.suggestedExternalIpAddress);
+        hash = 43 * hash + this.remotePeerPort;
+        hash = 43 * hash + Objects.hashCode(this.remotePeerIpAddress);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PeerPcpRequest other = (PeerPcpRequest) obj;
+        if (this.protocol != other.protocol) {
+            return false;
+        }
+        if (this.internalPort != other.internalPort) {
+            return false;
+        }
+        if (this.suggestedExternalPort != other.suggestedExternalPort) {
+            return false;
+        }
+        if (this.remotePeerPort != other.remotePeerPort) {
+            return false;
+        }
+        if (!Arrays.equals(this.mappingNonce, other.mappingNonce)) {
+            return false;
+        }
+        if (!Objects.equals(this.suggestedExternalIpAddress, other.suggestedExternalIpAddress)) {
+            return false;
+        }
+        if (!Objects.equals(this.remotePeerIpAddress, other.remotePeerIpAddress)) {
+            return false;
+        }
+        return true;
     }
 }

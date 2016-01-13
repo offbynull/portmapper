@@ -75,4 +75,6 @@ public final class GetSpecificPortMappingEntryUpnpIgdRequest extends UpnpIgdSoap
     public String toString() {
         return "GetSpecificPortMappingEntryUpnpIgdRequest{super=" + super.toString() + '}';
     }
+    
+    // NO NON-STATIC FIELDS, so parent's equals/hashCode should work
 }
