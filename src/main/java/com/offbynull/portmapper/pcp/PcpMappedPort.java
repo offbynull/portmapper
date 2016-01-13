@@ -19,28 +19,37 @@ package com.offbynull.portmapper.pcp;
 import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 final class PcpMappedPort implements MappedPort {
     
+    private byte[] nonce;
     private int internalPort;
     private int externalPort;
     private InetAddress externalAddress;
     private PortType portType;
     private long lifetime;
 
-    PcpMappedPort(int internalPort, int externalPort, InetAddress externalAddress, PortType portType, long duration) {
+    PcpMappedPort(byte[] nonce, int internalPort, int externalPort, InetAddress externalAddress, PortType portType, long duration) {
+        Validate.notNull(nonce);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1, 65535, externalPort);
         Validate.notNull(externalAddress);
         Validate.notNull(portType);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, duration);
+        Validate.isTrue(nonce.length == 12);
+        this.nonce = Arrays.copyOf(nonce, nonce.length);
         this.internalPort = internalPort;
         this.externalPort = externalPort;
         this.externalAddress = externalAddress;
         this.portType = portType;
         this.lifetime = duration;
+    }
+
+    byte[] getNonce() {
+        return Arrays.copyOf(nonce, nonce.length);
     }
 
     @Override
@@ -70,17 +79,19 @@ final class PcpMappedPort implements MappedPort {
 
     @Override
     public String toString() {
-        return "PortMapperMappedPort{" + "internalPort=" + internalPort + ", externalPort=" + externalPort + ", externalAddress="
-                + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
+        return "PcpMappedPort{" + "nonce=" + Arrays.toString(nonce) + ", internalPort=" + internalPort + ", externalPort=" + externalPort
+                + ", externalAddress=" + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 29 * hash + this.internalPort;
-        hash = 29 * hash + this.externalPort;
-        hash = 29 * hash + Objects.hashCode(this.portType);
-        hash = 29 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
+        int hash = 3;
+        hash = 17 * hash + Arrays.hashCode(this.nonce);
+        hash = 17 * hash + this.internalPort;
+        hash = 17 * hash + this.externalPort;
+        hash = 17 * hash + Objects.hashCode(this.externalAddress);
+        hash = 17 * hash + Objects.hashCode(this.portType);
+        hash = 17 * hash + (int) (this.lifetime ^ (this.lifetime >>> 32));
         return hash;
     }
 
@@ -105,6 +116,9 @@ final class PcpMappedPort implements MappedPort {
         if (this.lifetime != other.lifetime) {
             return false;
         }
+        if (!Arrays.equals(this.nonce, other.nonce)) {
+            return false;
+        }
         if (!Objects.equals(this.externalAddress, other.externalAddress)) {
             return false;
         }
@@ -113,5 +127,6 @@ final class PcpMappedPort implements MappedPort {
         }
         return true;
     }
+
     
 }

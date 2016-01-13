@@ -53,7 +53,8 @@ public interface PortMapper {
      * Refresh a mapping. Refreshing a port that hasn't been mapped or has been unmapped has undefined behaviour.
      * @param mappedPort mapped port
      * @param lifetime number of seconds to acquire mapping for (may be reduced or extended depending on server and/or client)
-     * @return object that describes the refreshed mapping
+     * @return object that describes the refreshed mapping (this is the object that should be used now to control the mapping, the previous
+     * object must no longer be used)
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if any numeric argument is non-positive, or if {@code mappedPort} is not expected by this mapper
      * (e.g. created by a different mapper or not the same type of mapped port that was expected by this mapper)

@@ -188,10 +188,11 @@ public final class PcpPortMapper implements PortMapper {
         //
         // PERFORM MAPPING
         //
+        byte[] nonce = nextNonce();
         UdpRequest mapIpReq = new UdpRequest();
         mapIpReq.sourceAddress = internalAddress;
         mapIpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
-        mapIpReq.sendMsg = new MapPcpRequest(nextNonce(), portType.getProtocolNumber(), internalPort, externalPort, ZERO_IPV6, lifetime,
+        mapIpReq.sendMsg = new MapPcpRequest(nonce, portType.getProtocolNumber(), internalPort, externalPort, ZERO_IPV6, lifetime,
                 internalAddress);
         mapIpReq.respCreator = new ResponseCreator() {
             @Override
@@ -204,7 +205,10 @@ public final class PcpPortMapper implements PortMapper {
             }
         };
         
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4)); // according to RFC, this should do 9 retry
+                                                                                                 // calcs instead of 4, but we don't want
+                                                                                                 // this method to hang for several minutes
+                                                                                                 // so we set it to 4
 
         if (mapIpReq.respMsg == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
@@ -214,7 +218,7 @@ public final class PcpPortMapper implements PortMapper {
         
         
         
-        return new PcpMappedPort(mappingResp.getInternalPort(), mappingResp.getAssignedExternalPort(),
+        return new PcpMappedPort(nonce, mappingResp.getInternalPort(), mappingResp.getAssignedExternalPort(),
                 mappingResp.getAssignedExternalIpAddress(), portType, mappingResp.getLifetime());
     }
 
@@ -228,8 +232,8 @@ public final class PcpPortMapper implements PortMapper {
         UdpRequest mapIpReq = new UdpRequest();
         mapIpReq.sourceAddress = internalAddress;
         mapIpReq.destinationSocketAddress = new InetSocketAddress(gatewayAddress, PORT);
-        mapIpReq.sendMsg = new MapPcpRequest(nextNonce(), mappedPort.getPortType().getProtocolNumber(), internalPort, 0, ZERO_IPV6, 0L,
-                internalAddress);
+        mapIpReq.sendMsg = new MapPcpRequest(((PcpMappedPort) mappedPort).getNonce(), mappedPort.getPortType().getProtocolNumber(),
+                internalPort, 0, ZERO_IPV6, 0L, internalAddress);
         mapIpReq.respCreator = new ResponseCreator() {
             @Override
             public PcpResponse create(byte[] buffer) {
@@ -241,7 +245,10 @@ public final class PcpPortMapper implements PortMapper {
             }
         };
         
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4)); // according to RFC, this should do 9 retry
+                                                                                                 // calcs instead of 4, but we don't want
+                                                                                                 // this method to hang for several minutes
+                                                                                                 // so we set it to 4
 
         if (mapIpReq.respMsg == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
