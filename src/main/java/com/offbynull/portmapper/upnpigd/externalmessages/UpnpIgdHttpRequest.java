@@ -20,7 +20,6 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -90,10 +89,11 @@ public abstract class UpnpIgdHttpRequest {
         }
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
-        return "UpnpIgdHttpRequest{" + "method=" + method + ", location=" + location + ", headers=" + headers + ", content=" + content +
-                '}';
+        return "UpnpIgdHttpRequest{" + "method=" + method + ", location=" + location + ", headers=" + headers + ", content=" + content
+                + '}';
     }
-    
+    // CHECKSTYLE:ON:DesignForExtension
 }

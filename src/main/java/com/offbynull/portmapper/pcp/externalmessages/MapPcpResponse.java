@@ -20,7 +20,6 @@ import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.nio.BufferUnderflowException; // NOPMD Javadoc not recognized (fixed in latest PMD but maven plugin has to catch up)
 import java.util.Arrays;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**

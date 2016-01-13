@@ -19,7 +19,6 @@ package com.offbynull.portmapper.natpmp.externalmessages;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**

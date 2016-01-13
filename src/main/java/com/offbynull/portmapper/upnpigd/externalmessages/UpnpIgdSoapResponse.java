@@ -20,7 +20,6 @@ import com.offbynull.portmapper.helpers.TextUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -102,9 +101,10 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         return null;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "UpnpIgdSoapResponse{super=" + super.toString() + "arguments=" + arguments + '}';
     }
- 
+    // CHECKSTYLE:ON:DesignForExtension
 }

@@ -20,7 +20,6 @@ import com.offbynull.portmapper.MappedPort;
 import com.offbynull.portmapper.PortType;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 final class PcpMappedPort implements MappedPort {

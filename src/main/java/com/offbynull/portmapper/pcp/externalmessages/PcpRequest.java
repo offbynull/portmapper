@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -288,9 +287,11 @@ public abstract class PcpRequest implements PcpMessage {
         return data;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "PcpRequest{" + "op=" + op + ", lifetime=" + lifetime + ", internalIp=" + internalIp + ", options=" + options
                 + ", dataLength=" + dataLength + ", optionsLength=" + optionsLength + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

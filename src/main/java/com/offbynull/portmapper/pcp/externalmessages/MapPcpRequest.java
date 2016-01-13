@@ -19,7 +19,6 @@ package com.offbynull.portmapper.pcp.externalmessages;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**

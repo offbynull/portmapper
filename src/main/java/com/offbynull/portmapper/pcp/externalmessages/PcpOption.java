@@ -164,8 +164,10 @@ public abstract class PcpOption {
         return buffer;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "PcpOption{" + "code=" + code + ", dataLength=" + dataLength + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

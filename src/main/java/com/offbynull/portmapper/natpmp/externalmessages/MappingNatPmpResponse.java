@@ -226,9 +226,11 @@ public abstract class MappingNatPmpResponse extends NatPmpResponse {
         return lifetime;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "MappingNatPmpResponse{super=" + super.toString() + "internalPort=" + internalPort + ", externalPort=" + externalPort
                 + ", lifetime=" + lifetime + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

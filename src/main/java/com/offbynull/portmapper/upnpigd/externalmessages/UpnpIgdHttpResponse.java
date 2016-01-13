@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.StringTokenizer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -137,9 +136,10 @@ public abstract class UpnpIgdHttpResponse {
         return content;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "UpnpIgdHttpResponse{" + "headers=" + headers + ", responseCode=" + responseCode + ", content=" + content + '}';
     }
-
+    // CHECKSTYLE:ON:DesignForExtension
 }

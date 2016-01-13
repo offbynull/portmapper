@@ -98,9 +98,10 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         return sb.toString();
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "UpnpIgdSoapRequest{super=" + super.toString() + '}';
     }
-
+    // CHECKSTYLE:ON:DesignForExtension
 }

@@ -36,9 +36,11 @@ public abstract class IdentifiableNetworkResponse {
         return id;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "IdentifiableNetworkResponse{" + "id=" + id + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 
 }

@@ -60,8 +60,10 @@ public abstract class NatPmpRequest implements NatPmpMessage {
         return op;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "NatPmpRequest{" + "op=" + op + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

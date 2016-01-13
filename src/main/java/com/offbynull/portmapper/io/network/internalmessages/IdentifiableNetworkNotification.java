@@ -36,9 +36,11 @@ public abstract class IdentifiableNetworkNotification implements NetworkNotifica
         return id;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "IdentifiableNetworkNotification{" + "id=" + id + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 
 }

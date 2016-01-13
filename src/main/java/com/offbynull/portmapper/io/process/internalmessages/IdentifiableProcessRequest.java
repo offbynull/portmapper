@@ -36,9 +36,10 @@ public abstract class IdentifiableProcessRequest {
         return id;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "IdentifiableProcessRequest{" + "id=" + id + '}';
     }
-
+    // CHECKSTYLE:ON:DesignForExtension
 }

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.apache.commons.lang3.Validate;
 
 /**
@@ -307,9 +306,11 @@ public abstract class PcpResponse implements PcpMessage {
         return data;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "PcpResponse{" + "op=" + op + ", resultCode=" + resultCode + ", lifetime=" + lifetime + ", epochTime=" + epochTime
                 + ", options=" + options + ", dataLength=" + dataLength + ", optionsLength=" + optionsLength + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }

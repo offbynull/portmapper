@@ -87,9 +87,11 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         return secondsSinceStartOfEpoch;
     }
 
+    // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
         return "NatPmpResponse{" + "op=" + op + ", resultCode=" + resultCode + ", secondsSinceStartOfEpoch=" + secondsSinceStartOfEpoch
                 + '}';
     }
+    // CHECKSTYLE:ON:DesignForExtension
 }
