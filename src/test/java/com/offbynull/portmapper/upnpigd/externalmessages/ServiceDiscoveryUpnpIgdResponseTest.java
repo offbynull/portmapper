@@ -1,6 +1,6 @@
 package com.offbynull.portmapper.upnpigd.externalmessages;
 
-import java.net.URI;
+import java.net.URL;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -21,7 +21,7 @@ public class ServiceDiscoveryUpnpIgdResponseTest {
                 .getBytes("US-ASCII");
         ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(buffer);
         
-        assertEquals(URI.create("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
+        assertEquals(new URL("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
         assertEquals("SpeedTouch 510 4.0.0.9.0 UPnP/1.0 (DG233B00011961)", resp.getServer());
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getServiceType());
         assertEquals("uuid:UPnP-SpeedTouch510::urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getUsn());
@@ -39,7 +39,7 @@ public class ServiceDiscoveryUpnpIgdResponseTest {
                 .getBytes("US-ASCII");
         ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(buffer);
         
-        assertEquals(URI.create("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
+        assertEquals(new URL("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
         assertEquals("SpeedTouch 510 4.0.0.9.0 UPnP/1.0 (DG233B00011961)", resp.getServer());
         assertEquals("uuid:UPnP-SpeedTouch510::urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getUsn());
         resp.getServiceType();
@@ -94,7 +94,7 @@ public class ServiceDiscoveryUpnpIgdResponseTest {
                 .getBytes("US-ASCII");
         ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(buffer);
         
-        assertEquals(URI.create("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
+        assertEquals(new URL("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
         assertNull(resp.getServer());
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getServiceType());
         assertEquals("uuid:UPnP-SpeedTouch510::urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getUsn());
@@ -115,7 +115,7 @@ public class ServiceDiscoveryUpnpIgdResponseTest {
                 .getBytes("US-ASCII");
         ServiceDiscoveryUpnpIgdResponse resp = new ServiceDiscoveryUpnpIgdResponse(buffer);
         
-        assertEquals(URI.create("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
+        assertEquals(new URL("http://10.0.0.138:80/IGD.xml"), resp.getLocation());
         assertEquals("SpeedTouch 510 4.0.0.9.0 UPnP/1.0 (DG233B00011961)", resp.getServer());
         assertEquals("urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getServiceType());
         assertEquals("uuid:UPnP-SpeedTouch510::urn:schemas-upnp-org:service:WANPPPConnection:1", resp.getUsn());
