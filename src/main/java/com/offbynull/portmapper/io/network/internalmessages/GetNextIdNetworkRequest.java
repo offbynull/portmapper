@@ -16,23 +16,32 @@
  */
 package com.offbynull.portmapper.io.network.internalmessages;
 
+import com.offbynull.portmapper.Bus;
+import org.apache.commons.lang3.Validate;
+
 /**
- * Close a socket. Only possible response is {@link CloseNetworkResponse}.
+ * Get ID to use for a new socket. Only possible response is {@link GetNextSocketIdResponse}.
  * @author Kasra Faghihi
  */
-public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
-
+public final class GetNextIdNetworkRequest implements NetworkRequest {
+    private Bus responseBus;
+    
     /**
-     * Constructs a {@link CloseNetworkRequest}.
-     * @param id id of socket
+     * Constructs a {@link GetNextSocketIdRequest} object.
+     * @param responseBus bus to send new ID to
+     * @throws NullPointerException if any argument is {@code null}, or contains {@code null}
      */
-    public CloseNetworkRequest(int id) {
-        super(id);
-    }
+    public GetNextIdNetworkRequest(Bus responseBus) {
+        Validate.notNull(responseBus);
 
-    @Override
-    public String toString() {
-        return "CloseNetworkRequest{super=" + super.toString() + '}';
+        this.responseBus = responseBus;
     }
-
+    
+    /**
+     * Bus to send responses/notifications to for the created process.
+     * @return response bus
+     */
+    public Bus getResponseBus() {
+        return responseBus;
+    }
 }

@@ -518,7 +518,7 @@ final class InternalUtils {
         LOG.debug("Completed udp requests {}", reqs);
     }
     
-    static long[] calculateRetryTimes(int attempts) {
+    static long[] calculateRetryTimes(int attempts) { // as per PCP/NAT-PMP RFC
         long[] ret = new long[attempts];
         
         long nextTime = 250L;

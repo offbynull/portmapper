@@ -18,6 +18,8 @@ package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
  * Closed a socket. Successful response to {@link CloseNetworkRequest}.
+ * <p>
+ * If an ID is used after issuing a close, the results are undefined.
  * @author Kasra Faghihi
  */
 public final class CloseNetworkResponse extends IdentifiableNetworkResponse {

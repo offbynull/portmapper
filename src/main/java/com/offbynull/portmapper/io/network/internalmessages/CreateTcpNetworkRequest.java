@@ -25,7 +25,7 @@ import org.apache.commons.lang3.Validate;
  * creation, the socket will connect and a {@link ConnectedTcpNetworkNotification} will be sent out to the creator.
  * @author Kasra Faghihi
  */
-public final class CreateTcpNetworkRequest implements NetworkRequest {
+public final class CreateTcpNetworkRequest extends IdentifiableNetworkRequest {
 
     private Bus responseBus;
     private InetAddress sourceAddress;
@@ -34,6 +34,7 @@ public final class CreateTcpNetworkRequest implements NetworkRequest {
 
     /**
      * Constructs a {@link CreateTcpNetworkRequest} object.
+     * @param id id of socket
      * @param responseBus bus to send responses/notifications to for the created socket 
      * @param sourceAddress source address of the socket to be created
      * @param destinationAddress destination address of the socket to be created
@@ -41,7 +42,9 @@ public final class CreateTcpNetworkRequest implements NetworkRequest {
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if {@code 1 > destinationPort > 65535}
      */
-    public CreateTcpNetworkRequest(Bus responseBus, InetAddress sourceAddress, InetAddress destinationAddress, int destinationPort) {
+    public CreateTcpNetworkRequest(int id, Bus responseBus, InetAddress sourceAddress, InetAddress destinationAddress,
+            int destinationPort) {
+        super(id);
         Validate.notNull(responseBus);
         Validate.notNull(sourceAddress);
         Validate.notNull(destinationAddress);

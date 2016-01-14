@@ -14,25 +14,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper.io.network.internalmessages;
+package com.offbynull.portmapper.io.process.internalmessages;
+
 
 /**
- * Close a socket. Only possible response is {@link CloseNetworkResponse}.
+ * Created a new process ID. Response to {@link GetNextProcessIdRequest}.
  * @author Kasra Faghihi
  */
-public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
-
+public final class GetNextIdProcessResponse extends IdentifiableProcessResponse {
+   
     /**
-     * Constructs a {@link CloseNetworkRequest}.
-     * @param id id of socket
+     * Constructs a {@link GetNextProcessIdResponse} object.
+     * @param id id to use for for new socket
      */
-    public CloseNetworkRequest(int id) {
+    public GetNextIdProcessResponse(int id) {
         super(id);
     }
-
-    @Override
-    public String toString() {
-        return "CloseNetworkRequest{super=" + super.toString() + '}';
-    }
-
+    
 }

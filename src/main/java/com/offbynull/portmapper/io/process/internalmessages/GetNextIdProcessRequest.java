@@ -16,24 +16,33 @@
  */
 package com.offbynull.portmapper.io.process.internalmessages;
 
+import com.offbynull.portmapper.Bus;
+import org.apache.commons.lang3.Validate;
+
 /**
- * Error response associated with a request to a process. Does not mean that the process associated with this ID is dead (no longer usable)
- * -- you should still close the process.
+ * Get ID to use for a new socket. Only possible response is {@link GetNextProcessIdResponse}.
  * @author Kasra Faghihi
  */
-public final class IdentifiableErrorProcessResponse extends IdentifiableProcessResponse {
-
+public final class GetNextIdProcessRequest implements ProcessRequest {
+    
+    private Bus responseBus;
+    
     /**
-     * Constructs a {@link IdentifiableErrorProcessResponse} object.
-     * @param id id of process
+     * Constructs a {@link GetNextProcessIdRequest} object.
+     * @param responseBus bus to send new ID to
+     * @throws NullPointerException if any argument is {@code null}, or contains {@code null}
      */
-    public IdentifiableErrorProcessResponse(int id) {
-        super(id);
-    }
+    public GetNextIdProcessRequest(Bus responseBus) {
+        Validate.notNull(responseBus);
 
-    @Override
-    public String toString() {
-        return "IdentifiableErrorProcessResponse{super=" + super.toString() + '}';
+        this.responseBus = responseBus;
     }
-
+    
+    /**
+     * Bus to send responses/notifications to for the created process.
+     * @return response bus
+     */
+    public Bus getResponseBus() {
+        return responseBus;
+    }
 }

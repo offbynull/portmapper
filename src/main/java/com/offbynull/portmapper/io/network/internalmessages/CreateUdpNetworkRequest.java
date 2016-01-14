@@ -25,17 +25,19 @@ import org.apache.commons.lang3.Validate;
  * creation, the socket will connect and a {@link ConnectedUdpNetworkNotification} will be sent out to the creator.
  * @author Kasra Faghihi
  */
-public final class CreateUdpNetworkRequest implements NetworkRequest {
+public final class CreateUdpNetworkRequest extends IdentifiableNetworkRequest {
     private Bus responseBus;
     private InetAddress sourceAddress;
 
     /**
      * Constructs a {@link CreateUdpNetworkRequest} object.
+     * @param id id of socket
      * @param responseBus bus to send responses/notifications to for the created socket 
      * @param sourceAddress source address of the socket to be created
      * @throws NullPointerException if any argument is {@code null}
      */
-    public CreateUdpNetworkRequest(Bus responseBus, InetAddress sourceAddress) {
+    public CreateUdpNetworkRequest(int id, Bus responseBus, InetAddress sourceAddress) {
+        super(id);
         Validate.notNull(responseBus);
         Validate.notNull(sourceAddress);
         this.responseBus = responseBus;

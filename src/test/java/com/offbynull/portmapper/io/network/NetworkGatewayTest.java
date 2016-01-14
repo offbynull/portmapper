@@ -9,6 +9,8 @@ import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResp
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.ConnectedTcpNetworkNotification;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
@@ -55,16 +57,21 @@ public class NetworkGatewayTest {
                     ByteBuffer.wrap("hello".getBytes("UTF-8")),
                     ByteBuffer.wrap("goodbye".getBytes("UTF-8")));
 
-            int id;
-
             LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+            Bus responseBus = new BasicBus(queue);
+            
+            fixtureBus.send(new GetNextIdNetworkRequest(responseBus));
+            GetNextIdNetworkResponse nextIdResp = (GetNextIdNetworkResponse) queue.take();
+            
+            int id = nextIdResp.getId();
+            
             fixtureBus.send(new CreateTcpNetworkRequest(
-                    new BasicBus(queue),
+                    id,
+                    responseBus,
                     InetAddress.getByName("0.0.0.0"),
                     InetAddress.getLoopbackAddress(),
                     12345));
-            CreateTcpNetworkResponse resp1 = (CreateTcpNetworkResponse) queue.take();
-            id = resp1.getId();
+            CreateTcpNetworkResponse createdResp = (CreateTcpNetworkResponse) queue.take();
             ConnectedTcpNetworkNotification connectedResp = (ConnectedTcpNetworkNotification) queue.take();
             
             fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
@@ -103,14 +110,19 @@ public class NetworkGatewayTest {
                     ByteBuffer.wrap("hello".getBytes("UTF-8")),
                     ByteBuffer.wrap("goodbye".getBytes("UTF-8")));
 
-            int id;
-
             LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+            Bus responseBus = new BasicBus(queue);
+            
+            fixtureBus.send(new GetNextIdNetworkRequest(responseBus));
+            GetNextIdNetworkResponse nextIdResp = (GetNextIdNetworkResponse) queue.take();
+
+            int id = nextIdResp.getId();
+            
             fixtureBus.send(new CreateUdpNetworkRequest(
-                    new BasicBus(queue),
+                    id,
+                    responseBus,
                     InetAddress.getByName("0.0.0.0")));
             CreateUdpNetworkResponse resp1 = (CreateUdpNetworkResponse) queue.take();
-            id = resp1.getId();
 
 
             WriteEmptyUdpNetworkNotification writeReadyResp = (WriteEmptyUdpNetworkNotification) queue.take();

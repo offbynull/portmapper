@@ -5,6 +5,7 @@ import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.GetNextIdProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
 import java.io.ByteArrayOutputStream;
@@ -36,10 +37,18 @@ public class ProcessGatewayTest {
     @Test
     public void mustRunProcess() throws Exception {
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+        Bus responseBus = new BasicBus(queue);
+
+        fixtureBus.send(new GetNextIdProcessRequest(responseBus));
+        CreateProcessResponse nextIdResp = (CreateProcessResponse) queue.take();
+        
+        int id = nextIdResp.getId();
+                
         fixtureBus.send(new CreateProcessRequest(
-                new BasicBus(queue),
+                id,
+                responseBus,
                 "java", "-version"));
-        CreateProcessResponse resp1 = (CreateProcessResponse) queue.take();
+        CreateProcessResponse createResp = (CreateProcessResponse) queue.take();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         while (true) {

@@ -17,22 +17,17 @@
 package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
- * Close a socket. Only possible response is {@link CloseNetworkResponse}.
+ * Created a new socket ID. Response to {@link GetNextSocketIdRequest}.
  * @author Kasra Faghihi
  */
-public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
-
+public final class GetNextIdNetworkResponse extends IdentifiableNetworkResponse {
+   
     /**
-     * Constructs a {@link CloseNetworkRequest}.
-     * @param id id of socket
+     * Constructs a {@link GetNextSocketIdResponse} object.
+     * @param id id to use for for new socket
      */
-    public CloseNetworkRequest(int id) {
+    public GetNextIdNetworkResponse(int id) {
         super(id);
     }
-
-    @Override
-    public String toString() {
-        return "CloseNetworkRequest{super=" + super.toString() + '}';
-    }
-
+    
 }

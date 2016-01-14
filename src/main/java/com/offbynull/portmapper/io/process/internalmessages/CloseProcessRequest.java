@@ -17,7 +17,7 @@
 package com.offbynull.portmapper.io.process.internalmessages;
 
 /**
- * Close a process. Possible responses are {@link CloseProcessResponse} and {@link IdentifiableErrorProcessResponse}).
+ * Close a process. Only possible response is {@link CloseProcessResponse}.
  * @author Kasra Faghihi
  */
 public final class CloseProcessRequest extends IdentifiableProcessResponse {

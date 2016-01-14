@@ -26,7 +26,7 @@ import org.apache.commons.lang3.Validate;
  * Create a process. Possible responses are {@link CreateProcessResponse} and {@link IdentifiableErrorProcessResponse}).
  * @author Kasra Faghihi
  */
-public final class CreateProcessRequest implements ProcessRequest {
+public final class CreateProcessRequest extends IdentifiableProcessRequest {
 
     private Bus responseBus;
     private String executable;
@@ -34,12 +34,14 @@ public final class CreateProcessRequest implements ProcessRequest {
 
     /**
      * Constructs a {@link CreateProcessRequest} object.
+     * @param id of process
      * @param responseBus bus to send responses/notifications to for the created process 
      * @param executable executable to run
      * @param parameters parameters to use when running {@code executable}
      * @throws NullPointerException if any argument is {@code null}, or contains {@code null}
      */
-    public CreateProcessRequest(Bus responseBus, String executable, String ... parameters) {
+    public CreateProcessRequest(int id, Bus responseBus, String executable, String ... parameters) {
+        super(id);
         Validate.notNull(responseBus);
         Validate.notNull(executable);
         Validate.notNull(parameters);

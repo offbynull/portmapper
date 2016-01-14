@@ -21,8 +21,9 @@ import com.offbynull.portmapper.Bus;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.CloseProcessRequest;
-import com.offbynull.portmapper.io.process.internalmessages.ErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.GetNextIdProcessRequest;
+import com.offbynull.portmapper.io.process.internalmessages.GetNextIdProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.IdentifiableErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
@@ -81,8 +82,15 @@ final class ProcessRunnable implements Runnable {
     private void processMessage(Object msg) {
         LOG.debug("Processing message: {}", msg);
         
-        if (msg instanceof CreateProcessRequest) {
+        if (msg instanceof GetNextIdProcessRequest) {
+            int id = nextId++;
+            
+            GetNextIdProcessRequest req = (GetNextIdProcessRequest) msg;
+            Bus responseBus = req.getResponseBus();
+            responseBus.send(new GetNextIdProcessResponse(id));
+        } else if (msg instanceof CreateProcessRequest) {
             CreateProcessRequest req = (CreateProcessRequest) msg;
+            int id = req.getId();
             Bus responseBus = req.getResponseBus();
             Process process = null;
             Thread monitorThread = null;
@@ -97,8 +105,6 @@ final class ProcessRunnable implements Runnable {
                 command.addAll(parameters);
                 ProcessBuilder pb = new ProcessBuilder(command);
                 process = pb.start();
-                
-                int id = nextId++;
                 
                 ProcessMonitorRunnable monitorRunnable = new ProcessMonitorRunnable(id, process, bus);
                 monitorThread = new Thread(monitorRunnable);
@@ -131,6 +137,7 @@ final class ProcessRunnable implements Runnable {
                 stdinThread.start();
                 monitorThread.start();
             } catch (IOException | RuntimeException re) {
+                idMap.remove(id);
                 LOG.error("Unable to create process", re);
                 if (stdoutThread != null) {
                     stdoutThread.interrupt();
@@ -148,7 +155,7 @@ final class ProcessRunnable implements Runnable {
                     process.destroy();
                 }
 
-                responseBus.send(new ErrorProcessResponse());
+                responseBus.send(new IdentifiableErrorProcessResponse(id));
             }
         } else if (msg instanceof CloseProcessRequest) {
             CloseProcessRequest req = (CloseProcessRequest) msg;
@@ -162,28 +169,22 @@ final class ProcessRunnable implements Runnable {
         } else if (msg instanceof TerminatedMessage) {
             // sent internally once process exits -- not by user
             TerminatedMessage req = (TerminatedMessage) msg;
+            Integer exitCode = req.getExitCode();
             int id = req.getId();
-            try {
-                ProcessEntry entry = idMap.remove(id);
-                if (entry != null) {
-                    Bus responseBus = entry.getResponseBus();
+            ProcessEntry entry = idMap.remove(id);
+            if (entry != null) {
+                try {
                     entry.getProcess().destroy();
                     entry.getStdoutThread().interrupt();
                     entry.getStderrThread().interrupt();
                     entry.getStdinThread().interrupt();
                     entry.getExitThread().interrupt();
-                    
-                    Integer exitCode = req.getExitCode();
-                    
-                    if (exitCode == null) {
-                        responseBus.send(new IdentifiableErrorProcessResponse(id));
-                    } else {
-                        responseBus.send(new ExitProcessNotification(id, exitCode));
-                    }
+                } catch (RuntimeException re) {
+                    LOG.error("Unable to process terminate message", re);
+                } finally {
+                    Bus responseBus = entry.getResponseBus();
+                    responseBus.send(new ExitProcessNotification(id, exitCode));
                 }
-            } catch (RuntimeException re) {
-                LOG.error("Unable to process message", re);
-                // do nothing, process should alreayd be dead at this point
             }
         } else if (msg instanceof WriteEmptyMessage) {
             // sent internally once process has nothing else to write out
@@ -205,20 +206,11 @@ final class ProcessRunnable implements Runnable {
             }
         } else if (msg instanceof WriteProcessRequest) {
             WriteProcessRequest req = (WriteProcessRequest) msg;
-            Bus responseBus = null;
-            Process process = null;
             int id = req.getId();
-            try {
-                ProcessEntry entry = idMap.get(id);
-                responseBus = entry.getResponseBus();
-                process = entry.getProcess();
+
+            ProcessEntry entry = idMap.get(id);
+            if (entry != null) {
                 entry.getStdinBus().send(ByteBuffer.wrap(req.getData()));
-            } catch (RuntimeException re) {
-                if (process != null) {
-                    process.destroy();
-                } else if (responseBus != null) {
-                    responseBus.send(new IdentifiableErrorProcessResponse(id));
-                }
             }
         } else if (msg instanceof KillProcessRequest) {
             throw new KillRequestException();

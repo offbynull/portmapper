@@ -17,22 +17,22 @@
 package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
- * Close a socket. Only possible response is {@link CloseNetworkResponse}.
- * @author Kasra Faghihi
+ * Error notification associated with a socket.  Does not mean that the socket associated with this ID is dead (no longer usable) -- you
+ * should still close the socket.
  */
-public final class CloseNetworkRequest extends IdentifiableNetworkRequest {
+public final class IdentifiableErrorNetworkNotification extends IdentifiableNetworkNotification {
 
     /**
-     * Constructs a {@link CloseNetworkRequest}.
+     * Constructs a {@link IdentifiableErrorNetworkNotification} object.
      * @param id id of socket
      */
-    public CloseNetworkRequest(int id) {
+    public IdentifiableErrorNetworkNotification(int id) {
         super(id);
     }
 
     @Override
     public String toString() {
-        return "CloseNetworkRequest{super=" + super.toString() + '}';
+        return "IdentifiableErrorNetworkNotification{super=" + super.toString() + '}';
     }
 
 }
