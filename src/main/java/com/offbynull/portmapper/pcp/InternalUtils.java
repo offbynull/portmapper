@@ -26,12 +26,16 @@ import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResp
 import com.offbynull.portmapper.io.network.internalmessages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.WriteUdpNetworkRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CloseProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.io.process.internalmessages.ErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.io.process.internalmessages.GetNextIdProcessRequest;
+import com.offbynull.portmapper.io.process.internalmessages.GetNextIdProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.IdentifiableErrorProcessResponse;
 import com.offbynull.portmapper.io.process.internalmessages.ReadProcessNotification;
 import com.offbynull.portmapper.io.process.internalmessages.ReadType;
@@ -333,18 +337,33 @@ final class InternalUtils {
 
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
+        long timeout = 10000L;
+        long endTime = System.currentTimeMillis() + timeout;
 
         // Create processes
         Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
         next:
         for (RunProcessRequest req : reqs) {
             LOG.debug("Starting process {}", req);
-            processBus.send(new CreateProcessRequest(selfBus, req.getExecutable(), req.getParameters()));
+
+            int id;
+
+            processBus.send(new GetNextIdProcessRequest(selfBus));
+            while (true) {
+                long sleepTime = endTime - System.currentTimeMillis();
+                Validate.validState(sleepTime > 0, "Failed to create all processes in time");
+
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                if (resp instanceof GetNextIdProcessResponse) {
+                    id = ((GetNextIdProcessResponse) resp).getId();
+                    break;
+                }
+            }
+            
+            processBus.send(new CreateProcessRequest(id, selfBus, req.getExecutable(), req.getParameters()));
         }
 
         // Read data from sockets
-        long timeout = 10000L;
-        long endTime = System.currentTimeMillis() + timeout;
         int runningProcs = reqs.length;
         while (runningProcs > 0) {
             long sleepTime = endTime - System.currentTimeMillis();
@@ -417,9 +436,22 @@ final class InternalUtils {
             if (addressToSocketId.containsKey(req.getSourceAddress())) {
                 continue;
             }
+            
+            int id;
+            
+            networkBus.send(new GetNextIdNetworkRequest(selfBus));
+            while (true) {
+                long sleepTime = endCreateTime - System.currentTimeMillis();
+                Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
+                
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                if (resp instanceof GetNextIdNetworkResponse) {
+                    id = ((GetNextIdNetworkResponse) resp).getId();
+                    break;
+                }
+            }
 
-            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.getSourceAddress()));
-
+            networkBus.send(new CreateUdpNetworkRequest(id, selfBus, req.getSourceAddress()));
             Object createResp;
             while (true) {
                 long sleepTime = endCreateTime - System.currentTimeMillis();
@@ -437,7 +469,6 @@ final class InternalUtils {
                 // unrecognized response/notification, keep reading from queue until we have something we recognize
             }
 
-            int id = ((CreateUdpNetworkResponse) createResp).getId();
             addressToSocketId.put(req.getSourceAddress(), id);
         }
         
