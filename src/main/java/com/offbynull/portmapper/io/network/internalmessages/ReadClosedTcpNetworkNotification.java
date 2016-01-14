@@ -18,6 +18,7 @@ package com.offbynull.portmapper.io.network.internalmessages;
 
 /**
  * TCP read stream has been closed.
+ * @author Kasra Faghihi
  */
 public final class ReadClosedTcpNetworkNotification extends IdentifiableNetworkNotification {
 

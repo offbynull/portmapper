@@ -19,6 +19,7 @@ package com.offbynull.portmapper.io.network.internalmessages;
 /**
  * Error notification associated with a socket.  Does not mean that the socket associated with this ID is dead (no longer usable) -- you
  * should still close the socket.
+ * @author Kasra Faghihi
  */
 public final class IdentifiableErrorNetworkNotification extends IdentifiableNetworkNotification {
 

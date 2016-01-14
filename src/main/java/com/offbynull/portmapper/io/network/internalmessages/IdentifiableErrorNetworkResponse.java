@@ -19,6 +19,7 @@ package com.offbynull.portmapper.io.network.internalmessages;
 /**
  * Error response associated with a request to a socket.  Does not mean that the socket associated with this ID is dead (no longer usable)
  * -- you should still close the socket.
+ * @author Kasra Faghihi
  */
 public final class IdentifiableErrorNetworkResponse extends IdentifiableNetworkResponse {
 

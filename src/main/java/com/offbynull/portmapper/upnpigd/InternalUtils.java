@@ -24,7 +24,6 @@ import com.offbynull.portmapper.io.network.internalmessages.CreateTcpNetworkResp
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.CreateUdpNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
-import com.offbynull.portmapper.io.network.internalmessages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkRequest;
@@ -185,12 +184,12 @@ final class InternalUtils {
                     }
 
                     Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                    if (resp instanceof IdentifiableErrorNetworkResponse &&
-                            ((IdentifiableNetworkResponse) resp).getId() == id) {
+                    if (resp instanceof IdentifiableErrorNetworkResponse
+                            && ((IdentifiableNetworkResponse) resp).getId() == id) {
                         // create socket failed, so skip this request
                         continue next;
-                    } else if (resp instanceof CreateTcpNetworkResponse &&
-                            ((CreateTcpNetworkResponse) resp).getId() == id) {
+                    } else if (resp instanceof CreateTcpNetworkResponse
+                            && ((CreateTcpNetworkResponse) resp).getId() == id) {
                         // create socket success
                         break;
                     }
