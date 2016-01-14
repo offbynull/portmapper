@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
     private boolean connecting = true;
+    private boolean readFinished;
     private LinkedList<ByteBuffer> outgoingBuffers;
 
     TcpNetworkEntry(int id, Channel channel, Bus responseBus) {
@@ -41,6 +42,14 @@ final class TcpNetworkEntry extends NetworkEntry<ByteBuffer> {
 
     void setConnecting(boolean connecting) {
         this.connecting = connecting;
+    }
+
+    public boolean isReadFinished() {
+        return readFinished;
+    }
+
+    public void setReadFinished(boolean readFinished) {
+        this.readFinished = readFinished;
     }
     
 }

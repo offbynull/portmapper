@@ -34,6 +34,7 @@ import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkResp
 import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.ReadClosedTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.WriteEmptyTcpNetworkNotification;
@@ -169,12 +170,12 @@ final class NetworkRunnable implements Runnable {
                 LOG.debug("{} TCP read {} bytes", id, readCount);
 
                 if (readCount == -1) {
-                    // socket disconnected
-                    throw new RuntimeException(); // goes up the chain and shuts down the channel
+                    // read finished, set flag to stop requesting read notifications
+                    entry.setReadFinished(true);
+                    responseBus.send(new ReadClosedTcpNetworkNotification(id));
                 } else if (buffer.remaining() > 0) {
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadTcpNetworkNotification(id, bufferAsArray);
-                    responseBus.send(readResp);
+                    responseBus.send(new ReadTcpNetworkNotification(id, bufferAsArray));
                 }
             } catch (IOException ioe) {
                 LOG.error(id + " Exception encountered", ioe);
@@ -204,8 +205,7 @@ final class NetworkRunnable implements Runnable {
                             break;
                         }
                         outBuffers.removeFirst();
-                        Object writeResp = new WriteTcpNetworkResponse(id, writeCount);
-                        responseBus.send(writeResp);
+                        responseBus.send(new WriteTcpNetworkResponse(id, writeCount));
                     }
                 }
             } catch (IOException ioe) {
@@ -230,8 +230,7 @@ final class NetworkRunnable implements Runnable {
                 if (remoteAddress != null) {
                     buffer.flip();
                     byte[] bufferAsArray = ByteBufferUtils.copyContentsToArray(buffer);
-                    Object readResp = new ReadUdpNetworkNotification(id, localAddress, remoteAddress, bufferAsArray);
-                    responseBus.send(readResp);
+                    responseBus.send(new ReadUdpNetworkNotification(id, localAddress, remoteAddress, bufferAsArray));
                 }
             } catch (IOException ioe) {
                 LOG.error(id + " Exception encountered", ioe);
@@ -254,8 +253,7 @@ final class NetworkRunnable implements Runnable {
 
                     LOG.debug("{} UDP wrote {} bytes of {} from {} to {}", id, writeCount, totalCount, localAddress, remoteAddress);
 
-                    Object writeResp = new WriteUdpNetworkResponse(id, writeCount);
-                    responseBus.send(writeResp);
+                    responseBus.send(new WriteUdpNetworkResponse(id, writeCount));
                 } else if (!entry.isNotifiedOfWritable()) {
                     LOG.debug("{} UDP write empty", id);
 
@@ -271,11 +269,21 @@ final class NetworkRunnable implements Runnable {
     }
 
     private void updateSelectionKey(NetworkEntry<?> entry, AbstractSelectableChannel channel) throws ClosedChannelException {
-        int newKey = SelectionKey.OP_READ; // always read
-        if (entry instanceof TcpNetworkEntry && ((TcpNetworkEntry) entry).isConnecting()) {
-            // if connecting (tcp-only)
-            newKey |= SelectionKey.OP_CONNECT;
+        int newKey = 0;
+        if (entry instanceof TcpNetworkEntry) {
+            TcpNetworkEntry tcpNetworkEntry = (TcpNetworkEntry) entry;
+            if (tcpNetworkEntry.isConnecting()) {
+                // if connecting (tcp-only)
+                newKey |= SelectionKey.OP_CONNECT;
+            }
+            
+            if (!tcpNetworkEntry.isReadFinished()) {
+                newKey |= SelectionKey.OP_READ;
+            }
+        } else if (entry instanceof UdpNetworkEntry) {
+            newKey |= SelectionKey.OP_READ;
         }
+        
         if (!entry.getOutgoingBuffers().isEmpty()) {
             // if not empty
             newKey |= SelectionKey.OP_WRITE;

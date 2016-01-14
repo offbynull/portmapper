@@ -27,7 +27,11 @@ import com.offbynull.portmapper.io.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.ErrorNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkRequest;
 import com.offbynull.portmapper.io.network.internalmessages.GetLocalIpAddressesNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkRequest;
+import com.offbynull.portmapper.io.network.internalmessages.GetNextIdNetworkResponse;
 import com.offbynull.portmapper.io.network.internalmessages.IdentifiableErrorNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.IdentifiableNetworkResponse;
+import com.offbynull.portmapper.io.network.internalmessages.ReadClosedTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.io.network.internalmessages.WriteTcpNetworkRequest;
@@ -149,39 +153,59 @@ final class InternalUtils {
                     continue;
                 }
 
-                InetAddress destinationAddress = NetworkUtils.toAddress(req.getLocation().getHost());
-                int destinationPort = req.getLocation().getPort();
+                long sleepTime;
+                
+                
+                // Get id
+                networkBus.send(new GetNextIdNetworkRequest(selfBus));
 
-                networkBus.send(new CreateTcpNetworkRequest(selfBus, req.getSourceAddress(), destinationAddress, destinationPort));
-
+                    // read
                 int id;
                 while (true) {
-                    long sleepTime = endCreateTime - System.currentTimeMillis();
+                    sleepTime = endCreateTime - System.currentTimeMillis();
+                    Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
+
+                    Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                    if (resp instanceof GetNextIdNetworkResponse) {
+                        id = ((GetNextIdNetworkResponse) resp).getId();
+                        break;
+                    }
+                }
+                
+                // Create socket
+                InetAddress destinationAddress = NetworkUtils.toAddress(req.getLocation().getHost());
+                int destinationPort = req.getLocation().getPort();
+                networkBus.send(new CreateTcpNetworkRequest(id, selfBus, req.getSourceAddress(), destinationAddress, destinationPort));
+
+                   // read until success or failure
+                while (true) {
+                    sleepTime = endCreateTime - System.currentTimeMillis();
                     if (sleepTime <= 0L) {
                         break next;
                     }
 
                     Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                    if (resp instanceof ErrorNetworkResponse) {
+                    if (resp instanceof IdentifiableErrorNetworkResponse &&
+                            ((IdentifiableNetworkResponse) resp).getId() == id) {
                         // create socket failed, so skip this request
                         continue next;
-                    } else if (resp instanceof CreateTcpNetworkResponse) {
+                    } else if (resp instanceof CreateTcpNetworkResponse &&
+                            ((CreateTcpNetworkResponse) resp).getId() == id) {
                         // create socket success
-                        id = ((CreateTcpNetworkResponse) resp).getId();
                         break;
-                    } else if (resp instanceof IdentifiableErrorNetworkResponse) {
-                        // likely one of the previously created sockets failed to connect -- remove the previously added socket and move on
-                        int removeId = ((IdentifiableErrorNetworkResponse) resp).getId();
-                        sockets.remove(removeId);
-                        readBuffers.remove(removeId);
                     }
-
-                    // unrecognized response/notification, keep reading from queue until we have something we recognize
                 }
 
-                // Even though the TCP socket hasn't connected yet, add outgoing data (it'll be sent on connect
+                // Track socket
                 sockets.put(id, req);
                 readBuffers.put(id, new ByteArrayOutputStream());
+            }
+
+            
+            // Send data to sockets
+            for (Entry<Integer, HttpRequest> entry : sockets.entrySet()) {
+                int id = entry.getKey();
+                HttpRequest req = entry.getValue();
                 networkBus.send(new WriteTcpNetworkRequest(id, req.getSendMsg().dump()));
             }
 
@@ -211,9 +235,15 @@ final class InternalUtils {
                         throw new IllegalStateException(); // should never happen
                     }
                 } else if (resp instanceof IdentifiableErrorNetworkResponse) {
-                    // On error, remove socket from active set (server likely closed the socket)
+                    // On error, remove socket from active set
                     IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
                     int id = errorResp.getId();
+
+                    activeSocketIds.remove(id);
+                } else if (resp instanceof ReadClosedTcpNetworkNotification) {
+                    // On no more read, remove socket from active set
+                    ReadClosedTcpNetworkNotification closedResp = (ReadClosedTcpNetworkNotification) resp;
+                    int id = closedResp.getId();
 
                     activeSocketIds.remove(id);
                 }
@@ -264,26 +294,47 @@ final class InternalUtils {
                 continue;
             }
 
-            networkBus.send(new CreateUdpNetworkRequest(selfBus, req.getSourceAddress()));
-
-            Object createResp;
+            long sleepTime;
+            
+            
+            // Get id
+            networkBus.send(new GetNextIdNetworkRequest(selfBus));
+            
+                // read
+            int id;
             while (true) {
-                long sleepTime = endCreateTime - System.currentTimeMillis();
+                sleepTime = endCreateTime - System.currentTimeMillis();
+                Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
+                
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                if (resp instanceof GetNextIdNetworkResponse) {
+                    id = ((GetNextIdNetworkResponse) resp).getId();
+                    break;
+                }
+            }
+
+            // Create socket
+            networkBus.send(new CreateUdpNetworkRequest(id, selfBus, req.getSourceAddress()));
+            
+                // read until success or failure
+            while (true) {
+                sleepTime = endCreateTime - System.currentTimeMillis();
                 Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
 
-                createResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (createResp instanceof ErrorNetworkResponse) {
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                if (resp instanceof IdentifiableErrorNetworkResponse
+                        && ((IdentifiableNetworkResponse) resp).getId() == id) {
                     // create socket failed, so skip this request
                     continue next;
-                } else if (createResp instanceof CreateUdpNetworkResponse) {
-                    // create socket success, store the udp socket info
+                } else if (resp instanceof CreateUdpNetworkResponse
+                        && ((CreateUdpNetworkResponse) resp).getId() == id) {
+                    // create socket success
                     break;
                 }
 
                 // unrecognized response/notification, keep reading from queue until we have something we recognize
             }
 
-            int id = ((CreateUdpNetworkResponse) createResp).getId();
             addressToSocketId.put(req.getSourceAddress(), id);
         }
         
