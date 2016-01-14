@@ -48,7 +48,7 @@ final class ReadMessage {
 
     @Override
     public String toString() {
-        return "ReadMessage{" + "id=" + id + ", data=" + data + ", readType=" + readType + '}';
+        return "ReadMessage{" + "id=" + id + ", data=" + Arrays.toString(data) + ", readType=" + readType + '}';
     }
 
 }

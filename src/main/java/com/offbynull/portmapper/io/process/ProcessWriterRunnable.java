@@ -24,8 +24,11 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class ProcessWriterRunnable implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(ProcessWriterRunnable.class);
 
     private int id;
     private final OutputStream outputStream;
@@ -50,18 +53,28 @@ final class ProcessWriterRunnable implements Runnable {
     
     @Override
     public void run() {
+        log.debug("{} Starting up writer", id);
+        
         try {
             while (true) {
                 ByteBuffer sendBuffer = (ByteBuffer) localInputBusQueue.poll();
                 if (sendBuffer == null) {
+                    log.debug("{} Write empty", id);
                     processBus.send(new WriteEmptyMessage(id));
                     sendBuffer = (ByteBuffer) localInputBusQueue.take();
                 }
                 byte[] buffer = ByteBufferUtils.copyContentsToArray(sendBuffer);
                 outputStream.write(buffer);
+
+                log.debug("{} Write {} bytes", id, buffer.length);
             }
-        } catch (IOException | InterruptedException ioe) {
-            // do nothing
+        } catch (RuntimeException | IOException ioe) {
+            log.error(id + " Encountered exception", ioe);
+        } catch (InterruptedException ie) {
+            Thread.interrupted();
+            log.error(id + " Interrupted", ie);
+        } finally {
+            log.debug("{} Shutting down writer", id);
         }
     }
     

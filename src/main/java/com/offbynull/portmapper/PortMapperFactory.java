@@ -22,12 +22,16 @@ import com.offbynull.portmapper.upnpigd.UpnpIgdPortMapper;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Port mapper factory that attempts to find all port mappers.
  * @author Kasra Faghihi
  */
 public final class PortMapperFactory {
+    private static final Logger log = LoggerFactory.getLogger(PortMapperFactory.class);
+    
     private PortMapperFactory() {
         // do nothing
     }
@@ -40,15 +44,26 @@ public final class PortMapperFactory {
      * @throws NullPointerException if any argument is {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static List<PortMapper> create(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<PortMapper> discover(Bus networkBus, Bus processBus) throws InterruptedException {
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
         
         List<PortMapper> ret = new LinkedList<>();
         
-        ret.addAll(UpnpIgdPortMapper.identify(networkBus));
-        ret.addAll(NatPmpPortMapper.identify(networkBus, processBus));
-        ret.addAll(PcpPortMapper.identify(networkBus, processBus));
+        List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
+        log.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
+        
+        List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus);
+        log.debug("Found NAT-PMP mappers: {}", natPmpMappers);
+        
+        List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus);
+        log.debug("Found PCP mappers: {}", natPmpMappers);
+        
+        ret.addAll(upnpIgdMappers);
+        ret.addAll(natPmpMappers);
+        ret.addAll(pcpMappers);
+        
+        log.debug("Total found mappers: {}", pcpMappers);
         
         return ret;
     }

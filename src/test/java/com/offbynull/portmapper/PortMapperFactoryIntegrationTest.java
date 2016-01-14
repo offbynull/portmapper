@@ -40,7 +40,7 @@ public class PortMapperFactoryIntegrationTest {
 
     @Test
     public void mustDiscoverPortMappers() throws Exception {
-        List<PortMapper> mappers = PortMapperFactory.create(networkBus, processBus);
+        List<PortMapper> mappers = PortMapperFactory.discover(networkBus, processBus);
         
         Set<Class<?>> expectedTypes = new HashSet<>();
         

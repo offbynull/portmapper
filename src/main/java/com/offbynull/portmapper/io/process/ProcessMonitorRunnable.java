@@ -19,8 +19,11 @@ package com.offbynull.portmapper.io.process;
 import com.offbynull.portmapper.Bus;
 
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class ProcessMonitorRunnable implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(ProcessMonitorRunnable.class);
 
     private final int id;
     private final Process process;
@@ -37,12 +40,24 @@ final class ProcessMonitorRunnable implements Runnable {
     
     @Override
     public void run() {
+        log.debug("{} Starting up monitor", id);
+        
         try {
             int exitCode = process.waitFor();
+            
+            log.debug("{} Process closed with exit code {}", id, exitCode);
+            
             processBus.send(new TerminatedMessage(id, exitCode));
-        } catch (InterruptedException ioe) {
+        } catch (RuntimeException e) {
+            log.error(id + " Encountered exception", e);
+        } catch (InterruptedException ie) {
+            Thread.interrupted();
+            log.error(id + " Interrupted", ie);
+            
             process.destroy();
             processBus.send(new TerminatedMessage(id, null));
+        } finally {
+            log.debug("{} Shutting down monitor", id);
         }
     }
     
