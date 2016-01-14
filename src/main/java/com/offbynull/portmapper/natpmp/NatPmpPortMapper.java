@@ -204,7 +204,7 @@ public final class NatPmpPortMapper implements PortMapper {
             }
         });
         
-        performUdpRequests(networkBus, Collections.singleton(externalIpReq), calculateRetryTimes(9));
+        performUdpRequests(networkBus, Collections.singleton(externalIpReq), calculateRetryTimes(4)); // should be 9 but 9 takes too long
         
         if (externalIpReq.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to getting external IP");
@@ -251,7 +251,7 @@ public final class NatPmpPortMapper implements PortMapper {
                 throw new IllegalStateException(); // should never happen
         }
         
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4));
 
         if (mapIpReq.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
@@ -311,7 +311,7 @@ public final class NatPmpPortMapper implements PortMapper {
                 throw new IllegalStateException(); // should never happen
         }
         
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(9));
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4));
 
         if (mapIpReq.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");

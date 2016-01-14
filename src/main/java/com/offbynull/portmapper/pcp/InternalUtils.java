@@ -436,7 +436,7 @@ final class InternalUtils {
             if (addressToSocketId.containsKey(req.getSourceAddress())) {
                 continue;
             }
-            
+
             int id;
             
             networkBus.send(new GetNextIdNetworkRequest(selfBus));
