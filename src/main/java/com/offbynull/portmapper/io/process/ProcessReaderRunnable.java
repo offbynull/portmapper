@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class ProcessReaderRunnable implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ProcessReaderRunnable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessReaderRunnable.class);
 
     private int id;
     private final InputStream inputStream;
@@ -46,25 +46,25 @@ final class ProcessReaderRunnable implements Runnable {
     
     @Override
     public void run() {
-        log.debug("{} Starting up reader {}", id, readType);
+        LOG.debug("{} Starting up reader {}", id, readType);
         
         byte[] buffer = new byte[8192];
         try {
             while (true) {
                 int count = inputStream.read(buffer);
                 if (count == -1) {
-                    log.debug("{} {} ended", id, readType);
+                    LOG.debug("{} {} ended", id, readType);
                     break;
                 }
                 
-                log.debug("{} Read {} bytes from {}", id, count, readType);
+                LOG.debug("{} Read {} bytes from {}", id, count, readType);
                 
                 processBus.send(new ReadMessage(id, Arrays.copyOf(buffer, count), readType));
             }
         } catch (RuntimeException | IOException ioe) {
-            log.error(id + " " + readType + " encountered exception", ioe);
+            LOG.error(id + " " + readType + " encountered exception", ioe);
         } finally {
-            log.debug("{} Shutting down reader {}", id, readType);
+            LOG.debug("{} Shutting down reader {}", id, readType);
         }
     }
     

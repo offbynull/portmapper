@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class ProcessMonitorRunnable implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ProcessMonitorRunnable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessMonitorRunnable.class);
 
     private final int id;
     private final Process process;
@@ -40,24 +40,24 @@ final class ProcessMonitorRunnable implements Runnable {
     
     @Override
     public void run() {
-        log.debug("{} Starting up monitor", id);
+        LOG.debug("{} Starting up monitor", id);
         
         try {
             int exitCode = process.waitFor();
             
-            log.debug("{} Process closed with exit code {}", id, exitCode);
+            LOG.debug("{} Process closed with exit code {}", id, exitCode);
             
             processBus.send(new TerminatedMessage(id, exitCode));
         } catch (RuntimeException e) {
-            log.error(id + " Encountered exception", e);
+            LOG.error(id + " Encountered exception", e);
         } catch (InterruptedException ie) {
             Thread.interrupted();
-            log.error(id + " Interrupted", ie);
+            LOG.error(id + " Interrupted", ie);
             
             process.destroy();
             processBus.send(new TerminatedMessage(id, null));
         } finally {
-            log.debug("{} Shutting down monitor", id);
+            LOG.debug("{} Shutting down monitor", id);
         }
     }
     

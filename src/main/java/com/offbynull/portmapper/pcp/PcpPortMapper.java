@@ -45,12 +45,16 @@ import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import static com.offbynull.portmapper.pcp.InternalUtils.runCommandline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A PCP {@link PortMapper} implementation.
  * @author Kasra Faghihi
  */
 public final class PcpPortMapper implements PortMapper {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(PcpPortMapper.class);
     
     private static final int PORT = 5351;
     
@@ -72,6 +76,8 @@ public final class PcpPortMapper implements PortMapper {
      * @throws InterruptedException if interrupted
      */
     public static List<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+        LOG.info("Attempting to identify devices");
+        
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
 
@@ -180,6 +186,8 @@ public final class PcpPortMapper implements PortMapper {
 
     @Override
     public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to map {} Internal:{} External:{} Lifetime:{}", portType, internalPort, externalPort, lifetime);
+        
         Validate.notNull(portType);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -217,12 +225,17 @@ public final class PcpPortMapper implements PortMapper {
         
         
         
-        return new PcpMappedPort(nonce, mappingResp.getInternalPort(), mappingResp.getAssignedExternalPort(),
+        MappedPort mappedPort = new PcpMappedPort(nonce, mappingResp.getInternalPort(), mappingResp.getAssignedExternalPort(),
                 mappingResp.getAssignedExternalIpAddress(), portType, mappingResp.getLifetime());
+        LOG.debug("Map successful {}", mappedPort);
+        
+        return mappedPort;
     }
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
+        LOG.info("Attempting to unmap {}", mappedPort);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PcpMappedPort);
 
@@ -252,10 +265,14 @@ public final class PcpPortMapper implements PortMapper {
         if (mapIpReq.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
         }
+        
+        LOG.debug("Unmap successful {}", mappedPort);
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to refresh mapping {} for {}", mappedPort, lifetime);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PcpMappedPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -263,6 +280,7 @@ public final class PcpPortMapper implements PortMapper {
         
         if (mappedPort.getExternalPort() != newMappedPort.getExternalPort()
                 || !Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress())) {
+            LOG.warn("Failed refresh mapping {}: ", mappedPort, newMappedPort);
             try {
                 unmapPort(newMappedPort);
             } catch (IllegalStateException ise) {
@@ -274,6 +292,8 @@ public final class PcpPortMapper implements PortMapper {
                     + " to "
                     + newMappedPort.getExternalAddress() + ":" + newMappedPort.getExternalPort());
         }
+        
+        LOG.debug("Mapping refreshed {}: ", mappedPort, newMappedPort);
         
         return newMappedPort;
     }

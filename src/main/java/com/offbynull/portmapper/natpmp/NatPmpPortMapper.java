@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A NAT-PMP {@link PortMapper} implementation.
@@ -54,6 +56,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class NatPmpPortMapper implements PortMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(NatPmpPortMapper.class);
     
     private static final int PORT = 5351;
     private Bus networkBus;
@@ -71,9 +74,11 @@ public final class NatPmpPortMapper implements PortMapper {
      * @param processBus process bus
      * @return set of found PCP devices
      * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalStateException if encountered issue with gateways
      * @throws InterruptedException if interrupted
      */
     public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+        LOG.info("Attempting to identify devices");
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
         
@@ -175,6 +180,8 @@ public final class NatPmpPortMapper implements PortMapper {
 
     @Override
     public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to map {} Internal:{} External:{} Lifetime:{}", portType, internalPort, externalPort, lifetime);
+        
         Validate.notNull(portType);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -254,12 +261,17 @@ public final class NatPmpPortMapper implements PortMapper {
         
         
         
-        return new NatPmpMappedPort(mappingResp.getInternalPort(), mappingResp.getExternalPort(), externalAddress, portType,
-                mappingResp.getLifetime());
+        MappedPort mappedPort = new NatPmpMappedPort(mappingResp.getInternalPort(), mappingResp.getExternalPort(), externalAddress,
+                portType, mappingResp.getLifetime());
+        LOG.debug("Map successful {}", mappedPort);
+        
+        return mappedPort;
     }
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
+        LOG.info("Attempting to unmap {}", mappedPort);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof NatPmpMappedPort);
 
@@ -304,10 +316,14 @@ public final class NatPmpPortMapper implements PortMapper {
         if (mapIpReq.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
         }
+        
+        LOG.debug("Unmap successful {}", mappedPort);
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to refresh mapping {} for {}", mappedPort, lifetime);
+
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof NatPmpMappedPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -315,6 +331,7 @@ public final class NatPmpPortMapper implements PortMapper {
         
         if (mappedPort.getExternalPort() != newMappedPort.getExternalPort()
                 || !Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress())) {
+            LOG.warn("Failed refresh mapping {}: ", mappedPort, newMappedPort);
             try {
                 unmapPort(newMappedPort);
             } catch (IllegalStateException ise) {
@@ -326,6 +343,8 @@ public final class NatPmpPortMapper implements PortMapper {
                     + " to "
                     + newMappedPort.getExternalAddress() + ":" + newMappedPort.getExternalPort());
         }
+        
+        LOG.debug("Mapping refreshed {}: ", mappedPort, newMappedPort);
         
         return newMappedPort;
     }

@@ -57,8 +57,12 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class InternalUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(InternalUtils.class);
+    
     private InternalUtils() {
         
     }
@@ -68,8 +72,14 @@ final class InternalUtils {
         Bus selfBus = new BasicBus(queue);
 
         // Get local IP addresses
+        LOG.debug("Getting local IP addresses");
+        
         networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
         GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
+        
+        Validate.validState(localIpsResp != null);
+
+        LOG.debug("Got local IP addresses {}", localIpsResp);
         
         return localIpsResp.getLocalAddresses();
     }
@@ -116,6 +126,7 @@ final class InternalUtils {
     }
     
     static void performHttpRequests(Bus networkBus, Collection<HttpRequest> reqs, long ... attemptDurations) throws InterruptedException {
+        LOG.debug("Performing http requests {} with durations ", reqs, attemptDurations);
         
         Queue<Long> remainingAttemptDurations = new LinkedList<>();
         for (long attemptDuration : attemptDurations) {
@@ -229,10 +240,14 @@ final class InternalUtils {
                 }
             }
         }
+        
+        LOG.debug("Completed http requests {}", reqs);
     }
 
     static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, long ... attemptDurations)
             throws InterruptedException {
+        
+        LOG.debug("Performing udp requests {} with durations ", reqs, attemptDurations);
         
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
@@ -335,6 +350,8 @@ final class InternalUtils {
         for (int id : addressToSocketId.values()) {
             networkBus.send(new CloseNetworkRequest(id));
         }
+        
+        LOG.debug("Completed udp requests {}", reqs);
     }
     
     
@@ -393,6 +410,12 @@ final class InternalUtils {
         void setRespCreator(ResponseCreator respCreator) {
             this.respCreator = respCreator;
         }
+
+        @Override
+        public String toString() {
+            return "HttpRequest{" + "other=" + other + ", sourceAddress=" + sourceAddress + ", location=" + location + ", sendMsg="
+                    + sendMsg + ", respMsg=" + respMsg + ", respCreator=" + respCreator + '}';
+        }
         
     }
 
@@ -450,6 +473,12 @@ final class InternalUtils {
 
         void setRespCreator(ResponseCreator respCreator) {
             this.respCreator = respCreator;
+        }
+
+        @Override
+        public String toString() {
+            return "UdpRequest{" + "other=" + other + ", sourceAddress=" + sourceAddress + ", destinationSocketAddress="
+                    + destinationSocketAddress + ", sendMsg=" + sendMsg + ", respMsges=" + respMsges + ", respCreator=" + respCreator + '}';
         }
         
     }

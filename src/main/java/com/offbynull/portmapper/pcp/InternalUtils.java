@@ -62,8 +62,12 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class InternalUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(InternalUtils.class);
+    
     private InternalUtils() {
         
     }
@@ -313,8 +317,14 @@ final class InternalUtils {
         Bus selfBus = new BasicBus(queue);
 
         // Get local IP addresses
+        LOG.debug("Getting local IP addresses");
+        
         networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
         GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
+        
+        Validate.validState(localIpsResp != null);
+        
+        LOG.debug("Got local IP addresses {}", localIpsResp);
         
         return localIpsResp.getLocalAddresses();
     }
@@ -328,9 +338,8 @@ final class InternalUtils {
         Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
         next:
         for (RunProcessRequest req : reqs) {
-            processBus.send(
-                    new CreateProcessRequest(
-                            selfBus, req.getExecutable(), req.getParameters()));
+            LOG.debug("Starting process {}", req);
+            processBus.send(new CreateProcessRequest(selfBus, req.getExecutable(), req.getParameters()));
         }
 
         // Read data from sockets
@@ -380,7 +389,9 @@ final class InternalUtils {
         // Process responses
         Set<String> ret = new HashSet<>();
         for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
-             ret.add(new String(entry.getValue().toByteArray(), Charset.forName("US-ASCII")));
+            String resp = new String(entry.getValue().toByteArray(), Charset.forName("US-ASCII"));
+            LOG.debug("Process respose {}", resp);
+            ret.add(resp);
         }
         
         return ret;
@@ -389,6 +400,8 @@ final class InternalUtils {
 
     static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, long ... attemptDurations)
             throws InterruptedException {
+        
+        LOG.debug("Performing udp requests {} with durations ", reqs, attemptDurations);
         
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
         Bus selfBus = new BasicBus(queue);
@@ -501,6 +514,8 @@ final class InternalUtils {
         for (int id : addressToSocketId.values()) {
             networkBus.send(new CloseNetworkRequest(id));
         }
+        
+        LOG.debug("Completed udp requests {}", reqs);
     }
     
     static long[] calculateRetryTimes(int attempts) {
@@ -538,6 +553,11 @@ final class InternalUtils {
 
         public void setExecutable(String executable) {
             this.executable = executable;
+        }
+
+        @Override
+        public String toString() {
+            return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + parameters + '}';
         }
         
     }
@@ -596,6 +616,12 @@ final class InternalUtils {
 
         public void setRespCreator(ResponseCreator respCreator) {
             this.respCreator = respCreator;
+        }
+
+        @Override
+        public String toString() {
+            return "UdpRequest{" + "other=" + other + ", sourceAddress=" + sourceAddress + ", destinationSocketAddress="
+                    + destinationSocketAddress + ", sendMsg=" + sendMsg + ", respMsg=" + respMsg + ", respCreator=" + respCreator + '}';
         }
         
     }

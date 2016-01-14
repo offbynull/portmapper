@@ -33,6 +33,8 @@ import java.util.Collections;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Port mapper implementation that interfaces with a UPnP-IGD IPv6 firewall service.
@@ -43,6 +45,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(FirewallUpnpIgdPortMapper.class);
 
     /**
      * Constructs a {@link FirewallUpnpIgdPortMapper} object.
@@ -65,6 +68,8 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     @Override
     public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to map {} Internal:{} External:{} Lifetime:{}", portType, internalPort, externalPort, lifetime);
+        
         Validate.notNull(portType);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -120,7 +125,11 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
             if (mapHttpRequest.getRespMsg() != null) {
                 // server responded, so we're good to go
                 String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.getRespMsg()).getUniqueId();
-                return new FirewallMappedPort(key, internalPort, externalPort, null, portType, leaseDuration);
+                
+                MappedPort mappedPort = new FirewallMappedPort(key, internalPort, externalPort, null, portType, leaseDuration);
+                LOG.debug("Map successful {}", mappedPort);
+                
+                return mappedPort;
             }
             
             // choose another external port for next try -- next try only make 1 attempt
@@ -137,6 +146,8 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
+        LOG.info("Attempting to unmap {}", mappedPort);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof FirewallMappedPort);
 
@@ -169,10 +180,14 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         if (httpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");
         }
+        
+        LOG.debug("Unmap successful {}", mappedPort);
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to refresh mapping {} for {}", mappedPort, lifetime);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof FirewallMappedPort);
 
@@ -216,8 +231,12 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
             throw new IllegalStateException("No response/invalid response to refresh");
         }
         
-        return new FirewallMappedPort(key, mappedPort.getInternalPort(), mappedPort.getExternalPort(), null, mappedPort.getPortType(),
-                leaseDuration);
+        FirewallMappedPort newMappedPort = new FirewallMappedPort(key, mappedPort.getInternalPort(), mappedPort.getExternalPort(), null,
+                mappedPort.getPortType(), leaseDuration);
+        
+        LOG.warn("Mapping refreshed {}: ", mappedPort, newMappedPort);
+        
+        return newMappedPort;
     }
 
     @Override

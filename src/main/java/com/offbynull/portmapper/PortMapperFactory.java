@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author Kasra Faghihi
  */
 public final class PortMapperFactory {
-    private static final Logger log = LoggerFactory.getLogger(PortMapperFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PortMapperFactory.class);
     
     private PortMapperFactory() {
         // do nothing
@@ -51,19 +51,19 @@ public final class PortMapperFactory {
         List<PortMapper> ret = new LinkedList<>();
         
         List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
-        log.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
+        LOG.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
         
         List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus);
-        log.debug("Found NAT-PMP mappers: {}", natPmpMappers);
+        LOG.debug("Found NAT-PMP mappers: {}", natPmpMappers);
         
         List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus);
-        log.debug("Found PCP mappers: {}", natPmpMappers);
+        LOG.debug("Found PCP mappers: {}", natPmpMappers);
         
         ret.addAll(upnpIgdMappers);
         ret.addAll(natPmpMappers);
         ret.addAll(pcpMappers);
         
-        log.debug("Total found mappers: {}", pcpMappers);
+        LOG.debug("Total found mappers: {}", pcpMappers);
         
         return ret;
     }

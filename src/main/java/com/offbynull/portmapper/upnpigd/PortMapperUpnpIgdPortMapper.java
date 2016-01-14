@@ -38,6 +38,8 @@ import java.util.Objects;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Port mapper implementation that interfaces with a UPnP-IGD IPv4 port mapping service (both 1.0 and 2.0 variants).
@@ -49,6 +51,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(PortMapperUpnpIgdPortMapper.class);
 
     private final boolean hasAddAnyPortMappingMethod;
     
@@ -76,6 +79,8 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     @Override
     public MappedPort mapPort(PortType portType, int internalPort, int externalPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to map {} Internal:{} External:{} Lifetime:{}", portType, internalPort, externalPort, lifetime);
+        
         Validate.notNull(portType);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -120,11 +125,15 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         //
         // PERFORM MAPPING
         //
+        MappedPort mappedPort;
         if (hasAddAnyPortMappingMethod) {
-            return newMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
+            mappedPort = newMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
         } else {
-            return oldMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
+            mappedPort = oldMapPort(portType, internalPort, externalPort, lifetime, externalAddress);
         }
+        LOG.debug("Map successful {}", mappedPort);
+        
+        return mappedPort;
     }
     
     private MappedPort newMapPort(PortType portType, int internalPort, int externalPort, long lifetime, InetAddress externalAddress)
@@ -265,6 +274,8 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
     @Override
     public void unmapPort(MappedPort mappedPort) throws InterruptedException {
+        LOG.info("Attempting to unmap {}", mappedPort);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PortMapperMappedPort);
 
@@ -300,10 +311,14 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         if (httpRequest.getRespMsg() == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");
         }
+        
+        LOG.debug("Unmap successful {}", mappedPort);
     }
 
     @Override
     public MappedPort refreshPort(MappedPort mappedPort, long lifetime) throws InterruptedException {
+        LOG.info("Attempting to refresh mapping {} for {}", mappedPort, lifetime);
+        
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof PortMapperMappedPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
@@ -311,6 +326,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         if (mappedPort.getExternalPort() != newMappedPort.getExternalPort()
                 || !Objects.equals(mappedPort.getExternalAddress(), newMappedPort.getExternalAddress())) {
+            LOG.warn("Failed refresh mapping {}: ", mappedPort, newMappedPort);
             try {
                 unmapPort(newMappedPort);
             } catch (IllegalStateException ise) {
@@ -322,6 +338,8 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
                     + " to "
                     + newMappedPort.getExternalAddress() + ":" + newMappedPort.getExternalPort());
         }
+        
+        LOG.debug("Mapping refreshed {}: ", mappedPort, newMappedPort);
         
         return newMappedPort;
     }

@@ -50,6 +50,8 @@ import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescripti
 import static com.offbynull.portmapper.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.NEW_PORT_MAPPER;
 import com.offbynull.portmapper.upnpigd.externalmessages.UpnpIgdHttpResponse;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * UPNP-IGD {@link PortMapper} implementation.
@@ -57,6 +59,7 @@ import java.util.List;
  * @author Kasra Faghihi
  */
 public abstract class UpnpIgdPortMapper implements PortMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(UpnpIgdPortMapper.class);
 
     private final Bus networkBus;
     private final InetAddress internalAddress;
@@ -176,6 +179,8 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
      * @throws InterruptedException if interrupted
      */
     public static List<UpnpIgdPortMapper> identify(Bus networkBus) throws InterruptedException {
+        LOG.info("Attempting to identify devices");
+        
         Validate.notNull(networkBus);
 
         // Probe for devices -- for each device found, query the device

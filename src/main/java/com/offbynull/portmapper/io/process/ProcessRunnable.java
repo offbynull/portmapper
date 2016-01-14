@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class ProcessRunnable implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRunnable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessRunnable.class);
     
     private final Bus bus;
     private final LinkedBlockingQueue<Object> queue;
@@ -60,7 +60,7 @@ final class ProcessRunnable implements Runnable {
 
     @Override
     public void run() {
-        log.debug("Starting gateway");
+        LOG.debug("Starting gateway");
         try {
             while (true) {
                 Object msg = queue.take();
@@ -69,17 +69,17 @@ final class ProcessRunnable implements Runnable {
         } catch (KillRequestException kre) {
             // do nothing
         } catch (Exception e) {
-            log.error("Encountered unexpected exception", e);
+            LOG.error("Encountered unexpected exception", e);
             throw new RuntimeException(e); // rethrow exception
         } finally {
-            log.debug("Stopping gateway");
+            LOG.debug("Stopping gateway");
             shutdownResources();
-            log.debug("Shutdown of resources complete");
+            LOG.debug("Shutdown of resources complete");
         }
     }
 
     private void processMessage(Object msg) {
-        log.debug("Processing message: {}", msg);
+        LOG.debug("Processing message: {}", msg);
         
         if (msg instanceof CreateProcessRequest) {
             CreateProcessRequest req = (CreateProcessRequest) msg;
@@ -131,7 +131,7 @@ final class ProcessRunnable implements Runnable {
                 stdinThread.start();
                 monitorThread.start();
             } catch (IOException | RuntimeException re) {
-                log.error("Unable to create process", re);
+                LOG.error("Unable to create process", re);
                 if (stdoutThread != null) {
                     stdoutThread.interrupt();
                 }
@@ -182,7 +182,7 @@ final class ProcessRunnable implements Runnable {
                     }
                 }
             } catch (RuntimeException re) {
-                log.error("Unable to process message", re);
+                LOG.error("Unable to process message", re);
                 // do nothing, process should alreayd be dead at this point
             }
         } else if (msg instanceof WriteEmptyMessage) {
@@ -226,12 +226,12 @@ final class ProcessRunnable implements Runnable {
     }
 
     private void shutdownResources() {
-        log.debug("Shutting down all resources");
+        LOG.debug("Shutting down all resources");
         
         for (Entry<Integer, ProcessEntry> entry : idMap.entrySet()) {
             int id = entry.getKey();
             
-            log.debug("{} Attempting to shutdown", id);
+            LOG.debug("{} Attempting to shutdown", id);
             
             ProcessEntry pe = entry.getValue();
 
@@ -247,7 +247,7 @@ final class ProcessRunnable implements Runnable {
             } catch (InterruptedException ie) {
                 throw new RuntimeException(ie);
             } catch (RuntimeException e) {
-                log.error(id + " Error shutting down resource", e);
+                LOG.error(id + " Error shutting down resource", e);
             }
 
             // shutdownResources() is the last thing that gets called before the ProcessRunnable thread gets shut down. Any messages put on
