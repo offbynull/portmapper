@@ -557,7 +557,7 @@ final class InternalUtils {
 
         @Override
         public String toString() {
-            return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + parameters + '}';
+            return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + Arrays.toString(parameters) + '}';
         }
         
     }
