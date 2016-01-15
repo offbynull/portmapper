@@ -1,13 +1,13 @@
 package com.offbynull.portmapper;
 
-import com.offbynull.portmapper.io.network.NetworkGateway;
-import com.offbynull.portmapper.io.network.internalmessages.KillNetworkRequest;
-import com.offbynull.portmapper.io.process.ProcessGateway;
-import com.offbynull.portmapper.io.process.internalmessages.KillProcessRequest;
-import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
-import com.offbynull.portmapper.pcp.PcpPortMapper;
-import com.offbynull.portmapper.upnpigd.FirewallUpnpIgdPortMapper;
-import com.offbynull.portmapper.upnpigd.PortMapperUpnpIgdPortMapper;
+import com.offbynull.portmapper.gateways.network.NetworkGateway;
+import com.offbynull.portmapper.gateways.network.internalmessages.KillNetworkRequest;
+import com.offbynull.portmapper.gateways.process.ProcessGateway;
+import com.offbynull.portmapper.gateways.process.internalmessages.KillProcessRequest;
+import com.offbynull.portmapper.mappers.natpmp.NatPmpPortMapper;
+import com.offbynull.portmapper.mappers.pcp.PcpPortMapper;
+import com.offbynull.portmapper.mappers.upnpigd.FirewallUpnpIgdPortMapper;
+import com.offbynull.portmapper.mappers.upnpigd.PortMapperUpnpIgdPortMapper;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

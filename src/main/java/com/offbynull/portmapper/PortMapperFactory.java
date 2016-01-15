@@ -16,9 +16,9 @@
  */
 package com.offbynull.portmapper;
 
-import com.offbynull.portmapper.natpmp.NatPmpPortMapper;
-import com.offbynull.portmapper.pcp.PcpPortMapper;
-import com.offbynull.portmapper.upnpigd.UpnpIgdPortMapper;
+import com.offbynull.portmapper.mappers.natpmp.NatPmpPortMapper;
+import com.offbynull.portmapper.mappers.pcp.PcpPortMapper;
+import com.offbynull.portmapper.mappers.upnpigd.UpnpIgdPortMapper;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
