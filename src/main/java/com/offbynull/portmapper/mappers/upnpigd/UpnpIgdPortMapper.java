@@ -21,6 +21,7 @@ import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
 import com.offbynull.portmapper.mapper.MapperIoUtils.RequestToBytesTransformer;
 import com.offbynull.portmapper.mapper.MapperIoUtils.UdpRequest;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.HttpRequest;
 import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.ResponseCreator;

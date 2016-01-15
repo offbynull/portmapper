@@ -22,8 +22,6 @@ import com.offbynull.portmapper.helpers.NetworkUtils;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.CloseNetworkRequest;
-import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkRequest;
-import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.IdentifiableErrorNetworkResponse;
@@ -58,23 +56,6 @@ final class InternalUtils {
     
     private InternalUtils() {
         
-    }
-
-    static Set<InetAddress> getLocalIpAddresses(Bus networkBus) throws InterruptedException {
-        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-        Bus selfBus = new BasicBus(queue);
-
-        // Get local IP addresses
-        LOG.debug("Getting local IP addresses");
-        
-        networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
-        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
-        
-        Validate.validState(localIpsResp != null);
-
-        LOG.debug("Got local IP addresses {}", localIpsResp);
-        
-        return localIpsResp.getLocalAddresses();
     }
     
     // avoids flooding a single server with a bunch of requests -- does requests to each server in batches of no more than 3
