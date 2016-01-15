@@ -23,6 +23,7 @@ import com.offbynull.portmapper.gateway.Bus;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.helpers.TextUtils;
+import com.offbynull.portmapper.mapper.MapperIoUtils;
 import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
 import com.offbynull.portmapper.mapper.MapperIoUtils.RequestToBytesTransformer;
@@ -31,7 +32,7 @@ import static com.offbynull.portmapper.mapper.MapperIoUtils.calculateExponential
 import static com.offbynull.portmapper.mapper.MapperIoUtils.convertToAddressSet;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
-import com.offbynull.portmapper.mappers.pcp.InternalUtils.RunProcessRequest;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.runProcesses;
 import com.offbynull.portmapper.mappers.pcp.externalmessages.MapPcpRequest;
 import com.offbynull.portmapper.mappers.pcp.externalmessages.MapPcpResponse;
 import java.net.InetAddress;
@@ -44,7 +45,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
-import static com.offbynull.portmapper.mappers.pcp.InternalUtils.runCommandline;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,22 +83,22 @@ public final class PcpPortMapper implements PortMapper {
         Validate.notNull(processBus);
 
         // Perform commands to try to grab gateway addresses
-        Set<String> cliOutputs = runCommandline(processBus,
-                new RunProcessRequest("netstat", "-rn"), //linux mac and windows -- but seems wrong for windows
-                new RunProcessRequest("route", "-n"), // linux
-                new RunProcessRequest("route", "-n", "get", "default"), // mac
-                new RunProcessRequest("ipconfig"), // windows
-                new RunProcessRequest("ifconfig")); // linux (and mac?)
-
+        List<MapperIoUtils.ProcessRequest> processReqs = new ArrayList<>();
+        processReqs.add(new MapperIoUtils.ProcessRequest("netstat", "-rn")); //linux mac and windows -- but seems wrong for windows
+        processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n")); // linux
+        processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n", "get", "default")); // mac
+        processReqs.add(new MapperIoUtils.ProcessRequest("ipconfig")); // windows
+        processReqs.add(new MapperIoUtils.ProcessRequest("ifconfig")); // linux (and mac?)
+        runProcesses(processBus, processReqs, 10000L);
         
         
         
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        for (String cliOutput : cliOutputs) {
-            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(cliOutput);
-            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(cliOutput);
+        for (MapperIoUtils.ProcessRequest req : processReqs) {
+            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());
+            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(req.getOutput());
 
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));

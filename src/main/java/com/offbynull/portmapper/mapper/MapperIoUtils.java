@@ -28,16 +28,30 @@ import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetwo
 import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.gateways.network.internalmessages.WriteUdpNetworkRequest;
+import com.offbynull.portmapper.gateways.process.internalmessages.CloseProcessRequest;
+import com.offbynull.portmapper.gateways.process.internalmessages.CreateProcessRequest;
+import com.offbynull.portmapper.gateways.process.internalmessages.ErrorProcessResponse;
+import com.offbynull.portmapper.gateways.process.internalmessages.ExitProcessNotification;
+import com.offbynull.portmapper.gateways.process.internalmessages.GetNextIdProcessRequest;
+import com.offbynull.portmapper.gateways.process.internalmessages.GetNextIdProcessResponse;
+import com.offbynull.portmapper.gateways.process.internalmessages.IdentifiableErrorProcessResponse;
+import com.offbynull.portmapper.gateways.process.internalmessages.ReadProcessNotification;
+import com.offbynull.portmapper.gateways.process.internalmessages.ReadType;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
@@ -291,127 +305,164 @@ public final class MapperIoUtils {
         PRESET_IPV4_GATEWAY_ADDRESSES = (UnmodifiableSet<InetAddress>) UnmodifiableSet.unmodifiableSet(gatewayAddresses);
     }
     
-//    static Set<String> runCommandline(Bus processBus, RunProcessRequest ... reqs) throws InterruptedException {
-//
-//        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-//        Bus selfBus = new BasicBus(queue);
-//        long timeout = 10000L;
-//        long endTime = System.currentTimeMillis() + timeout;
-//
-//        // Create processes
-//        Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
-//        next:
-//        for (RunProcessRequest req : reqs) {
-//            LOG.debug("Starting process {}", req);
-//
-//            int id;
-//
-//            processBus.send(new GetNextIdProcessRequest(selfBus));
-//            while (true) {
-//                long sleepTime = endTime - System.currentTimeMillis();
-//                Validate.validState(sleepTime > 0, "Failed to create all processes in time");
-//
-//                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-//                if (resp instanceof GetNextIdProcessResponse) {
-//                    id = ((GetNextIdProcessResponse) resp).getId();
-//                    break;
-//                }
-//            }
-//            
-//            processBus.send(new CreateProcessRequest(id, selfBus, req.getExecutable(), req.getParameters()));
-//        }
-//
-//        // Read data from sockets
-//        int runningProcs = reqs.length;
-//        while (runningProcs > 0) {
-//            long sleepTime = endTime - System.currentTimeMillis();
-//            if (sleepTime <= 0L) {
-//                break;
-//            }
-//
-//            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-//
-//            if (resp instanceof ReadProcessNotification) {
-//                // On read, put in to readBuffer
-//                ReadProcessNotification readResp = (ReadProcessNotification) resp;
-//                if (readResp.getReadType() == ReadType.STDOUT) {
-//                    Integer id = readResp.getId();
-//
-//                    ByteArrayOutputStream baos = readBuffers.get(id);
-//                    if (baos == null) {
-//                        baos = new ByteArrayOutputStream();
-//                        readBuffers.put(id, baos);
-//                    }
-//
-//                    try {
-//                        baos.write(readResp.getData());
-//                    } catch (IOException ioe) {
-//                        throw new IllegalStateException(); // should never happen
-//                    }
-//                }
-//            } else if (resp instanceof ExitProcessNotification) {
-//                runningProcs--;
-//            } else if (resp instanceof IdentifiableErrorProcessResponse) {
-//                runningProcs--;
-//            } else if (resp instanceof ErrorProcessResponse) {
-//                runningProcs--;
-//            }
-//        }
-//
-//        // Issue closes
-//        for (int id : readBuffers.keySet()) {
-//            processBus.send(new CloseProcessRequest(id));
-//        }
-//
-//        // Process responses
-//        Set<String> ret = new HashSet<>();
-//        for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
-//            String resp = new String(entry.getValue().toByteArray(), Charset.forName("US-ASCII"));
-//            LOG.debug("Process respose {}", resp);
-//            ret.add(resp);
-//        }
-//        
-//        return ret;
-//    }
-//
-//    public static final class RunProcessRequest {
-//        private final String executable;
-//        private final String[] parameters;
-//        private String output;
-//        
-//        RunProcessRequest(String executable, String ... parameters) {
-//            Validate.notNull(executable);
-//            Validate.notNull(parameters);
-//            Validate.noNullElements(parameters);
-//
-//            this.executable = executable;
-//            this.parameters = Arrays.copyOf(parameters, parameters.length);
-//        }
-//
-//        public String[] getParameters() {
-//            return Arrays.copyOf(parameters, parameters.length);
-//        }
-//
-//        public String getExecutable() {
-//            return executable;
-//        }
-//
-//        public String getOutput() {
-//            return output;
-//        }
-//
-//        void setOutput(String output) {
-//            this.output = output;
-//        }
-//
-//        @Override
-//        public String toString() {
-//            return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + Arrays.toString(parameters) + ", output=" +output
-//                    + '}';
-//        }
-//
-//        
-//    }
+    /**
+     * Run a group of processes at once.
+     * @param processBus process bus
+     * @param reqs processes to run
+     * @param timeout process timeout
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalArgumentException if {@code timeout} is negative
+     * @throws InterruptedException if interrupted
+     */
+    public static void runProcesses(Bus processBus, Collection<ProcessRequest> reqs, long timeout) throws InterruptedException {
+        Validate.notNull(processBus);
+        Validate.notNull(reqs);
+        Validate.noNullElements(reqs);
+
+        LOG.debug("Running processes {} with duration {}", reqs, timeout);
+        
+        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+        Bus selfBus = new BasicBus(queue);
+        long endTime = System.currentTimeMillis() + timeout;
+
+        // Get ids
+        Map<Integer, ProcessRequest> processes = new HashMap<>();
+        Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
+        for (ProcessRequest req : reqs) {
+            long sleepTime = endTime - System.currentTimeMillis();
+            Validate.validState(sleepTime > 0, "Failed to create all processes in time");
+
+            processBus.send(new GetNextIdProcessRequest(selfBus));
+            GetNextIdProcessResponse resp = (GetNextIdProcessResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+            int id = resp.getId();
+            
+            readBuffers.put(id, new ByteArrayOutputStream());
+            processes.put(id, req);
+        }
+        
+        // Create processes
+        for (Entry<Integer, ProcessRequest> entry : processes.entrySet()) {
+            int id = entry.getKey();
+            ProcessRequest req = entry.getValue();
+            
+            LOG.debug("Starting process {}", req);
+
+            processBus.send(new CreateProcessRequest(id, selfBus, req.getExecutable(), req.getParameters()));
+            // don't care about response
+        }
+        
+        // Read data from sockets
+        int runningProcs = reqs.size();
+        while (runningProcs > 0) {
+            long sleepTime = endTime - System.currentTimeMillis();
+            if (sleepTime <= 0L) {
+                break;
+            }
+
+            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+
+            if (resp instanceof ReadProcessNotification) {
+                // On read, put in to readBuffer
+                ReadProcessNotification readResp = (ReadProcessNotification) resp;
+                if (readResp.getReadType() == ReadType.STDOUT) {
+                    Integer id = readResp.getId();
+
+                    ByteArrayOutputStream baos = readBuffers.get(id);
+                    if (baos == null) {
+                        baos = new ByteArrayOutputStream();
+                        readBuffers.put(id, baos);
+                    }
+
+                    try {
+                        baos.write(readResp.getData());
+                    } catch (IOException ioe) {
+                        throw new IllegalStateException(); // should never happen
+                    }
+                }
+            } else if (resp instanceof ExitProcessNotification) {
+                runningProcs--;
+            } else if (resp instanceof IdentifiableErrorProcessResponse) {
+                runningProcs--;
+            } else if (resp instanceof ErrorProcessResponse) {
+                runningProcs--;
+            }
+        }
+
+        // Issue closes
+        for (int id : readBuffers.keySet()) {
+            processBus.send(new CloseProcessRequest(id));
+        }
+
+        // Process responses
+        for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
+            int id = entry.getKey();
+            byte[] respData = entry.getValue().toByteArray();
+            
+            String resp = new String(respData, Charset.forName("US-ASCII"));
+            LOG.debug("Process response {}", resp);
+            
+            ProcessRequest req = processes.get(id);
+            req.setOutput(resp);
+        }
+    }
+
+    /**
+     * Process request object.
+     */
+    public static final class ProcessRequest {
+        private final String executable;
+        private final String[] parameters;
+        private String output;
+        
+        /**
+         * Constructs a {@link ProcessRequest} object.
+         * @param executable executable
+         * @param parameters parameters
+         * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+         */
+        public ProcessRequest(String executable, String ... parameters) {
+            Validate.notNull(executable);
+            Validate.notNull(parameters);
+            Validate.noNullElements(parameters);
+
+            this.executable = executable;
+            this.parameters = Arrays.copyOf(parameters, parameters.length);
+        }
+
+        /**
+         * Get parameters.
+         * @return parameters
+         */
+        public String[] getParameters() {
+            return Arrays.copyOf(parameters, parameters.length);
+        }
+
+        /**
+         * Get executable.
+         * @return executable
+         */
+        public String getExecutable() {
+            return executable;
+        }
+
+        /**
+         * Get process STDOUT.
+         * @return process STDOUT
+         */
+        public String getOutput() {
+            return output;
+        }
+
+        void setOutput(String output) {
+            this.output = output;
+        }
+
+        @Override
+        public String toString() {
+            return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + Arrays.toString(parameters) + ", output=" + output
+                    + '}';
+        }
+    }
     
     /**
      * Convert a list of addresses as strings to {@link InetAddress}es.
@@ -493,6 +544,7 @@ public final class MapperIoUtils {
      * as such, the response will be added to a random request that has the same source IP)
      * @param attemptDurations amount of time to wait before resending a request
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalArgumentException if any {@code attemptDuration} element is negative
      * @throws InterruptedException if interrupted
      */
     public static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, boolean broadcastBehaviour,
@@ -502,6 +554,9 @@ public final class MapperIoUtils {
         Validate.notNull(reqs);
         Validate.noNullElements(reqs);
         Validate.notNull(attemptDurations);
+        for (long attemptDuration : attemptDurations) {
+            Validate.isTrue(attemptDuration >= 0);
+        }
         
         LOG.debug("Performing udp requests {} with durations {}", reqs, attemptDurations);
         
@@ -546,6 +601,8 @@ public final class MapperIoUtils {
         for (Entry<InetAddress, Integer> entry : addressToSocketId.entrySet()) {
             int id = entry.getValue();
             InetAddress source = entry.getKey();
+            
+            LOG.debug("Creading UDP socket {}", source);
             
             networkBus.send(new CreateUdpNetworkRequest(id, selfBus, source));
             // Don't worry if it was created or not -- just assume that it was

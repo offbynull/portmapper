@@ -16,11 +16,11 @@
  */
 package com.offbynull.portmapper.mappers.natpmp;
 
-import com.offbynull.portmapper.mapper.MappedPort;
 import com.offbynull.portmapper.mapper.PortMapper;
-import com.offbynull.portmapper.mapper.PortType;
 import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.helpers.TextUtils;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.MapperIoUtils;
 import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
 import com.offbynull.portmapper.mapper.MapperIoUtils.RequestToBytesTransformer;
@@ -29,8 +29,10 @@ import static com.offbynull.portmapper.mapper.MapperIoUtils.calculateExponential
 import static com.offbynull.portmapper.mapper.MapperIoUtils.convertToAddressSet;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
-import com.offbynull.portmapper.mappers.natpmp.InternalUtils.RunProcessRequest;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.runCommandline;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.runProcesses;
+import com.offbynull.portmapper.mapper.PortType;
+import static com.offbynull.portmapper.mapper.PortType.TCP;
+import static com.offbynull.portmapper.mapper.PortType.UDP;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.ExternalAddressNatPmpRequest;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.ExternalAddressNatPmpResponse;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.MappingNatPmpRequest;
@@ -41,6 +43,7 @@ import com.offbynull.portmapper.mappers.natpmp.externalmessages.UdpMappingNatPmp
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.UdpMappingNatPmpResponse;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -82,24 +85,24 @@ public final class NatPmpPortMapper implements PortMapper {
         LOG.info("Attempting to identify devices");
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
-        
-        // Perform NETSTAT command
+
         // Perform commands to try to grab gateway addresses
-        Set<String> cliOutputs = runCommandline(processBus,
-                new RunProcessRequest("netstat", "-rn"), //linux mac and windows -- but seems wrong for windows
-                new RunProcessRequest("route", "-n"), // linux
-                new RunProcessRequest("route", "-n", "get", "default"), // mac
-                new RunProcessRequest("ipconfig"), // windows
-                new RunProcessRequest("ifconfig")); // linux (and mac?)
+        List<MapperIoUtils.ProcessRequest> processReqs = new ArrayList<>();
+        processReqs.add(new MapperIoUtils.ProcessRequest("netstat", "-rn")); //linux mac and windows -- but seems wrong for windows
+        processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n")); // linux
+        processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n", "get", "default")); // mac
+        processReqs.add(new MapperIoUtils.ProcessRequest("ipconfig")); // windows
+        processReqs.add(new MapperIoUtils.ProcessRequest("ifconfig")); // linux (and mac?)
+        runProcesses(processBus, processReqs, 10000L);
         
         
         
         // Aggregate results
         Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
         
-        for (String cliOutput : cliOutputs) {
-            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(cliOutput);
-            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(cliOutput);
+        for (MapperIoUtils.ProcessRequest req : processReqs) {
+            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());
+            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(req.getOutput());
 
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
