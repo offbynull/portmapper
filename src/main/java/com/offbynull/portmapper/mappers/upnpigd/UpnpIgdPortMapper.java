@@ -25,7 +25,6 @@ import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.HttpRequest;
 import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.ResponseCreator;
-import static com.offbynull.portmapper.mappers.upnpigd.InternalUtils.getLocalIpAddresses;
 import static com.offbynull.portmapper.mappers.upnpigd.InternalUtils.performBatchedHttpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.RootUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.RootUpnpIgdResponse;
