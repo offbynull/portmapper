@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.mappers.upnpigd;
 
-import com.offbynull.portmapper.BasicBus;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.BasicBus;
+import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkResponse;

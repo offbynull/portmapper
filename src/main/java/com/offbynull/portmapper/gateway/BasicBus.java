@@ -14,43 +14,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper;
+package com.offbynull.portmapper.gateway;
 
-import java.net.InetAddress;
+import java.util.concurrent.LinkedBlockingQueue;
+import org.apache.commons.lang3.Validate;
 
 /**
- * Represents a mapped port.
+ * A bus that's backed by a {@link LinkedBlockingQueue}.
  * @author Kasra Faghihi
  */
-public interface MappedPort {
+public final class BasicBus implements Bus {
+    private LinkedBlockingQueue<Object> queue;
 
     /**
-     * Get internal port.
-     * @return internal port
+     * Constructs a {@link BasicBus} object.
+     * @param queue internal queue to use for this bus
+     * @throws NullPointerException if any argument is {@code null}
      */
-    int getInternalPort();
+    public BasicBus(LinkedBlockingQueue<Object> queue) {
+        Validate.notNull(queue);
+        this.queue = queue;
+    }
 
-    /**
-     * Get external port.
-     * @return external port
-     */
-    int getExternalPort();
-
-    /**
-     * Get external address (optional).
-     * @return external address ({@code null} if underlying protocol doesn't support getting the external address)
-     */
-    InetAddress getExternalAddress();
-    
-    /**
-     * Get port type.
-     * @return port type
-     */
-    PortType getPortType();
-
-    /**
-     * Get mapping lifetime.
-     * @return mapping lifetime
-     */
-    long getLifetime();
+    @Override
+    public void send(Object msg) {
+        Validate.notNull(msg);
+        queue.add(msg);
+    }
 }

@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.gateways.network;
 
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.gateways.network.UdpNetworkEntry.AddressedByteBuffer;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;

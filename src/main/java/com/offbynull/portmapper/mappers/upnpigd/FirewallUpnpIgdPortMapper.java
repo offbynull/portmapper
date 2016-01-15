@@ -16,9 +16,9 @@
  */
 package com.offbynull.portmapper.mappers.upnpigd;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.PortType;
+import com.offbynull.portmapper.gateway.Bus;
 import static com.offbynull.portmapper.mappers.upnpigd.InternalUtils.performHttpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdResponse;

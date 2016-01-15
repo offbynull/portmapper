@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.gateways.process;
 
-import com.offbynull.portmapper.BasicBus;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.BasicBus;
+import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.gateways.process.internalmessages.CreateProcessRequest;
 import com.offbynull.portmapper.gateways.process.internalmessages.CreateProcessResponse;
 import com.offbynull.portmapper.gateways.process.internalmessages.CloseProcessRequest;

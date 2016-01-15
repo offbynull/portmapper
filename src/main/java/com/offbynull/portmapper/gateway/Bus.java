@@ -14,31 +14,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper;
-
-import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.commons.lang3.Validate;
+package com.offbynull.portmapper.gateway;
 
 /**
- * A bus that's backed by a {@link LinkedBlockingQueue}.
+ * A bus.
  * @author Kasra Faghihi
  */
-public final class BasicBus implements Bus {
-    private LinkedBlockingQueue<Object> queue;
-
+public interface Bus {
     /**
-     * Constructs a {@link BasicBus} object.
-     * @param queue internal queue to use for this bus
+     * Send a message to this bus.
+     * @param msg message to send
      * @throws NullPointerException if any argument is {@code null}
      */
-    public BasicBus(LinkedBlockingQueue<Object> queue) {
-        Validate.notNull(queue);
-        this.queue = queue;
-    }
-
-    @Override
-    public void send(Object msg) {
-        Validate.notNull(msg);
-        queue.add(msg);
-    }
+    void send(Object msg);
 }

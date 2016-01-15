@@ -16,6 +16,8 @@
  */
 package com.offbynull.portmapper;
 
+import com.offbynull.portmapper.gateway.Bus;
+import com.offbynull.portmapper.mapper.PortMapper;
 import com.offbynull.portmapper.mappers.natpmp.NatPmpPortMapper;
 import com.offbynull.portmapper.mappers.pcp.PcpPortMapper;
 import com.offbynull.portmapper.mappers.upnpigd.UpnpIgdPortMapper;

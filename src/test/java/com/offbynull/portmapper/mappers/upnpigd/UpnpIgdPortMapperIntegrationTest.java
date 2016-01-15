@@ -1,8 +1,8 @@
 package com.offbynull.portmapper.mappers.upnpigd;
 
-import com.offbynull.portmapper.Bus;
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.gateway.Bus;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.PortType;
 import com.offbynull.portmapper.gateways.network.NetworkGateway;
 import com.offbynull.portmapper.gateways.network.internalmessages.KillNetworkRequest;
 import java.util.HashSet;

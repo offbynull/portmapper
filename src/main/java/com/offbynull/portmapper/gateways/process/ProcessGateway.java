@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.gateways.process;
 
-import com.offbynull.portmapper.Bus;
-import com.offbynull.portmapper.Gateway;
+import com.offbynull.portmapper.gateway.Bus;
+import com.offbynull.portmapper.gateway.Gateway;
 
 /**
  * Process gateway.

@@ -14,17 +14,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper;
+package com.offbynull.portmapper.gateway;
 
 /**
- * A bus.
+ * A gateway.
  * @author Kasra Faghihi
  */
-public interface Bus {
+public interface Gateway {
+
     /**
-     * Send a message to this bus.
-     * @param msg message to send
-     * @throws NullPointerException if any argument is {@code null}
+     * Get the bus used to send messages to this gateway.
+     * @return bus to send messages to this gateway
      */
-    void send(Object msg);
+    Bus getBus();
+
+    /**
+     * Waits until this gateway dies.
+     * @throws InterruptedException if interrupted
+     */
+    void join() throws InterruptedException;
+    
 }

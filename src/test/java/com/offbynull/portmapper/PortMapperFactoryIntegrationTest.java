@@ -1,5 +1,7 @@
 package com.offbynull.portmapper;
 
+import com.offbynull.portmapper.gateway.Bus;
+import com.offbynull.portmapper.mapper.PortMapper;
 import com.offbynull.portmapper.gateways.network.NetworkGateway;
 import com.offbynull.portmapper.gateways.network.internalmessages.KillNetworkRequest;
 import com.offbynull.portmapper.gateways.process.ProcessGateway;

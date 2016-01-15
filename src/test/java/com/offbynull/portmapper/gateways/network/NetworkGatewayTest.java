@@ -1,7 +1,7 @@
 package com.offbynull.portmapper.gateways.network;
 
-import com.offbynull.portmapper.BasicBus;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.BasicBus;
+import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateUdpNetworkRequest;

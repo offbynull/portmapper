@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.gateways.network;
 
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.Bus;
 import java.nio.channels.Selector;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.lang3.Validate;

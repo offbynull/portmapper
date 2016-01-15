@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.gateways.process;
 
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.Bus;
 import org.apache.commons.lang3.Validate;
 
 final class ProcessEntry {

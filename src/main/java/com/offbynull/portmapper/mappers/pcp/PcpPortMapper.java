@@ -16,10 +16,10 @@
  */
 package com.offbynull.portmapper.mappers.pcp;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.PortMapper;
+import com.offbynull.portmapper.mapper.PortType;
+import com.offbynull.portmapper.gateway.Bus;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.helpers.TextUtils;

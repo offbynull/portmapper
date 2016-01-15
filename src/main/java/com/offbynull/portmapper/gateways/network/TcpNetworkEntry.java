@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.gateways.network;
 
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.Bus;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.util.LinkedList;

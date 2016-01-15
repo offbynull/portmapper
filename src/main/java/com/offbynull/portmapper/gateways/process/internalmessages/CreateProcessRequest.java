@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.gateways.process.internalmessages;
 
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.Bus;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.apache.commons.collections4.list.UnmodifiableList;

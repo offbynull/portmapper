@@ -14,24 +14,43 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package com.offbynull.portmapper;
+package com.offbynull.portmapper.mapper;
+
+import java.net.InetAddress;
 
 /**
- * A gateway.
+ * Represents a mapped port.
  * @author Kasra Faghihi
  */
-public interface Gateway {
+public interface MappedPort {
 
     /**
-     * Get the bus used to send messages to this gateway.
-     * @return bus to send messages to this gateway
+     * Get internal port.
+     * @return internal port
      */
-    Bus getBus();
+    int getInternalPort();
 
     /**
-     * Waits until this gateway dies.
-     * @throws InterruptedException if interrupted
+     * Get external port.
+     * @return external port
      */
-    void join() throws InterruptedException;
+    int getExternalPort();
+
+    /**
+     * Get external address (optional).
+     * @return external address ({@code null} if underlying protocol doesn't support getting the external address)
+     */
+    InetAddress getExternalAddress();
     
+    /**
+     * Get port type.
+     * @return port type
+     */
+    PortType getPortType();
+
+    /**
+     * Get mapping lifetime.
+     * @return mapping lifetime
+     */
+    long getLifetime();
 }

@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.mappers.pcp;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortType;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.PortType;
 import java.net.InetAddress;
 import java.util.Arrays;
 import org.apache.commons.lang3.Validate;

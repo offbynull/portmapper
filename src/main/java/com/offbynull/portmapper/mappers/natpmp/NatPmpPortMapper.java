@@ -16,10 +16,10 @@
  */
 package com.offbynull.portmapper.mappers.natpmp;
 
-import com.offbynull.portmapper.MappedPort;
-import com.offbynull.portmapper.PortMapper;
-import com.offbynull.portmapper.PortType;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.mapper.MappedPort;
+import com.offbynull.portmapper.mapper.PortMapper;
+import com.offbynull.portmapper.mapper.PortType;
+import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.helpers.TextUtils;
 import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
 import com.offbynull.portmapper.mappers.natpmp.InternalUtils.ResponseCreator;

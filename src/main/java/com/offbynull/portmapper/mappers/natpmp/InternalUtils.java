@@ -16,8 +16,8 @@
  */
 package com.offbynull.portmapper.mappers.natpmp;
 
-import com.offbynull.portmapper.BasicBus;
-import com.offbynull.portmapper.Bus;
+import com.offbynull.portmapper.gateway.BasicBus;
+import com.offbynull.portmapper.gateway.Bus;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.gateways.network.internalmessages.CloseNetworkRequest;
