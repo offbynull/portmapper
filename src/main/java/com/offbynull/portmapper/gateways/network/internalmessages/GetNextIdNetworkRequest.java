@@ -20,14 +20,14 @@ import com.offbynull.portmapper.gateway.Bus;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Get ID to use for a new socket. Only possible response is {@link GetNextSocketIdResponse}.
+ * Get ID to use for a new socket. Only possible response is {@link GetNextIdNetworkResponse}.
  * @author Kasra Faghihi
  */
 public final class GetNextIdNetworkRequest implements NetworkRequest {
     private Bus responseBus;
     
     /**
-     * Constructs a {@link GetNextSocketIdRequest} object.
+     * Constructs a {@link GetNextIdNetworkRequest} object.
      * @param responseBus bus to send new ID to
      * @throws NullPointerException if any argument is {@code null}, or contains {@code null}
      */

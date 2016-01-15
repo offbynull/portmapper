@@ -19,7 +19,7 @@ package com.offbynull.portmapper.gateways.process.internalmessages;
 import java.util.Arrays;
 
 /**
- * Send data to a process. Possible responses are {@link WriteProcesskResponse} and {@link IdentifiableErrorProcessResponse}).
+ * Send data to a process. Possible responses are {@link WriteProcessResponse} and {@link IdentifiableErrorProcessResponse}).
  * @author Kasra Faghihi
  */
 public final class WriteProcessRequest extends IdentifiableProcessRequest {

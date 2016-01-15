@@ -20,7 +20,7 @@ import com.offbynull.portmapper.gateway.Bus;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Get ID to use for a new socket. Only possible response is {@link GetNextProcessIdResponse}.
+ * Get ID to use for a new socket. Only possible response is {@link GetNextIdProcessResponse}.
  * @author Kasra Faghihi
  */
 public final class GetNextIdProcessRequest implements ProcessRequest {
@@ -28,7 +28,7 @@ public final class GetNextIdProcessRequest implements ProcessRequest {
     private Bus responseBus;
     
     /**
-     * Constructs a {@link GetNextProcessIdRequest} object.
+     * Constructs a {@link GetNextIdProcessRequest} object.
      * @param responseBus bus to send new ID to
      * @throws NullPointerException if any argument is {@code null}, or contains {@code null}
      */

@@ -42,7 +42,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
     private Map<ServiceType, IdentifiedService> identifiedServices;
 
     /**
-     * Constructs a {@link ServiceDescriptionResponse} object by parsing a buffer.
+     * Constructs a {@link ServiceDescriptionUpnpIgdResponse} object by parsing a buffer.
      * @param buffer buffer containing response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if {@code buffer} was malformed

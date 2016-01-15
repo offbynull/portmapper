@@ -66,7 +66,7 @@ public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
 //    }
 
     /**
-     * Constructs a {@link ProbeResponse} object by parsing a buffer.
+     * Constructs a {@link ServiceDiscoveryUpnpIgdResponse} object by parsing a buffer.
      * @param buffer buffer containing response data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if buffer is malformed (response is not 200 OK, or LOCATION header is missing)

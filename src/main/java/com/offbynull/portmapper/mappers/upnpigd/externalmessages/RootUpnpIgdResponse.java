@@ -38,7 +38,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
     private List<ServiceReference> services;
 
     /**
-     * Constructs a {@link DeviceQueryResponse} object by parsing a buffer.
+     * Constructs a {@link RootUpnpIgdResponse} object by parsing a buffer.
      *
      * @param baseUrl device URI
      * @param buffer buffer containing response data

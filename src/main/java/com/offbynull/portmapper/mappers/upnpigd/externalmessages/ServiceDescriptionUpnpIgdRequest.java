@@ -29,7 +29,7 @@ import org.apache.commons.lang3.Validate;
 public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {
 
     /**
-     * Constructs a {@link ServiceDescriptionRequest} object.
+     * Constructs a {@link ServiceDescriptionUpnpIgdRequest} object.
      * @param host device host
      * @param scpdLocation SCPD location (found during discovery)
      */

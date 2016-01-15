@@ -128,7 +128,7 @@ public final class UdpMappingNatPmpRequest extends MappingNatPmpRequest {
      * @param data buffer containing NAT-PMP request data
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalArgumentException if {@code buffer} isn't the right size or is malformed ({@code op != 1 || version != 0 ||
-     * @code 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 0 > lifetime > 0xFFFFFFFFL})
+     * 1 > internalPort > 65535 || 0 > suggestedExternalPort > 65535 || 0 > lifetime > 0xFFFFFFFFL})
      */
     public UdpMappingNatPmpRequest(byte[] data) {
         super(OP, data);

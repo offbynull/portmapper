@@ -17,13 +17,13 @@
 package com.offbynull.portmapper.gateways.network.internalmessages;
 
 /**
- * Created a new socket ID. Response to {@link GetNextSocketIdRequest}.
+ * Created a new socket ID. Response to {@link GetNextIdNetworkRequest}.
  * @author Kasra Faghihi
  */
 public final class GetNextIdNetworkResponse extends IdentifiableNetworkResponse {
    
     /**
-     * Constructs a {@link GetNextSocketIdResponse} object.
+     * Constructs a {@link GetNextIdNetworkResponse} object.
      * @param id id to use for for new socket
      */
     public GetNextIdNetworkResponse(int id) {

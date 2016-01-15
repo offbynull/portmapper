@@ -18,13 +18,13 @@ package com.offbynull.portmapper.gateways.process.internalmessages;
 
 
 /**
- * Created a new process ID. Response to {@link GetNextProcessIdRequest}.
+ * Created a new process ID. Response to {@link GetNextIdProcessRequest}.
  * @author Kasra Faghihi
  */
 public final class GetNextIdProcessResponse extends IdentifiableProcessResponse {
    
     /**
-     * Constructs a {@link GetNextProcessIdResponse} object.
+     * Constructs a {@link GetNextIdProcessResponse} object.
      * @param id id to use for for new socket
      */
     public GetNextIdProcessResponse(int id) {

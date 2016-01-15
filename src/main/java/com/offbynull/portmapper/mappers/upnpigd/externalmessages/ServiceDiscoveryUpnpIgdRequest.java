@@ -45,7 +45,7 @@ public final class ServiceDiscoveryUpnpIgdRequest extends UpnpIgdHttpRequest {
     // http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt
 
     /**
-     * Constructs a {@link ProbeRequest} object.
+     * Constructs a {@link ServiceDiscoveryUpnpIgdRequest} object.
      * @param probeDeviceType type of device to probe for (IPv4 or IPv6)
      * @param mm minimum amount of time the UPnP server will wait before responding (can be {@code null} -- set to {@code null} if you don't
      * know or care)

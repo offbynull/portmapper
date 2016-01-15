@@ -27,7 +27,7 @@ import org.apache.commons.lang3.Validate;
 public final class RootUpnpIgdRequest extends UpnpIgdHttpRequest {
 
     /**
-     * Constructs a {@link DeviceQueryRequest} object.
+     * Constructs a {@link RootUpnpIgdRequest} object.
      * @param host device host
      * @param location device's root location (found during probe)
      * @throws NullPointerException if any argument is {@code null}
