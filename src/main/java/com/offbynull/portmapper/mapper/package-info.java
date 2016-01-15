@@ -16,7 +16,7 @@
  */
 
 /**
- * High-level port mapping classes.
+ * Core port mapper interfaces and classes.
  * @author Kasra Faghihi
  */
-package com.offbynull.portmapper;
+package com.offbynull.portmapper.mapper;

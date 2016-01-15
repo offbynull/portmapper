@@ -21,8 +21,6 @@ import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.helpers.NetworkUtils;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkResponse;
-import com.offbynull.portmapper.gateways.network.internalmessages.CreateUdpNetworkRequest;
-import com.offbynull.portmapper.gateways.network.internalmessages.CreateUdpNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.CloseNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkResponse;
@@ -32,21 +30,16 @@ import com.offbynull.portmapper.gateways.network.internalmessages.IdentifiableEr
 import com.offbynull.portmapper.gateways.network.internalmessages.IdentifiableNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.ReadClosedTcpNetworkNotification;
 import com.offbynull.portmapper.gateways.network.internalmessages.ReadTcpNetworkNotification;
-import com.offbynull.portmapper.gateways.network.internalmessages.ReadUdpNetworkNotification;
 import com.offbynull.portmapper.gateways.network.internalmessages.WriteTcpNetworkRequest;
-import com.offbynull.portmapper.gateways.network.internalmessages.WriteUdpNetworkRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpnpIgdHttpRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpnpIgdHttpResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +48,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -272,137 +262,6 @@ final class InternalUtils {
         
         LOG.debug("Completed http requests {}", reqs);
     }
-
-    static void performUdpRequests(Bus networkBus, Collection<UdpRequest> reqs, long ... attemptDurations)
-            throws InterruptedException {
-        
-        LOG.debug("Performing udp requests {} with durations ", reqs, attemptDurations);
-        
-        LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-        Bus selfBus = new BasicBus(queue);
-
-        
-        // Get unique source addresses and create socket for each one
-        BidiMap<InetAddress, Integer> addressToSocketId = new DualHashBidiMap<>(); // source address to socket id
-        MultiValuedMap<Integer, UdpRequest> socketIdToRequests = new ArrayListValuedHashMap<>(); // source address to requests
-
-        long endCreateTime = System.currentTimeMillis() + 1000L; // 1 second to create all sockets
-        next:
-        for (UdpRequest req : reqs) {
-            if (addressToSocketId.containsKey(req.getSourceAddress())) {
-                continue;
-            }
-
-            long sleepTime;
-            
-            
-            // Get id
-            networkBus.send(new GetNextIdNetworkRequest(selfBus));
-            
-                // read
-            int id;
-            while (true) {
-                sleepTime = endCreateTime - System.currentTimeMillis();
-                Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
-                
-                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (resp instanceof GetNextIdNetworkResponse) {
-                    id = ((GetNextIdNetworkResponse) resp).getId();
-                    break;
-                }
-            }
-
-            // Create socket
-            networkBus.send(new CreateUdpNetworkRequest(id, selfBus, req.getSourceAddress()));
-            
-                // read until success or failure
-            while (true) {
-                sleepTime = endCreateTime - System.currentTimeMillis();
-                Validate.validState(sleepTime > 0, "Failed to create all UDP sockets in time");
-
-                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (resp instanceof IdentifiableErrorNetworkResponse
-                        && ((IdentifiableNetworkResponse) resp).getId() == id) {
-                    // create socket failed, so skip this request
-                    continue next;
-                } else if (resp instanceof CreateUdpNetworkResponse
-                        && ((CreateUdpNetworkResponse) resp).getId() == id) {
-                    // create socket success
-                    break;
-                }
-
-                // unrecognized response/notification, keep reading from queue until we have something we recognize
-            }
-
-            addressToSocketId.put(req.getSourceAddress(), id);
-        }
-        
-        
-        
-        // Queue up requests to send out
-        for (UdpRequest req : reqs) {
-            int id = addressToSocketId.get(req.getSourceAddress());
-            socketIdToRequests.put(id, req);
-        }
-
-
-        // Send requests
-        Queue<Long> remainingAttemptDurations = new LinkedList<>();
-        for (long attemptDuration : attemptDurations) {
-            remainingAttemptDurations.add(attemptDuration);
-        }
-        while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
-            // Send requests to whoever hasn't responded yet
-            for (UdpRequest req : socketIdToRequests.values()) {
-                int id = addressToSocketId.get(req.getSourceAddress());
-                networkBus.send(new WriteUdpNetworkRequest(id, req.getDestinationSocketAddress(), req.getSendMsg().dump()));
-            }
-
-            // Wait for responses
-            long timeout = remainingAttemptDurations.poll();
-            long endTime = System.currentTimeMillis() + timeout;
-            while (true) {
-                long sleepTime = endTime - System.currentTimeMillis();
-                if (sleepTime <= 0L) {
-                    break;
-                }
-
-                Object netResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (netResp == null) {
-                    // timed out
-                    continue;
-                } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
-                    // got a response but it wasn't a read
-                    continue;
-                }
-
-                ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
-                int id = readNetResp.getId();
-
-                Iterator<UdpRequest> it = socketIdToRequests.get(id).iterator();
-                while (it.hasNext()) {
-                    UdpRequest pendingReq = it.next();
-                    byte[] respData = readNetResp.getData();
-                    try {
-                        pendingReq.getRespMsges().add(pendingReq.getRespCreator().create(respData));
-                        it.remove();
-                    } catch (RuntimeException e) {
-                        // do nothing
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        
-        // Destroy UDP sockets
-        for (int id : addressToSocketId.values()) {
-            networkBus.send(new CloseNetworkRequest(id));
-        }
-        
-        LOG.debug("Completed udp requests {}", reqs);
-    }
     
     
     static final class HttpRequest {
@@ -465,70 +324,6 @@ final class InternalUtils {
         public String toString() {
             return "HttpRequest{" + "other=" + other + ", sourceAddress=" + sourceAddress + ", location=" + location + ", sendMsg="
                     + sendMsg + ", respMsg=" + respMsg + ", respCreator=" + respCreator + '}';
-        }
-        
-    }
-
-    static final class UdpRequest {
-        private Object other;
-        private InetAddress sourceAddress;
-        private InetSocketAddress destinationSocketAddress;
-        private UpnpIgdHttpRequest sendMsg;
-        private List<UpnpIgdHttpResponse> respMsges = new ArrayList<>();
-        private ResponseCreator respCreator;
-
-        Object getOther() {
-            return other;
-        }
-
-        void setOther(Object other) {
-            this.other = other;
-        }
-
-        InetAddress getSourceAddress() {
-            return sourceAddress;
-        }
-
-        void setSourceAddress(InetAddress sourceAddress) {
-            this.sourceAddress = sourceAddress;
-        }
-
-        InetSocketAddress getDestinationSocketAddress() {
-            return destinationSocketAddress;
-        }
-
-        void setDestinationSocketAddress(InetSocketAddress destinationSocketAddress) {
-            this.destinationSocketAddress = destinationSocketAddress;
-        }
-
-        UpnpIgdHttpRequest getSendMsg() {
-            return sendMsg;
-        }
-
-        void setSendMsg(UpnpIgdHttpRequest sendMsg) {
-            this.sendMsg = sendMsg;
-        }
-
-        List<UpnpIgdHttpResponse> getRespMsges() {
-            return respMsges;
-        }
-
-        void setRespMsges(List<UpnpIgdHttpResponse> respMsges) {
-            this.respMsges = respMsges;
-        }
-
-        ResponseCreator getRespCreator() {
-            return respCreator;
-        }
-
-        void setRespCreator(ResponseCreator respCreator) {
-            this.respCreator = respCreator;
-        }
-
-        @Override
-        public String toString() {
-            return "UdpRequest{" + "other=" + other + ", sourceAddress=" + sourceAddress + ", destinationSocketAddress="
-                    + destinationSocketAddress + ", sendMsg=" + sendMsg + ", respMsges=" + respMsges + ", respCreator=" + respCreator + '}';
         }
         
     }

@@ -21,19 +21,20 @@ import com.offbynull.portmapper.mapper.PortMapper;
 import com.offbynull.portmapper.mapper.PortType;
 import com.offbynull.portmapper.gateway.Bus;
 import com.offbynull.portmapper.helpers.TextUtils;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
-import com.offbynull.portmapper.mappers.natpmp.InternalUtils.ResponseCreator;
+import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.PRESET_IPV4_GATEWAY_ADDRESSES;
+import com.offbynull.portmapper.mapper.MapperIoUtils.RequestToBytesTransformer;
+import com.offbynull.portmapper.mapper.MapperIoUtils.UdpRequest;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.calculateExponentialBackoffTimes;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.convertToAddressSet;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
 import com.offbynull.portmapper.mappers.natpmp.InternalUtils.RunProcessRequest;
-import com.offbynull.portmapper.mappers.natpmp.InternalUtils.UdpRequest;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.calculateRetryTimes;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.convertToAddressSet;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.getLocalIpAddresses;
-import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.performUdpRequests;
 import static com.offbynull.portmapper.mappers.natpmp.InternalUtils.runCommandline;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.ExternalAddressNatPmpRequest;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.ExternalAddressNatPmpResponse;
+import com.offbynull.portmapper.mappers.natpmp.externalmessages.MappingNatPmpRequest;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.MappingNatPmpResponse;
-import com.offbynull.portmapper.mappers.natpmp.externalmessages.NatPmpResponse;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.TcpMappingNatPmpRequest;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.TcpMappingNatPmpResponse;
 import com.offbynull.portmapper.mappers.natpmp.externalmessages.UdpMappingNatPmpRequest;
@@ -123,35 +124,22 @@ public final class NatPmpPortMapper implements PortMapper {
                     continue;
                 }
 
-                UdpRequest udpReq = new UdpRequest();
-                udpReq.setSourceAddress(sourceAddress);
-                udpReq.setDestinationSocketAddress(new InetSocketAddress(gatewayAddress, PORT));
-                udpReq.setSendMsg(new ExternalAddressNatPmpRequest());
-                udpReq.setRespCreator(new ResponseCreator() {
-                    @Override
-                    public NatPmpResponse create(byte[] buffer) {
-                        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(buffer);
-                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                            throw new IllegalArgumentException();
-                        }
-                        return resp;
-                    }
-                });
-                
+                UdpRequest udpReq = createGetExternalIpUdpRequest(sourceAddress, gatewayAddress);
                 udpReqs.add(udpReq);
             }
         }
         
-        performUdpRequests(networkBus, udpReqs, 1000L, 1000L, 1000L, 1000L, 1000L); // don't do standard natpmp/pcp retries -- just
-                                                                                    // attempting to discover
+        performUdpRequests(networkBus, udpReqs, false, 1000L, 1000L, 1000L, 1000L, 1000L); // don't do standard natpmp/pcp retries -- just
+                                                                                           // attempting to discover
         
         
         // Create mappers and returns
         List<NatPmpPortMapper> mappers = new LinkedList<>();
         for (UdpRequest udpReq : udpReqs) {
-            if (udpReq.getRespMsg() != null) {
+            if (udpReq.getResponse() != null) {
                 NatPmpPortMapper portMapper = new NatPmpPortMapper(
-                        networkBus, udpReq.getSourceAddress(),
+                        networkBus,
+                        udpReq.getSourceAddress(),
                         udpReq.getDestinationSocketAddress().getAddress());
                 mappers.add(portMapper);
             }
@@ -186,78 +174,21 @@ public final class NatPmpPortMapper implements PortMapper {
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, lifetime);
 
-        //
-        // GET EXTERNAL IP
-        //
-        UdpRequest externalIpReq = new UdpRequest();
-        externalIpReq.setSourceAddress(internalAddress);
-        externalIpReq.setDestinationSocketAddress(new InetSocketAddress(gatewayAddress, PORT));
-        externalIpReq.setSendMsg(new ExternalAddressNatPmpRequest());
-        externalIpReq.setRespCreator(new ResponseCreator() {
-            @Override
-            public NatPmpResponse create(byte[] buffer) {
-                ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(buffer);
-                if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                    throw new IllegalArgumentException();
-                }
-                return resp;
-            }
-        });
-        
-        performUdpRequests(networkBus, Collections.singleton(externalIpReq), calculateRetryTimes(4)); // should be 9 but 9 takes too long
-        
-        if (externalIpReq.getRespMsg() == null) {
+        UdpRequest externalIpReq = createGetExternalIpUdpRequest(internalAddress, gatewayAddress);
+        performUdpRequests(networkBus, Collections.singleton(externalIpReq), false, calculateExponentialBackoffTimes(4));
+        if (externalIpReq.getResponse() == null) {
             throw new IllegalStateException("No response/invalid response to getting external IP");
         }
-        
-        InetAddress externalAddress = ((ExternalAddressNatPmpResponse) externalIpReq.getRespMsg()).getAddress();
-        
+        InetAddress externalAddress = ((ExternalAddressNatPmpResponse) externalIpReq.getResponse()).getAddress();
         
         
-        //
-        // PERFORM MAPPING
-        //
-        UdpRequest mapIpReq = new UdpRequest();
-        mapIpReq.setSourceAddress(internalAddress);
-        mapIpReq.setDestinationSocketAddress(new InetSocketAddress(gatewayAddress, PORT));
-        switch (portType) {
-            case TCP:
-                mapIpReq.setSendMsg(new TcpMappingNatPmpRequest(internalPort, externalPort, lifetime));
-                mapIpReq.setRespCreator(new ResponseCreator() {
-                    @Override
-                    public NatPmpResponse create(byte[] buffer) {
-                        TcpMappingNatPmpResponse resp = new TcpMappingNatPmpResponse(buffer);
-                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                            throw new IllegalArgumentException();
-                        }
-                        return resp;
-                    }
-                });
-                break;
-            case UDP:
-                mapIpReq.setSendMsg(new UdpMappingNatPmpRequest(internalPort, externalPort, lifetime));
-                mapIpReq.setRespCreator(new ResponseCreator() {
-                    @Override
-                    public NatPmpResponse create(byte[] buffer) {
-                        UdpMappingNatPmpResponse resp = new UdpMappingNatPmpResponse(buffer);
-                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                            throw new IllegalArgumentException();
-                        }
-                        return resp;
-                    }
-                });
-                break;
-            default:
-                throw new IllegalStateException(); // should never happen
-        }
         
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4));
-
-        if (mapIpReq.getRespMsg() == null) {
+        UdpRequest mapIpReq = createMappingUdpRequest(internalAddress, gatewayAddress, portType, internalPort, externalPort, lifetime);
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), false, calculateExponentialBackoffTimes(4));
+        if (mapIpReq.getResponse() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
         }
-        
-        MappingNatPmpResponse mappingResp = ((MappingNatPmpResponse) mapIpReq.getRespMsg());
+        MappingNatPmpResponse mappingResp = ((MappingNatPmpResponse) mapIpReq.getResponse());
         
         
         
@@ -275,45 +206,12 @@ public final class NatPmpPortMapper implements PortMapper {
         Validate.notNull(mappedPort);
         Validate.isTrue(mappedPort instanceof NatPmpMappedPort);
 
+        PortType portType = mappedPort.getPortType();
         int internalPort = mappedPort.getInternalPort();
         
-        UdpRequest mapIpReq = new UdpRequest();
-        mapIpReq.setSourceAddress(internalAddress);
-        mapIpReq.setDestinationSocketAddress(new InetSocketAddress(gatewayAddress, PORT));
-        switch (mappedPort.getPortType()) {
-            case TCP:
-                mapIpReq.setSendMsg(new TcpMappingNatPmpRequest(internalPort, 0, 0L));
-                mapIpReq.setRespCreator(new ResponseCreator() {
-                    @Override
-                    public NatPmpResponse create(byte[] buffer) {
-                        TcpMappingNatPmpResponse resp = new TcpMappingNatPmpResponse(buffer);
-                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                            throw new IllegalArgumentException();
-                        }
-                        return resp;
-                    }
-                });
-                break;
-            case UDP:
-                mapIpReq.setSendMsg(new UdpMappingNatPmpRequest(internalPort, 0, 0L));
-                mapIpReq.setRespCreator(new ResponseCreator() {
-                    @Override
-                    public NatPmpResponse create(byte[] buffer) {
-                        UdpMappingNatPmpResponse resp = new UdpMappingNatPmpResponse(buffer);
-                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
-                            throw new IllegalArgumentException();
-                        }
-                        return resp;
-                    }
-                });
-                break;
-            default:
-                throw new IllegalStateException(); // should never happen
-        }
-        
-        performUdpRequests(networkBus, Collections.singleton(mapIpReq), calculateRetryTimes(4));
-
-        if (mapIpReq.getRespMsg() == null) {
+        UdpRequest mapIpReq = createMappingUdpRequest(internalAddress, gatewayAddress, portType, internalPort, 0, 0L);
+        performUdpRequests(networkBus, Collections.singleton(mapIpReq), false, calculateExponentialBackoffTimes(4));
+        if (mapIpReq.getResponse() == null) {
             throw new IllegalStateException("No response/invalid response to mapping port");
         }
         
@@ -347,6 +245,88 @@ public final class NatPmpPortMapper implements PortMapper {
         LOG.debug("Mapping refreshed {}: ", mappedPort, newMappedPort);
         
         return newMappedPort;
+    }
+
+    private static UdpRequest createGetExternalIpUdpRequest(InetAddress internalAddress, InetAddress gatewayAddress) {
+        UdpRequest externalIpReq = new UdpRequest(
+                internalAddress,
+                new InetSocketAddress(gatewayAddress, PORT),
+                new ExternalAddressNatPmpRequest(),
+                new RequestToBytesTransformer() {
+                    @Override
+                    public byte[] create(Object request) {
+                        return ((ExternalAddressNatPmpRequest) request).dump();
+                    }
+                },
+                new BytesToResponseTransformer() {
+                    @Override
+                    public Object create(byte[] buffer) {
+                        ExternalAddressNatPmpResponse resp = new ExternalAddressNatPmpResponse(buffer);
+                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
+                            throw new IllegalArgumentException();
+                        }
+                        return resp;
+                    }
+                });
+        return externalIpReq;
+    }
+
+    private static UdpRequest createMappingUdpRequest(InetAddress internalAddress, InetAddress gatewayAddress, PortType portType,
+            int internalPort, int externalPort, long lifetime) {
+        MappingNatPmpRequest request;
+        RequestToBytesTransformer requestToBytesTransformer;
+        BytesToResponseTransformer bytesToResponseTransformer;
+        switch (portType) {
+            case TCP:
+                request = new TcpMappingNatPmpRequest(internalPort, externalPort, lifetime);
+                requestToBytesTransformer = new RequestToBytesTransformer() {
+                    @Override
+                    public byte[] create(Object request) {
+                        return ((TcpMappingNatPmpRequest) request).dump();
+                    }
+                };
+                bytesToResponseTransformer = new BytesToResponseTransformer() {
+                    @Override
+                    public Object create(byte[] buffer) {
+                        TcpMappingNatPmpResponse resp = new TcpMappingNatPmpResponse(buffer);
+                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
+                            throw new IllegalArgumentException();
+                        }
+                        return resp;
+                    }
+                };
+                break;
+            case UDP:
+                request = new UdpMappingNatPmpRequest(internalPort, externalPort, lifetime);
+                requestToBytesTransformer = new RequestToBytesTransformer() {
+                    @Override
+                    public byte[] create(Object request) {
+                        return ((UdpMappingNatPmpRequest) request).dump();
+                    }
+                };
+                bytesToResponseTransformer = new BytesToResponseTransformer() {
+                    @Override
+                    public Object create(byte[] buffer) {
+                        UdpMappingNatPmpResponse resp = new UdpMappingNatPmpResponse(buffer);
+                        if (resp.getResultCode() != NatPmpResultCode.SUCCESS.ordinal()) {
+                            throw new IllegalArgumentException();
+                        }
+                        return resp;
+                    }
+                };
+                break;
+            default:
+                throw new IllegalStateException(); // should never happen
+        }
+        
+        UdpRequest mapIpReq = new UdpRequest(
+                internalAddress,
+                new InetSocketAddress(gatewayAddress, PORT),
+                request,
+                requestToBytesTransformer,
+                bytesToResponseTransformer);
+        
+        return mapIpReq;
     }
 
     @Override
