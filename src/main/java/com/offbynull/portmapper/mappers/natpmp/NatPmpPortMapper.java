@@ -44,6 +44,7 @@ import com.offbynull.portmapper.mappers.natpmp.externalmessages.UdpMappingNatPmp
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -76,15 +77,19 @@ public final class NatPmpPortMapper implements PortMapper {
      * RFC + also support NAT-PMP may be discoverable via anycast/broadcast.
      * @param networkBus network bus
      * @param processBus process bus
+     * @param additionalIps additional IPs to check
      * @return set of found PCP devices
      * @throws NullPointerException if any argument is {@code null}
      * @throws IllegalStateException if encountered issue with gateways
      * @throws InterruptedException if interrupted
      */
-    public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus, InetAddress ... additionalIps) throws InterruptedException {
         LOG.info("Attempting to identify devices");
+
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
+        Validate.notNull(additionalIps);
+        Validate.noNullElements(additionalIps);
 
         // Perform commands to try to grab gateway addresses
         List<MapperIoUtils.ProcessRequest> processReqs = new ArrayList<>();
@@ -98,7 +103,9 @@ public final class NatPmpPortMapper implements PortMapper {
         
         
         // Aggregate results
-        Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
+        Set<InetAddress> potentialGatewayAddresses = new HashSet<>();
+        potentialGatewayAddresses.addAll(PRESET_IPV4_GATEWAY_ADDRESSES);
+        potentialGatewayAddresses.addAll(Arrays.asList(additionalIps));
         
         for (MapperIoUtils.ProcessRequest req : processReqs) {
             List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());

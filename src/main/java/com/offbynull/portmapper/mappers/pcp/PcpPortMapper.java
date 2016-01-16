@@ -46,6 +46,7 @@ import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,15 +73,18 @@ public final class PcpPortMapper implements PortMapper {
      * draft</a>.
      * @param networkBus network bus
      * @param processBus process bus
+     * @param additionalIps additional IPs to check
      * @return set of found PCP devices
-     * @throws NullPointerException if any argument is {@code null}
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
      * @throws InterruptedException if interrupted
      */
-    public static List<PcpPortMapper> identify(Bus networkBus, Bus processBus) throws InterruptedException {
+    public static List<PcpPortMapper> identify(Bus networkBus, Bus processBus, InetAddress ... additionalIps) throws InterruptedException {
         LOG.info("Attempting to identify devices");
         
         Validate.notNull(networkBus);
         Validate.notNull(processBus);
+        Validate.notNull(additionalIps);
+        Validate.noNullElements(additionalIps);
 
         // Perform commands to try to grab gateway addresses
         List<MapperIoUtils.ProcessRequest> processReqs = new ArrayList<>();
@@ -94,7 +98,9 @@ public final class PcpPortMapper implements PortMapper {
         
         
         // Aggregate results
-        Set<InetAddress> potentialGatewayAddresses = new HashSet<>(PRESET_IPV4_GATEWAY_ADDRESSES);
+        Set<InetAddress> potentialGatewayAddresses = new HashSet<>();
+        potentialGatewayAddresses.addAll(PRESET_IPV4_GATEWAY_ADDRESSES);
+        potentialGatewayAddresses.addAll(Arrays.asList(additionalIps));
         
         for (MapperIoUtils.ProcessRequest req : processReqs) {
             List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());
