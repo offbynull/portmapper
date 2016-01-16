@@ -14,8 +14,11 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-//@Ignore("REQUIRES MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH NO OTHER UPNP-ENABLED ROUTERS")
+//@Ignore("REQUIRES (modified) MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH NO OTHER UPNP-ENABLED ROUTERS")
 public class UpnpIgdPortMapperIntegrationTest {
+    
+    // FOR THIS CLASS TO WORK: miniupnpd needs to be modified to ignore errors on addpinhole/deletepinhole. The VM set has a modified
+    // version of miniupnpd that allows this.
 
     private NetworkGateway network;
     private Bus networkBus;
@@ -43,10 +46,6 @@ public class UpnpIgdPortMapperIntegrationTest {
         }
         
         for (UpnpIgdPortMapper mapper : mappers) {
-            if (mapper instanceof FirewallUpnpIgdPortMapper) {
-                continue; // this port mapper will complain about no IPv6 address being available due to the way the VM is set up
-            }
-
             MappedPort tcpPort = mapper.mapPort(PortType.TCP, 12345, 12345, 999999999999999999L);
             assertEquals(PortType.TCP, tcpPort.getPortType());
             assertEquals(12345, tcpPort.getInternalPort());

@@ -25,7 +25,7 @@ import static com.offbynull.portmapper.mapper.MapperIoUtils.performTcpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdResponse;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePinholeUpnpIgdRequest;
-import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePortMappingUpnpIgdResponse;
+import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePinholeUpnpIgdResponse;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdResponse;
 import java.net.InetAddress;
@@ -128,7 +128,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 // server responded, so we're good to go
                 String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.getResponse()).getUniqueId();
                 
-                MappedPort mappedPort = new FirewallMappedPort(key, internalPort, externalPort, null, portType, leaseDuration);
+                MappedPort mappedPort = new FirewallMappedPort(key, internalPort, externalPort, portType, leaseDuration);
                 LOG.debug("Map successful {}", mappedPort);
                 
                 return mappedPort;
@@ -171,7 +171,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
                 new BytesToResponseTransformer() {
                     @Override
                     public Object create(byte[] buffer) {
-                        return new DeletePortMappingUpnpIgdResponse(buffer);
+                        return new DeletePinholeUpnpIgdResponse(buffer);
                     }
                 });
         
@@ -235,7 +235,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
             throw new IllegalStateException("No response/invalid response to refresh");
         }
         
-        FirewallMappedPort newMappedPort = new FirewallMappedPort(key, mappedPort.getInternalPort(), mappedPort.getExternalPort(), null,
+        FirewallMappedPort newMappedPort = new FirewallMappedPort(key, mappedPort.getInternalPort(), mappedPort.getExternalPort(),
                 mappedPort.getPortType(), leaseDuration);
         
         LOG.warn("Mapping refreshed {}: ", mappedPort, newMappedPort);

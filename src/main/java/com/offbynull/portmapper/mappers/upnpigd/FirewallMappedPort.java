@@ -30,17 +30,15 @@ final class FirewallMappedPort implements MappedPort {
     private PortType portType;
     private long lifetime;
 
-    FirewallMappedPort(String key, int internalPort, int externalPort, InetAddress externalAddress, PortType portType, long duration) {
+    FirewallMappedPort(String key, int internalPort, int externalPort, PortType portType, long duration) {
         Validate.notNull(key);
         Validate.inclusiveBetween(1, 65535, internalPort);
         Validate.inclusiveBetween(1, 65535, externalPort);
-        Validate.notNull(externalAddress);
         Validate.notNull(portType);
         Validate.inclusiveBetween(1L, Long.MAX_VALUE, duration);
         this.key = key;
         this.internalPort = internalPort;
         this.externalPort = externalPort;
-        this.externalAddress = externalAddress;
         this.portType = portType;
         this.lifetime = duration;
     }
@@ -61,7 +59,7 @@ final class FirewallMappedPort implements MappedPort {
 
     @Override
     public InetAddress getExternalAddress() {
-        return externalAddress;
+        return null;
     }
 
     @Override
@@ -77,6 +75,6 @@ final class FirewallMappedPort implements MappedPort {
     @Override
     public String toString() {
         return "FirewallMappedPort{" + "key=" + key + ", internalPort=" + internalPort + ", externalPort=" + externalPort
-                + ", externalAddress=" + externalAddress + ", portType=" + portType + ", lifetime=" + lifetime + '}';
+                + ", portType=" + portType + ", lifetime=" + lifetime + '}';
     }
 }
