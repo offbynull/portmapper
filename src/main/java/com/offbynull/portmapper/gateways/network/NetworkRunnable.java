@@ -360,7 +360,9 @@ final class NetworkRunnable implements Runnable {
             try {
                 channel = SocketChannel.open();
                 channel.configureBlocking(false);
-                channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
+                // Would directly call SocketChannel.bind(), but this doesn't look to be available on android. Doing this on Java 7/8
+                // performs the same function -- it probably does the same on Android as well?
+                channel.socket().bind(new InetSocketAddress(req.getSourceAddress(), 0));
                 InetSocketAddress dst = new InetSocketAddress(req.getDestinationAddress(), req.getDestinationPort());
                 channel.connect(dst);
                 
