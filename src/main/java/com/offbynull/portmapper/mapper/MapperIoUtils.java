@@ -511,7 +511,7 @@ public final class MapperIoUtils {
         LOG.debug("Getting local IP addresses");
         
         networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
-        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(1000L, TimeUnit.MILLISECONDS);
+        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(3000L, TimeUnit.MILLISECONDS);
         
         Validate.validState(localIpsResp != null);
         
@@ -578,7 +578,7 @@ public final class MapperIoUtils {
         
         try {
             // Assign IDs for new sockets
-            long endCreateTime = System.currentTimeMillis() + 1000L;
+            long endCreateTime = System.currentTimeMillis() + 3000L;
             for (UdpRequest req : reqs) {
                 long sleepTime = endCreateTime - System.currentTimeMillis();
                 Validate.validState(sleepTime > 0);
