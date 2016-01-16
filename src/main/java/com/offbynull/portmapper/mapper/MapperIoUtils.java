@@ -21,12 +21,17 @@ import com.offbynull.portmapper.gateway.Bus;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV4;
 import static com.offbynull.portmapper.helpers.NetworkUtils.ZERO_IPV6;
 import com.offbynull.portmapper.gateways.network.internalmessages.CloseNetworkRequest;
+import com.offbynull.portmapper.gateways.network.internalmessages.CreateTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.CreateUdpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetLocalIpAddressesNetworkResponse;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.GetNextIdNetworkResponse;
+import com.offbynull.portmapper.gateways.network.internalmessages.IdentifiableErrorNetworkResponse;
+import com.offbynull.portmapper.gateways.network.internalmessages.ReadClosedTcpNetworkNotification;
+import com.offbynull.portmapper.gateways.network.internalmessages.ReadTcpNetworkNotification;
 import com.offbynull.portmapper.gateways.network.internalmessages.ReadUdpNetworkNotification;
+import com.offbynull.portmapper.gateways.network.internalmessages.WriteTcpNetworkRequest;
 import com.offbynull.portmapper.gateways.network.internalmessages.WriteUdpNetworkRequest;
 import com.offbynull.portmapper.gateways.process.internalmessages.CloseProcessRequest;
 import com.offbynull.portmapper.gateways.process.internalmessages.CreateProcessRequest;
@@ -325,72 +330,75 @@ public final class MapperIoUtils {
         Bus selfBus = new BasicBus(queue);
         long endTime = System.currentTimeMillis() + timeout;
 
-        // Get ids
         Map<Integer, ProcessRequest> processes = new HashMap<>();
         Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
-        for (ProcessRequest req : reqs) {
-            long sleepTime = endTime - System.currentTimeMillis();
-            Validate.validState(sleepTime > 0, "Failed to create all processes in time");
-
-            processBus.send(new GetNextIdProcessRequest(selfBus));
-            GetNextIdProcessResponse resp = (GetNextIdProcessResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-            int id = resp.getId();
-            
-            readBuffers.put(id, new ByteArrayOutputStream());
-            processes.put(id, req);
-        }
         
-        // Create processes
-        for (Entry<Integer, ProcessRequest> entry : processes.entrySet()) {
-            int id = entry.getKey();
-            ProcessRequest req = entry.getValue();
-            
-            LOG.debug("Starting process {}", req);
+        try {
+            // Get ids
+            for (ProcessRequest req : reqs) {
+                long sleepTime = endTime - System.currentTimeMillis();
+                Validate.validState(sleepTime > 0, "Failed to create all processes in time");
 
-            processBus.send(new CreateProcessRequest(id, selfBus, req.getExecutable(), req.getParameters()));
-            // don't care about response
-        }
-        
-        // Read data from sockets
-        int runningProcs = reqs.size();
-        while (runningProcs > 0) {
-            long sleepTime = endTime - System.currentTimeMillis();
-            if (sleepTime <= 0L) {
-                break;
+                processBus.send(new GetNextIdProcessRequest(selfBus));
+                GetNextIdProcessResponse resp = (GetNextIdProcessResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                int id = resp.getId();
+
+                readBuffers.put(id, new ByteArrayOutputStream());
+                processes.put(id, req);
             }
 
-            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+            // Create processes
+            for (Entry<Integer, ProcessRequest> entry : processes.entrySet()) {
+                int id = entry.getKey();
+                ProcessRequest req = entry.getValue();
 
-            if (resp instanceof ReadProcessNotification) {
-                // On read, put in to readBuffer
-                ReadProcessNotification readResp = (ReadProcessNotification) resp;
-                if (readResp.getReadType() == ReadType.STDOUT) {
-                    Integer id = readResp.getId();
+                LOG.debug("Starting process {}", req);
 
-                    ByteArrayOutputStream baos = readBuffers.get(id);
-                    if (baos == null) {
-                        baos = new ByteArrayOutputStream();
-                        readBuffers.put(id, baos);
-                    }
+                processBus.send(new CreateProcessRequest(id, selfBus, req.getExecutable(), req.getParameters()));
+                // don't care about response
+            }
 
-                    try {
-                        baos.write(readResp.getData());
-                    } catch (IOException ioe) {
-                        throw new IllegalStateException(); // should never happen
-                    }
+            // Read data from sockets
+            int runningProcs = reqs.size();
+            while (runningProcs > 0) {
+                long sleepTime = endTime - System.currentTimeMillis();
+                if (sleepTime <= 0L) {
+                    break;
                 }
-            } else if (resp instanceof ExitProcessNotification) {
-                runningProcs--;
-            } else if (resp instanceof IdentifiableErrorProcessResponse) {
-                runningProcs--;
-            } else if (resp instanceof ErrorProcessResponse) {
-                runningProcs--;
-            }
-        }
 
-        // Issue closes
-        for (int id : readBuffers.keySet()) {
-            processBus.send(new CloseProcessRequest(id));
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+
+                if (resp instanceof ReadProcessNotification) {
+                    // On read, put in to readBuffer
+                    ReadProcessNotification readResp = (ReadProcessNotification) resp;
+                    if (readResp.getReadType() == ReadType.STDOUT) {
+                        Integer id = readResp.getId();
+
+                        ByteArrayOutputStream baos = readBuffers.get(id);
+                        if (baos == null) {
+                            baos = new ByteArrayOutputStream();
+                            readBuffers.put(id, baos);
+                        }
+
+                        try {
+                            baos.write(readResp.getData());
+                        } catch (IOException ioe) {
+                            throw new IllegalStateException(); // should never happen
+                        }
+                    }
+                } else if (resp instanceof ExitProcessNotification) {
+                    runningProcs--;
+                } else if (resp instanceof IdentifiableErrorProcessResponse) {
+                    runningProcs--;
+                } else if (resp instanceof ErrorProcessResponse) {
+                    runningProcs--;
+                }
+            }
+        } finally {
+            // Issue closes
+            for (int id : readBuffers.keySet()) {
+                processBus.send(new CloseProcessRequest(id));
+            }
         }
 
         // Process responses
@@ -544,6 +552,7 @@ public final class MapperIoUtils {
      * as such, the response will be added to a random request that has the same source IP)
      * @param attemptDurations amount of time to wait before resending a request
      * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalStateException if it takes too long to create sockets
      * @throws IllegalArgumentException if any {@code attemptDuration} element is negative
      * @throws InterruptedException if interrupted
      */
@@ -567,123 +576,124 @@ public final class MapperIoUtils {
         MultiValuedMap<Integer, UdpRequest> socketIdToRequests = new ArrayListValuedHashMap<>(); // source address to requests
 
         
-        // Assign IDs for new sockets
-        long endCreateTime = System.currentTimeMillis() + 1000L;
-        for (UdpRequest req : reqs) {
-            long sleepTime = endCreateTime - System.currentTimeMillis();
-            Validate.validState(sleepTime > 0, "Failed to perform all UDP operations in desired time");
+        try {
+            // Assign IDs for new sockets
+            long endCreateTime = System.currentTimeMillis() + 1000L;
+            for (UdpRequest req : reqs) {
+                long sleepTime = endCreateTime - System.currentTimeMillis();
+                Validate.validState(sleepTime > 0);
 
-            InetAddress source = req.getSourceAddress();
-            if (addressToSocketId.containsKey(source)) {
-                continue;
+                InetAddress source = req.getSourceAddress();
+                if (addressToSocketId.containsKey(source)) {
+                    continue;
+                }
+
+                if (req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV4)
+                        || req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV6)) {
+                    // skip if 0.0.0.0 or :: -- we don't want to bind to 'any' address
+                    continue;
+                }
+
+                LOG.debug("Creating socket ID for {}", source);
+
+                networkBus.send(new GetNextIdNetworkRequest(selfBus));
+                Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                int id = ((GetNextIdNetworkResponse) resp).getId();
+
+                addressToSocketId.put(source, id);
+
+                LOG.debug("Socket ID for {} is {}", source, id);
             }
-            
-            if (req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV4)
-                    || req.getDestinationSocketAddress().getAddress().equals(ZERO_IPV6)) {
-                // skip if 0.0.0.0 or :: -- we don't want to bind to 'any' address
-                continue;
+
+
+            // Create new sockets
+            next:
+            for (Entry<InetAddress, Integer> entry : addressToSocketId.entrySet()) {
+                int id = entry.getValue();
+                InetAddress source = entry.getKey();
+
+                LOG.debug("Creating UDP socket {}", source);
+
+                networkBus.send(new CreateUdpNetworkRequest(id, selfBus, source));
+                // Don't worry if it was created or not -- just assume that it was
             }
-            
-            LOG.debug("Creating socket ID for {}", source);
-
-            networkBus.send(new GetNextIdNetworkRequest(selfBus));
-            Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-            int id = ((GetNextIdNetworkResponse) resp).getId();
-            
-            addressToSocketId.put(source, id);
-            
-            LOG.debug("Socket ID for {} is {}", source, id);
-        }
-
-        
-        // Create new sockets
-        next:
-        for (Entry<InetAddress, Integer> entry : addressToSocketId.entrySet()) {
-            int id = entry.getValue();
-            InetAddress source = entry.getKey();
-            
-            LOG.debug("Creading UDP socket {}", source);
-            
-            networkBus.send(new CreateUdpNetworkRequest(id, selfBus, source));
-            // Don't worry if it was created or not -- just assume that it was
-        }
-        
-        
-        // Queue up requests to send out
-        for (UdpRequest req : reqs) {
-            int id = addressToSocketId.get(req.getSourceAddress());
-            socketIdToRequests.put(id, req);
-        }
 
 
-        // Send requests
-        Queue<Long> remainingAttemptDurations = new LinkedList<>();
-        for (long attemptDuration : attemptDurations) {
-            remainingAttemptDurations.add(attemptDuration);
-        }
-        while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
-            // Send requests to whoever hasn't responded yet
-            for (UdpRequest req : socketIdToRequests.values()) {
+            // Queue up requests to send out
+            for (UdpRequest req : reqs) {
                 int id = addressToSocketId.get(req.getSourceAddress());
-                
-                Object request = req.getRequest();
-                byte[] reqBytes = req.getRequestToBytesTransformer().create(request); // should never throw an exc -- we created the request
-                
-                InetSocketAddress dst = req.getDestinationSocketAddress();
-                
-                networkBus.send(new WriteUdpNetworkRequest(id, dst, reqBytes));
+                socketIdToRequests.put(id, req);
             }
 
-            // Wait for responses
-            long timeout = remainingAttemptDurations.poll();
-            long endTime = System.currentTimeMillis() + timeout;
-            while (true) {
-                long sleepTime = endTime - System.currentTimeMillis();
-                if (sleepTime <= 0L) {
-                    break;
+
+            // Send requests
+            Queue<Long> remainingAttemptDurations = new LinkedList<>();
+            for (long attemptDuration : attemptDurations) {
+                remainingAttemptDurations.add(attemptDuration);
+            }
+            while (!socketIdToRequests.isEmpty() && !remainingAttemptDurations.isEmpty()) {
+                // Send requests to whoever hasn't responded yet
+                for (UdpRequest req : socketIdToRequests.values()) {
+                    int id = addressToSocketId.get(req.getSourceAddress());
+
+                    Object request = req.getRequest();
+                    byte[] reqBytes = req.getRequestToBytesTransformer().create(request); // should never throw an exc -- we created req
+
+                    InetSocketAddress dst = req.getDestinationSocketAddress();
+
+                    networkBus.send(new WriteUdpNetworkRequest(id, dst, reqBytes));
                 }
 
-                Object netResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
-                if (netResp == null) {
-                    LOG.debug("Timed out waiting for response");
-                    continue;
-                } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
-                    LOG.debug("Expected a read but encountered {} -- skipping", netResp);
-                    continue;
-                }
-
-                ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
-                int id = readNetResp.getId();
-
-                InetSocketAddress remoteSocketAddress = readNetResp.getRemoteAddress();
-                Iterator<UdpRequest> it = socketIdToRequests.get(id).iterator();
-                while (it.hasNext()) {
-                    UdpRequest pendingReq = it.next();
-                    if (broadcastBehaviour || pendingReq.getDestinationSocketAddress().equals(remoteSocketAddress)) {
-                        byte[] respData = readNetResp.getData();
-                        try {
-                            Object response = pendingReq.getBytesToResponseTransformer().create(respData);
-                            LOG.debug("Parsed the following response to {} from {}", response, respData);
-                            pendingReq.addResponse(response);
-                            
-                            if (!broadcastBehaviour) {
-                                LOG.debug("Removed request from send queue");
-                                it.remove();
-                            }
-                        } catch (RuntimeException e) {
-                            LOG.error("Encountered error while parsing response from {}", respData, e);
-                        }
-                        
+                // Wait for responses
+                long timeout = remainingAttemptDurations.poll();
+                long endTime = System.currentTimeMillis() + timeout;
+                while (true) {
+                    long sleepTime = endTime - System.currentTimeMillis();
+                    if (sleepTime <= 0L) {
                         break;
+                    }
+
+                    Object netResp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                    if (netResp == null) {
+                        LOG.debug("Timed out waiting for response");
+                        continue;
+                    } else if (!(netResp instanceof ReadUdpNetworkNotification)) {
+                        LOG.debug("Expected a read but encountered {} -- skipping", netResp);
+                        continue;
+                    }
+
+                    ReadUdpNetworkNotification readNetResp = (ReadUdpNetworkNotification) netResp;
+                    int id = readNetResp.getId();
+
+                    InetSocketAddress remoteSocketAddress = readNetResp.getRemoteAddress();
+                    Iterator<UdpRequest> it = socketIdToRequests.get(id).iterator();
+                    while (it.hasNext()) {
+                        UdpRequest pendingReq = it.next();
+                        if (broadcastBehaviour || pendingReq.getDestinationSocketAddress().equals(remoteSocketAddress)) {
+                            byte[] respData = readNetResp.getData();
+                            try {
+                                Object response = pendingReq.getBytesToResponseTransformer().create(respData);
+                                LOG.debug("Parsed the following response to {} from {}", response, respData);
+                                pendingReq.addResponse(response);
+
+                                if (!broadcastBehaviour) {
+                                    LOG.debug("Removed request from send queue");
+                                    it.remove();
+                                }
+                            } catch (RuntimeException e) {
+                                LOG.error("Encountered error while parsing response from {}", respData, e);
+                            }
+
+                            break;
+                        }
                     }
                 }
             }
-        }
-
-        
-        // Destroy UDP sockets
-        for (int id : addressToSocketId.values()) {
-            networkBus.send(new CloseNetworkRequest(id));
+        } finally {
+            // Destroy UDP sockets
+            for (int id : addressToSocketId.values()) {
+                networkBus.send(new CloseNetworkRequest(id));
+            }
         }
         
         LOG.debug("Completed udp requests {}", reqs);
@@ -808,6 +818,338 @@ public final class MapperIoUtils {
                     + ", request=" + request + ", responses=" + responses + ", requestToBytesTransformer=" + requestToBytesTransformer
                     + ", bytesToResponseTransformer=" + bytesToResponseTransformer + ", other=" + other + '}';
         }
+    }
+
+    // avoids flooding a single server with a bunch of requests -- does requests to each server in batches of no more than 3
+    /**
+     * Perform a group of TCP requests in batched form, such that no destination address and port combination gets more than a certain
+     * number of requests at the same time. Use this method when you want to avoid flooding a single destination with a bunch of requests
+     * at the same time. A good example of when to use this method is when multiple requests are going to the same HTTP server -- the HTTP
+     * server specification mentions that it shouldn't handle more than 3 requests concurrently from the same source.
+     * @param networkBus network bus
+     * @param reqs requests to perform
+     * @param batchSize maximum number of requests to send at the same time to the same destination address and port combination
+     * @param attemptDurations amount of time to wait before resending a request
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalStateException if it takes too long to create sockets
+     * @throws IllegalArgumentException if any {@code attemptDuration} element is negative, or {@code batchSize < 1}
+     * @throws InterruptedException if interrupted
+     */
+    public static void performBatchedTcpRequests(Bus networkBus, Collection<TcpRequest> reqs, int batchSize, long ... attemptDurations)
+            throws InterruptedException {
+        Validate.notNull(networkBus);
+        Validate.notNull(reqs);
+        Validate.notNull(attemptDurations);
+        Validate.isTrue(batchSize >= 1);
+        for (long attemptDuration : attemptDurations) {
+            Validate.isTrue(attemptDuration >= 0);
+        }
+        
+        LOG.debug("Performing tcp requests {} with durations ", reqs, attemptDurations);
+        
+        ArrayListValuedHashMap<InetSocketAddress, TcpRequest> ret = new ArrayListValuedHashMap<>();
+        for (TcpRequest req : reqs) {
+            InetSocketAddress dst = req.getDestinationSocketAddress();
+            ret.put(dst, req);
+        }
+        
+        List<List<TcpRequest>> batches = new LinkedList<>();
+        int counter = 0;
+        while (true) {
+            List<TcpRequest> batch = new LinkedList<>();
+            int start = counter * 3;
+            int end = (counter + 1) * 3;
+            
+            for (InetSocketAddress destinationAddress : ret.keySet()) {
+                List<TcpRequest> destinationRequests = ret.get(destinationAddress);
+                if (start >= destinationRequests.size()) {
+                    continue;
+                }
+                
+                int size = destinationRequests.size();
+                int actualEnd = Math.min(end, size);
+                
+                batch.addAll(destinationRequests.subList(start, actualEnd));
+            }
+            
+            if (batch.isEmpty()) {
+                break;
+            }
+            
+            batches.add(batch);
+            counter++;
+        }
+        
+        for (List<TcpRequest> batch : batches) {
+            LOG.debug("Performing batch");
+            performTcpRequests(networkBus, batch, attemptDurations);
+        }
+    }
+    
+    /**
+     * Perform a group of TCP requests.
+     * @param networkBus network bus
+     * @param reqs requests to perform
+     * @param attemptDurations amount of time to wait before resending a request
+     * @throws NullPointerException if any argument is {@code null} or contains {@code null}
+     * @throws IllegalStateException if it takes too long to create sockets
+     * @throws IllegalArgumentException if any {@code attemptDuration} element is negative
+     * @throws InterruptedException if interrupted
+     */
+    public static void performTcpRequests(Bus networkBus, Collection<TcpRequest> reqs, long ... attemptDurations)
+            throws InterruptedException {
+        Validate.notNull(networkBus);
+        Validate.notNull(reqs);
+        Validate.noNullElements(reqs);
+        Validate.notNull(attemptDurations);
+        for (long attemptDuration : attemptDurations) {
+            Validate.isTrue(attemptDuration >= 0);
+        }
+
+        LOG.debug("Performing tcp requests {} with durations ", reqs, attemptDurations);
+        
+        Queue<Long> remainingAttemptDurations = new LinkedList<>();
+        for (long attemptDuration : attemptDurations) {
+            remainingAttemptDurations.add(attemptDuration);
+        }
+        Set<TcpRequest> remainingReqs = new HashSet<>(reqs);
+        while (!remainingAttemptDurations.isEmpty()) {
+            LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+            Bus selfBus = new BasicBus(queue);
+            
+            long timeout = remainingAttemptDurations.poll();
+            long endTime = System.currentTimeMillis() + timeout;
+            
+            Map<Integer, TcpRequest> sockets = new HashMap<>();
+            Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
+
+
+            try {
+                // Assign IDs for new sockets
+                for (TcpRequest req : reqs) {
+                    long sleepTime = endTime - System.currentTimeMillis();
+                    Validate.validState(sleepTime > 0);
+
+                    LOG.debug("Creating socket ID for {}", req);
+
+                    networkBus.send(new GetNextIdNetworkRequest(selfBus));
+                    Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+                    int id = ((GetNextIdNetworkResponse) resp).getId();
+
+                    sockets.put(id, req);
+                    readBuffers.put(id, new ByteArrayOutputStream());
+
+                    LOG.debug("Socket ID for {} is {}", req, id);
+                }
+
+
+                // Create sockets
+                next:
+                for (Entry<Integer, TcpRequest> entry : sockets.entrySet()) {
+                    long sleepTime = endTime - System.currentTimeMillis();
+                    Validate.validState(sleepTime > 0);
+
+                    int id = entry.getKey();
+                    TcpRequest req = entry.getValue();
+
+                    LOG.debug("Creating TCP socket {}", id);
+                    
+                    // Create socket
+                    InetAddress destinationAddress = req.getDestinationSocketAddress().getAddress();
+                    int destinationPort = req.getDestinationSocketAddress().getPort();
+                    networkBus.send(new CreateTcpNetworkRequest(id, selfBus, req.getSourceAddress(), destinationAddress, destinationPort));
+
+                    // don't care about response
+                }
+
+
+                // Send data to sockets (even though socket isn't connected yet, it will flush out once it connects)
+                for (Entry<Integer, TcpRequest> entry : sockets.entrySet()) {
+                    int id = entry.getKey();
+                    TcpRequest req = entry.getValue();
+
+                    Object request = req.getRequest();
+                    byte[] reqBytes = req.getRequestToBytesTransformer().create(request); // should never throw an exc -- we created req
+
+                    networkBus.send(new WriteTcpNetworkRequest(id, reqBytes));
+                }
+
+
+                // Read data from sockets
+                Set<Integer> activeSocketIds = new HashSet<>(sockets.keySet());
+                while (!activeSocketIds.isEmpty()) {
+                    long sleepTime = endTime - System.currentTimeMillis();
+                    if (sleepTime <= 0L) {
+                        break;
+                    }
+
+                    Object resp = queue.poll(sleepTime, TimeUnit.MILLISECONDS);
+
+                    if (resp instanceof ReadTcpNetworkNotification) {
+                        // On read, put in to readBuffer
+                        ReadTcpNetworkNotification readResp = (ReadTcpNetworkNotification) resp;
+                        int id = readResp.getId();
+
+                        ByteArrayOutputStream baos = readBuffers.get(id);
+                        Validate.validState(baos != null); // sanity check -- should never happen
+                        try {
+                            baos.write(readResp.getData());
+                        } catch (IOException ioe) {
+                            throw new IllegalStateException(); // should never happen
+                        }
+                    } else if (resp instanceof IdentifiableErrorNetworkResponse) {
+                        // On error, remove socket from active set
+                        IdentifiableErrorNetworkResponse errorResp = (IdentifiableErrorNetworkResponse) resp;
+                        int id = errorResp.getId();
+
+                        activeSocketIds.remove(id);
+                    } else if (resp instanceof ReadClosedTcpNetworkNotification) {
+                        // On no more read, remove socket from active set
+                        ReadClosedTcpNetworkNotification closedResp = (ReadClosedTcpNetworkNotification) resp;
+                        int id = closedResp.getId();
+
+                        activeSocketIds.remove(id);
+                    }
+                }
+            } finally {
+                // Issue socket closes
+                for (int id : sockets.keySet()) {
+                    networkBus.send(new CloseNetworkRequest(id));
+                }
+            }
+
+
+            // Process responses
+            for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
+                int id = entry.getKey();
+                TcpRequest req = sockets.get(id);
+
+                byte[] respData = entry.getValue().toByteArray();
+                try {
+                    Object response = req.getBytesToResponseTransformer().create(respData);
+                    LOG.debug("Parsed the following response to {} from {}", response, respData);
+                    req.setResponse(response);
+                    
+                    remainingReqs.remove(req);
+                } catch (RuntimeException e) {
+                    LOG.error("Encountered error while parsing response from {}", respData, e);
+                }
+            }
+        }
+        
+        LOG.debug("Completed tcp requests {}", reqs);
+    }
+    
+    /**
+     * TCP request object.
+     */    
+    public static final class TcpRequest {
+        private final InetAddress sourceAddress;
+        private final InetSocketAddress destinationSocketAddress;
+        private final Object request;
+        private Object response;
+        private final RequestToBytesTransformer requestToBytesTransformer;
+        private final BytesToResponseTransformer bytesToResponseTransformer;
+        private Object other;
+
+        /**
+         * Construct a {@link TcpRequest} object.
+         * @param sourceAddress source address
+         * @param destinationSocketAddress destination socket address
+         * @param request request object
+         * @param requestToBytesTransformer request to byte buffer transformer
+         * @param bytesToResponseTransformer bytes to response transformer
+         * @throws NullPointerException if any argument is {@code null}
+         */
+        public TcpRequest(InetAddress sourceAddress, InetSocketAddress destinationSocketAddress, Object request,
+                RequestToBytesTransformer requestToBytesTransformer, BytesToResponseTransformer bytesToResponseTransformer) {
+            Validate.notNull(sourceAddress);
+            Validate.notNull(destinationSocketAddress);
+            Validate.notNull(request);
+            Validate.notNull(requestToBytesTransformer);
+            Validate.notNull(bytesToResponseTransformer);
+            this.sourceAddress = sourceAddress;
+            this.destinationSocketAddress = destinationSocketAddress;
+            this.request = request;
+            this.requestToBytesTransformer = requestToBytesTransformer;
+            this.bytesToResponseTransformer = bytesToResponseTransformer;
+        }
+
+        /**
+         * Get source address.
+         * @return source address
+         */
+        public InetAddress getSourceAddress() {
+            return sourceAddress;
+        }
+
+        /**
+         * Get destination socket address.
+         * @return destination socket address
+         */
+        public InetSocketAddress getDestinationSocketAddress() {
+            return destinationSocketAddress;
+        }
+
+        /**
+         * Get request to bytes transformer.
+         * @return request to bytes transformer
+         */
+        public RequestToBytesTransformer getRequestToBytesTransformer() {
+            return requestToBytesTransformer;
+        }
+
+        /**
+         * Gets bytes to response transformer.
+         * @return bytes to response transformer
+         */
+        public BytesToResponseTransformer getBytesToResponseTransformer() {
+            return bytesToResponseTransformer;
+        }
+
+        /**
+         * Get request object.
+         * @return request
+         */
+        public Object getRequest() {
+            return request;
+        }
+
+        /**
+         * Get response object.
+         * @return response (or {@code null} if no parse-able response was received)
+         */
+        public Object getResponse() {
+            return response;
+        }
+
+        void setResponse(Object response) {
+            this.response = response;
+        }
+
+        /**
+         * Get extra field.
+         * @return extra
+         */
+        public Object getOther() {
+            return other;
+        }
+
+        /**
+         * Set extra field.
+         * @param other extra
+         */
+        public void setOther(Object other) {
+            this.other = other;
+        }
+
+        @Override
+        public String toString() {
+            return "TcpRequest{" + "sourceAddress=" + sourceAddress + ", destinationSocketAddress=" + destinationSocketAddress
+                    + ", request=" + request + ", response=" + response + ", requestToBytesTransformer=" + requestToBytesTransformer
+                    + ", bytesToResponseTransformer=" + bytesToResponseTransformer + ", other=" + other + '}';
+        }
+
     }
 
     /**

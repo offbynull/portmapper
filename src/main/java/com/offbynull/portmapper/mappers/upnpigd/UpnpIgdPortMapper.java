@@ -18,14 +18,14 @@ package com.offbynull.portmapper.mappers.upnpigd;
 
 import com.offbynull.portmapper.mapper.PortMapper;
 import com.offbynull.portmapper.gateway.Bus;
+import com.offbynull.portmapper.helpers.NetworkUtils;
 import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
 import com.offbynull.portmapper.mapper.MapperIoUtils.RequestToBytesTransformer;
+import com.offbynull.portmapper.mapper.MapperIoUtils.TcpRequest;
 import com.offbynull.portmapper.mapper.MapperIoUtils.UdpRequest;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.getLocalIpAddresses;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.performBatchedTcpRequests;
 import static com.offbynull.portmapper.mapper.MapperIoUtils.performUdpRequests;
-import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.HttpRequest;
-import com.offbynull.portmapper.mappers.upnpigd.InternalUtils.ResponseCreator;
-import static com.offbynull.portmapper.mappers.upnpigd.InternalUtils.performBatchedHttpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.RootUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.RootUpnpIgdResponse;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.RootUpnpIgdResponse.ServiceReference;
@@ -51,7 +51,7 @@ import static com.offbynull.portmapper.mappers.upnpigd.externalmessages.ServiceD
 import static com.offbynull.portmapper.mappers.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.OLD_PORT_MAPPER;
 import static com.offbynull.portmapper.mappers.upnpigd.externalmessages.ServiceDescriptionUpnpIgdResponse.ServiceType.NEW_PORT_MAPPER;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpnpIgdHttpRequest;
-import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpnpIgdHttpResponse;
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
 import org.slf4j.Logger;
@@ -238,7 +238,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         performUdpRequests(networkBus, discoveryRequests, true, 1000L, 1000L, 1000L, 1000L, 1000L);
 
         // Get root XMLs
-        Collection<HttpRequest> rootRequests = new ArrayList<>(discoveryRequests.size());
+        Collection<TcpRequest> rootRequests = new ArrayList<>(discoveryRequests.size());
         Set<URL> processedLocations = new HashSet<>();
         for (UdpRequest discoveryReq : discoveryRequests) {
             LOG.debug("Processing discovery {}", discoveryReq);
@@ -250,32 +250,33 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                         continue;
                     }
 
-                    HttpRequest req = new HttpRequest();
-
                     ProbeResult other = new ProbeResult();
                     other.source = discoveryReq.getSourceAddress();
                     other.location = discoveryResp.getLocation();
                     other.serverName = discoveryResp.getServer();
-
+                    
+                    TcpRequest req = new TcpRequest(
+                            other.source,
+                            getAddressFromUrl(other.location),
+                            new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile()),
+                            new BasicRequestTransformer(),
+                            new RootUpnpIgdBytesToResponseTransformer(other.location));
                     req.setOther(other);
-                    req.setSourceAddress(other.source);
-                    req.setLocation(other.location);
-                    req.setRespCreator(new RootUpnpIgdResponseCreator(other.location));
-                    req.setSendMsg(new RootUpnpIgdRequest(other.location.getAuthority(), other.location.getFile()));
+
                     rootRequests.add(req);
                 } catch (RuntimeException iae) {
                     // failed to parse, so skip to next
                 }
             }
         }
-        performBatchedHttpRequests(networkBus, rootRequests, 5000L, 5000L, 5000L);
+        performBatchedTcpRequests(networkBus, rootRequests, 3, 5000L, 5000L, 5000L);
 
         // Extract service locations from root XMLs + get service descriptions
-        Collection<HttpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
-        for (HttpRequest rootRequest : rootRequests) {
+        Collection<TcpRequest> serviceDescRequests = new ArrayList<>(rootRequests.size());
+        for (TcpRequest rootRequest : rootRequests) {
             LOG.debug("Processing root {}", rootRequest);
             try {
-                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.getRespMsg();
+                RootUpnpIgdResponse rootResp = (RootUpnpIgdResponse) rootRequest.getResponse();
 
                 for (ServiceReference serviceReference : rootResp.getServices()) {
                     URL scpdUrl = serviceReference.getScpdUrl();
@@ -284,26 +285,28 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                     other.probeResult = (ProbeResult) rootRequest.getOther();
                     other.serviceReference = serviceReference;
 
-                    HttpRequest req = new HttpRequest();
+                    TcpRequest req = new TcpRequest(
+                            rootRequest.getSourceAddress(),
+                            getAddressFromUrl(scpdUrl),
+                            new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()),
+                            new BasicRequestTransformer(),
+                            new ServiceDescriptionUpnpIgdBytesToResponseTransformer());
                     req.setOther(other);
-                    req.setSourceAddress(rootRequest.getSourceAddress());
-                    req.setLocation(scpdUrl);
-                    req.setRespCreator(new ServiceDescriptionUpnpIgdResponseCreator());
-                    req.setSendMsg(new ServiceDescriptionUpnpIgdRequest(scpdUrl.getAuthority(), scpdUrl.getFile()));
+
                     serviceDescRequests.add(req);
                 }
             } catch (RuntimeException iae) {
                 // failed to parse, so skip to next
             }
         }
-        performBatchedHttpRequests(networkBus, serviceDescRequests, 5000L, 5000L, 5000L);
+        performBatchedTcpRequests(networkBus, serviceDescRequests, 3, 5000L, 5000L, 5000L);
 
         // Get service descriptions
         List<UpnpIgdPortMapper> ret = new LinkedList<>();
-        for (HttpRequest serviceDescRequest : serviceDescRequests) {
+        for (TcpRequest serviceDescRequest : serviceDescRequests) {
             LOG.debug("Processing description {}", serviceDescRequest);
             try {
-                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.getRespMsg();
+                ServiceDescriptionUpnpIgdResponse serviceDescResp = (ServiceDescriptionUpnpIgdResponse) serviceDescRequest.getResponse();
 
                 RootRequestResult rootReqRes = (RootRequestResult) serviceDescRequest.getOther();
                 for (Entry<ServiceType, IdentifiedService> e : serviceDescResp.getIdentifiedServices().entrySet()) {
@@ -360,6 +363,27 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
     public final InetAddress getSourceAddress() {
         return internalAddress;
     }
+    
+    /**
+     * Extracts the host and port from a URL.
+     * @param url url to extract host and port from
+     * @return socket address pointing to {@code url}'s address
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if port could not be determined (because protocol not recognized)
+     */
+    protected static final InetSocketAddress getAddressFromUrl(URL url) {
+        Validate.notNull(url);
+        
+        String host = url.getHost();
+        int port = url.getPort();
+        if (port == -1) {
+            port = url.getDefaultPort();
+        }
+        
+        Validate.isTrue(port != -1);
+        
+        return NetworkUtils.toSocketAddress(host, port);
+    }
 
     private static final class ProbeResult {
 
@@ -374,7 +398,10 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         private ServiceReference serviceReference;
     }
 
-    private static final class BasicRequestTransformer implements RequestToBytesTransformer {
+    /**
+     * Dumps any {@link UpnpIgdHttpRequest} to byte array.
+     */
+    protected static final class BasicRequestTransformer implements RequestToBytesTransformer {
 
         @Override
         public byte[] create(Object request) {
@@ -390,24 +417,24 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
         }
     }
 
-    private static final class RootUpnpIgdResponseCreator implements ResponseCreator {
+    private static final class RootUpnpIgdBytesToResponseTransformer implements BytesToResponseTransformer {
 
         private URL baseUrl;
 
-        private RootUpnpIgdResponseCreator(URL baseUrl) {
+        private RootUpnpIgdBytesToResponseTransformer(URL baseUrl) {
             this.baseUrl = baseUrl;
         }
 
         @Override
-        public UpnpIgdHttpResponse create(byte[] buffer) {
+        public Object create(byte[] buffer) {
             return new RootUpnpIgdResponse(baseUrl, buffer);
         }
     }
 
-    private static final class ServiceDescriptionUpnpIgdResponseCreator implements ResponseCreator {
+    private static final class ServiceDescriptionUpnpIgdBytesToResponseTransformer implements BytesToResponseTransformer {
 
         @Override
-        public ServiceDescriptionUpnpIgdResponse create(byte[] buffer) {
+        public Object create(byte[] buffer) {
             return new ServiceDescriptionUpnpIgdResponse(buffer);
         }
     }

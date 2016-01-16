@@ -19,6 +19,7 @@ package com.offbynull.portmapper.helpers;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import org.apache.commons.lang3.Validate;
@@ -62,7 +63,24 @@ public final class NetworkUtils {
         try {
             return InetAddress.getByName(host);
         } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(uhe); // should never happen
+            throw new IllegalArgumentException(uhe);
+        }
+    }
+
+    /**
+     * Convert host and port to {@link InetSocketAddress}. Equivalent to calling
+     * {@link InetSocketAddress#InetSocketAddress(java.net.InetAddress, int) } but throws an unchecked exception on problem.
+     * @param host host to convert
+     * @param port port of host
+     * @return address converted address
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws IllegalArgumentException if host couldn't be converted to an {@link InetSocketAddress}
+     */
+    public static InetSocketAddress toSocketAddress(String host, int port) {
+        try {
+            return new InetSocketAddress(InetAddress.getByName(host), port);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(uhe);
         }
     }
 

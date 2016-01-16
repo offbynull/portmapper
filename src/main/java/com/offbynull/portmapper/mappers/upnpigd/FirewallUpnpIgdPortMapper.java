@@ -19,14 +19,15 @@ package com.offbynull.portmapper.mappers.upnpigd;
 import com.offbynull.portmapper.mapper.MappedPort;
 import com.offbynull.portmapper.mapper.PortType;
 import com.offbynull.portmapper.gateway.Bus;
-import static com.offbynull.portmapper.mappers.upnpigd.InternalUtils.performHttpRequests;
+import com.offbynull.portmapper.mapper.MapperIoUtils.BytesToResponseTransformer;
+import com.offbynull.portmapper.mapper.MapperIoUtils.TcpRequest;
+import static com.offbynull.portmapper.mapper.MapperIoUtils.performTcpRequests;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.AddPinholeUpnpIgdResponse;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePortMappingUpnpIgdResponse;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdResponse;
-import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpnpIgdHttpResponse;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.Collections;
@@ -97,34 +98,35 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
             Validate.validState(externalPortRange.contains((long) externalPort),
                     "Router reports external port mappings as %s", externalPortRange);
 
-            InternalUtils.HttpRequest mapHttpRequest = new InternalUtils.HttpRequest();
-            mapHttpRequest.setLocation(controlUrl);
-            mapHttpRequest.setSourceAddress(internalAddress);
-            mapHttpRequest.setSendMsg(new AddPinholeUpnpIgdRequest(
-                    controlUrl.getAuthority(),
-                    controlUrl.getFile(),
-                    serviceType,
-                    null,
-                    externalPort,
+            TcpRequest mapHttpRequest = new TcpRequest(
                     internalAddress,
-                    internalPort,
-                    portType,
-                    leaseDuration));
-            mapHttpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
-                @Override
-                public UpnpIgdHttpResponse create(byte[] buffer) {
-                    return new AddPinholeUpnpIgdResponse(buffer);
-                }
-            });
+                    getAddressFromUrl(controlUrl),
+                    new AddPinholeUpnpIgdRequest(
+                            controlUrl.getAuthority(),
+                            controlUrl.getFile(),
+                            serviceType,
+                            null,
+                            externalPort,
+                            internalAddress,
+                            internalPort,
+                            portType,
+                            leaseDuration),
+                    new BasicRequestTransformer(),
+                    new BytesToResponseTransformer() {
+                        @Override
+                        public Object create(byte[] buffer) {
+                            return new AddPinholeUpnpIgdResponse(buffer);
+                        }
+                    });
 
-            performHttpRequests(
+            performTcpRequests(
                     networkBus,
                     Collections.singleton(mapHttpRequest),
                     retryDurations);
 
-            if (mapHttpRequest.getRespMsg() != null) {
+            if (mapHttpRequest.getResponse() != null) {
                 // server responded, so we're good to go
-                String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.getRespMsg()).getUniqueId();
+                String key = ((AddPinholeUpnpIgdResponse) mapHttpRequest.getResponse()).getUniqueId();
                 
                 MappedPort mappedPort = new FirewallMappedPort(key, internalPort, externalPort, null, portType, leaseDuration);
                 LOG.debug("Map successful {}", mappedPort);
@@ -157,27 +159,28 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         String key = ((FirewallMappedPort) mappedPort).getKey();
         InetAddress internalAddress = getInternalAddress();
         
-        InternalUtils.HttpRequest httpRequest = new InternalUtils.HttpRequest();
-        httpRequest.setLocation(controlUrl);
-        httpRequest.setSourceAddress(internalAddress);
-        httpRequest.setSendMsg(new DeletePinholeUpnpIgdRequest(
-                controlUrl.getAuthority(),
-                controlUrl.getFile(),
-                serviceType,
-                key));
-        httpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
-            @Override
-            public UpnpIgdHttpResponse create(byte[] buffer) {
-                return new DeletePortMappingUpnpIgdResponse(buffer);
-            }
-        });
+        TcpRequest httpRequest = new TcpRequest(
+                internalAddress,
+                getAddressFromUrl(controlUrl),
+                new DeletePinholeUpnpIgdRequest(
+                        controlUrl.getAuthority(),
+                        controlUrl.getFile(),
+                        serviceType,
+                        key),
+                new BasicRequestTransformer(),
+                new BytesToResponseTransformer() {
+                    @Override
+                    public Object create(byte[] buffer) {
+                        return new DeletePortMappingUpnpIgdResponse(buffer);
+                    }
+                });
         
-        performHttpRequests(
+        performTcpRequests(
                 networkBus,
                 Collections.singleton(httpRequest),
                 5000L, 5000L, 5000L);
         
-        if (httpRequest.getRespMsg() == null) {
+        if (httpRequest.getResponse() == null) {
             throw new IllegalStateException("No response/invalid response to unmapping");
         }
         
@@ -206,28 +209,29 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         String key = ((FirewallMappedPort) mappedPort).getKey();
         InetAddress internalAddress = getInternalAddress();
         
-        InternalUtils.HttpRequest httpRequest = new InternalUtils.HttpRequest();
-        httpRequest.setLocation(controlUrl);
-        httpRequest.setSourceAddress(internalAddress);
-        httpRequest.setSendMsg(new UpdatePinholeUpnpIgdRequest(
-                controlUrl.getAuthority(),
-                controlUrl.getFile(),
-                serviceType,
-                key,
-                leaseDuration));
-        httpRequest.setRespCreator(new InternalUtils.ResponseCreator() {
-            @Override
-            public UpnpIgdHttpResponse create(byte[] buffer) {
-                return new UpdatePinholeUpnpIgdResponse(buffer);
-            }
-        });
+        TcpRequest httpRequest = new TcpRequest(
+                internalAddress,
+                getAddressFromUrl(controlUrl),
+                new UpdatePinholeUpnpIgdRequest(
+                        controlUrl.getAuthority(),
+                        controlUrl.getFile(),
+                        serviceType,
+                        key,
+                        leaseDuration),
+                new BasicRequestTransformer(),
+                new BytesToResponseTransformer() {
+                    @Override
+                    public Object create(byte[] buffer) {
+                        return new UpdatePinholeUpnpIgdResponse(buffer);
+                    }
+                });
         
-        performHttpRequests(
+        performTcpRequests(
                 networkBus,
                 Collections.singleton(httpRequest),
                 5000L, 5000L, 5000L);
         
-        if (httpRequest.getRespMsg() == null) {
+        if (httpRequest.getResponse() == null) {
             throw new IllegalStateException("No response/invalid response to refresh");
         }
         
