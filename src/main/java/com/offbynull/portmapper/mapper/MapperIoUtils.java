@@ -912,7 +912,6 @@ public final class MapperIoUtils {
         for (long attemptDuration : attemptDurations) {
             remainingAttemptDurations.add(attemptDuration);
         }
-        Set<TcpRequest> remainingReqs = new HashSet<>(reqs);
         while (!remainingAttemptDurations.isEmpty()) {
             LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
             Bus selfBus = new BasicBus(queue);
@@ -1029,8 +1028,6 @@ public final class MapperIoUtils {
                     Object response = req.getBytesToResponseTransformer().create(respData);
                     LOG.debug("Parsed the following response to {} from {}", response, respData);
                     req.setResponse(response);
-                    
-                    remainingReqs.remove(req);
                 } catch (RuntimeException e) {
                     LOG.error("Encountered error while parsing response from {}", respData, e);
                 }

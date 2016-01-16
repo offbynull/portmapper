@@ -83,7 +83,8 @@ public final class NatPmpPortMapper implements PortMapper {
      * @throws IllegalStateException if encountered issue with gateways
      * @throws InterruptedException if interrupted
      */
-    public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus, InetAddress ... additionalIps) throws InterruptedException {
+    public static List<NatPmpPortMapper> identify(Bus networkBus, Bus processBus,
+            InetAddress ... additionalIps) throws InterruptedException {
         LOG.info("Attempting to identify devices");
 
         Validate.notNull(networkBus);
