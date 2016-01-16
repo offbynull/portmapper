@@ -221,7 +221,10 @@ final class NetworkRunnable implements Runnable {
         if (selectionKey.isReadable()) {
             try {
                 buffer.clear();
-                InetSocketAddress localAddress = (InetSocketAddress) channel.getLocalAddress();
+
+                // Would directly call DatagramChannel.getLocalAddress(), but this doesn't look to be available on android. Doing this
+                // on Java 7/8 performs the same function -- it probably does the same on Android as well?
+                InetSocketAddress localAddress = (InetSocketAddress) channel.socket().getLocalSocketAddress();
                 InetSocketAddress remoteAddress = (InetSocketAddress) channel.receive(buffer);
 
                 LOG.debug("{} UDP read {} bytes from {} to {}", id, buffer.position(), remoteAddress, localAddress);
@@ -244,7 +247,10 @@ final class NetworkRunnable implements Runnable {
                     AddressedByteBuffer outBuffer = outBuffers.removeFirst();
 
                     ByteBuffer outgoingBuffer = outBuffer.getBuffer();
-                    InetSocketAddress localAddress = (InetSocketAddress) channel.getLocalAddress();
+                    
+                    // Would directly call DatagramChannel.getLocalAddress(), but this doesn't look to be available on android. Doing this
+                    // on Java 7/8 performs the same function -- it probably does the same on Android as well?
+                    InetSocketAddress localAddress = (InetSocketAddress) channel.socket().getLocalSocketAddress();
                     InetSocketAddress remoteAddress = outBuffer.getSocketAddress();
                     int totalCount = outgoingBuffer.remaining();
 
@@ -318,7 +324,10 @@ final class NetworkRunnable implements Runnable {
             try {
                 channel = DatagramChannel.open();
                 channel.configureBlocking(false);
-                channel.bind(new InetSocketAddress(req.getSourceAddress(), 0));
+                
+                // Would directly call DatagramChannel.bind(), but this doesn't look to be available on android. Doing this on Java 7/8
+                // performs the same function -- it probably does the same on Android as well?
+                channel.socket().bind(new InetSocketAddress(req.getSourceAddress(), 0));
                 
                 entry = new UdpNetworkEntry(id, channel, responseBus);
                 updateSelectionKey(entry, channel);
