@@ -83,14 +83,14 @@ processBus.send(new KillProcessRequest());
 You can use the identify method on the PortMapper implementations directly. For example ...
 
 ```java
-        List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
-        LOG.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
+List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
+LOG.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
         
-        List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus, additionalIps);
-        LOG.debug("Found NAT-PMP mappers: {}", natPmpMappers);
+List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus, additionalIps);
+LOG.debug("Found NAT-PMP mappers: {}", natPmpMappers);
         
-        List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, additionalIps);
-        LOG.debug("Found PCP mappers: {}", pcpMappers);
+List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, additionalIps);
+LOG.debug("Found PCP mappers: {}", pcpMappers);
 ```
 
 #### How is the Port Mapper project considered light-weight?
