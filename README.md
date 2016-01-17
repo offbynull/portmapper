@@ -78,7 +78,7 @@ processBus.send(new KillProcessRequest());
 
 ## FAQ
 
-#### What if I want to discover only one type of PortMapper
+#### What if I want to discover only one type of mapper
 
 You can use the identify method on the PortMapper implementations directly. For example ...
 
