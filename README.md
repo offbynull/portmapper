@@ -5,6 +5,13 @@
  * [Introduction](#introduction)
  * [Quick-start Guide](#quick-start-guide)
  * [FAQ](#faq)
+  * [What if I want to discover only one type of port forwarding device?](#what-if-i-want-to-discover-only-one-type-of-port-forwarding-device)
+  * [How is this library considered light-weight?](#how-is-this-library-considered-light-weight)
+  * [How is this library considered fault-tolerant?](#how-is-this-library-considered-fault-tolerant)
+  * [How does this library discover NAT-PMP and PCP gateway devices?](#how-does-this-library-discover-nat-pmp-and-pcp-gateway-devices)
+  * [Does this library support PCP authentication and/or UPnP-IGD device protection?](#does-this-library-support-pcp-authentication-andor-upnp-igd-device-protection)
+  * [Does this library support unsolicited PCP ANNOUNCEs or UPnP eventing?](#does-this-library-support-unsolicited-pcp-announces-or-upnp-eventing)
+  * [What alternatives are available?](#what-alternatives-are-available)
  * [Change Log](#change-log)
 
 ## Introduction
