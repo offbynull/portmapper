@@ -1,4 +1,4 @@
-# Port Mapper (beta)
+# Port Mapper
 
 <p align="center"><img src ="../gh-pages/logo.png" alt="Portmapper logo" /></p>
 
