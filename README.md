@@ -7,16 +7,15 @@
  * [FAQ](#faq)
 
 ## Introduction
-Port mapper is a Java library that allows you to open up ports on NAT-enabled routers. Why use Port Mapper over other Java port mapping libraries? The Port Mapper project provides several distinct advantages:
+Port mapper is a Java library, originally developed as part of the the [Peernetic](https://github.com/offbynull/peernetic) project, that allows you to open up UDP and TCP ports on NAT-enabled routers. The Port Mapper project provides several distinct advantages over existing Java libraries that provide port mapping functinoality:
 
 * Tested on all major platforms: Android, Windows, Linux, and Mac
 * Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0
 * Supports NAT-PMP (NAT Port Mapping Protocol)
 * Supports PCP (Port Control Protocol)
 * Supports both IPv4 and IPv6
-* Light-weight implementation -- very few dependencies and easy to port to other languages
-* Fault-tolerant implementation -- works around malformed responses and faulty routers
-* 
+* Fault-tolerant -- works around malformed responses and faulty routers
+* Light-weight -- very few dependencies and easy to port to other languages
 
 ## Quick-start Guide
 
@@ -31,7 +30,7 @@ If you're using Maven, include portmapper as a dependency.
 ```
 
 
-The following example attempts to discover a router with at least one of the supported protocols and map internal port 12345 to some external port.
+The following example attempts to map a port on the first port mapper it finds.
 
 ```java
 // Start up a network gateway
@@ -42,8 +41,7 @@ Bus networkBus = network.getBus();
 Gateway process = ProcessGateway.create();
 Bus processBus = process.getBus();
 
-// Try to auto-discover router's IP as well as the protocol supported
-// by the router for port mapping
+// Discover router's with port mapping functionality
 List<PortMapper> mappers = PortMapperFactory.discover(networkBus, processBus);
 
 // Kill the process gateway after discovery finishes -- no longer required
@@ -72,4 +70,20 @@ networkBus.send(new KillNetworkRequest());
 
 ## FAQ
 
-#### How much overhead am I adding?
+#### Why is Port Mapper considered light-weight
+
+The Port Mapper project doesn't require any special parsing libraries. All parsing is done as US-ASCII text. XML/SOAP/
+#### Does Port Mapper support PCP authentication or UPnP-IGD device protection
+
+Not at this time. Support may be added in the future.
+
+#### What alternatives are available?
+
+Alternatives to the Port Mapper project include:
+
+* [weupnp](https://github.com/bitletorg/weupnp)
+* [SBBI](https://sourceforge.net/projects/upnplibmobile/)
+* [Cling](http://4thline.org/projects/cling/)
+* [jNAT-PMPlib](http://sourceforge.net/projects/jnat-pmplib/)
+
+If you know of any other projects please let me know and I'll update this section.
