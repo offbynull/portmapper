@@ -93,7 +93,7 @@ List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, 
 
 Several reasons. The Port Mapper project
 
-1. has very few dependencies on third-party Java libraries.
+1. has very few dependencies on third-party libraries.
 1. doesn't require any special parsing libraries (e.g. XML/SOAP/HTTP/etc..) -- all parsing is done as US-ASCII text.
 1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard NIO.
 1. doesn't make use of regular expressions.
@@ -109,7 +109,7 @@ The Port Mapper project aims to be resilient when it comes to faulty responses, 
 
 #### How does this library discover NAT-PMP and PCP gateway devices?
 
-Unfortunately, Java doesn't provide a built-in mechanisms to grab the gateway address from the OS, nor does it allow you to do ICMP probing to find devices on path (e.g. set TTL to 1 and ping, the first device is very likely the gateway). As such, the Port Mapper project makes use of various OS-specific commands to find gateway addresses. You can find out which commands are used by looking through the source code.
+Unfortunately, Java doesn't provide a built-in way to grab gateway addresses from the OS, nor does it allow you to do ICMP probing to find devices on path (e.g. set TTL to 1 and ping, the first device is very likely the gateway). As such, the Port Mapper project makes use of various OS-specific commands to find gateway addresses. You can find out which commands are used by looking through the source code.
 
 #### Does this library support PCP authentication and/or UPnP-IGD device protection?
 
