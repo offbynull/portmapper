@@ -137,6 +137,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
+
+### [2.0.0] - 2016-01-17
 - CHANGED: Refactored API and backend
 - CHANGED: Updated README
 - ADDED: UPnP-IGD IPv6 firewall service support
