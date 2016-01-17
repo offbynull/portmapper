@@ -121,7 +121,7 @@ Not at this time. Support may be added in the future.
 
 #### Does this library support unsolicited PCP ANNOUNCEs or UPnP eventing?
 
-Not at this time. Version 1 did support unsolicited PCP ANNOUNCEs, but it has since been removed because no devices seem to support it. If you're worried about not being notified of the mapping being lost, just make sure you refresh more often so that you catch the problem early (e.g. maybe every 5 or 10 minutes).
+Not at this time. Version 1 did support unsolicited PCP ANNOUNCEs, but it has since been removed because no devices seem to support it. If you're worried about not being notified of lost mappings, just make sure you refresh more often so that you catch the problem early (e.g. every 5 or 10 minutes).
 
 #### What alternatives are available?
 
