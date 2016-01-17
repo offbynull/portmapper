@@ -30,7 +30,9 @@ If you're using Maven, include portmapper as a dependency.
 ```
 
 
-The following example attempts to forward port 12345 on the first port mapper it finds.
+The following example attempts to forward some external port (55555 preferred) to internal port 12345 on the first port mapper it finds.
+
+_IMPORTANT NOTE_: Many devices limit port forwarding to ports greater than 1024 (for both internal and external ports). Be mindful of this when choosing your port values.
 
 ```java
 // Start up a network gateway
