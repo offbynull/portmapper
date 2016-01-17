@@ -26,7 +26,6 @@ final class FirewallMappedPort implements MappedPort {
     private String key;
     private int internalPort;
     private int externalPort;
-    private InetAddress externalAddress;
     private PortType portType;
     private long lifetime;
 

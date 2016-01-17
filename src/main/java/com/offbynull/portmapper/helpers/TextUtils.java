@@ -247,7 +247,7 @@ public final class TextUtils {
             offset++;
 
             String component4 = readIp4Component(text, offset);
-            offset += component4.length();
+//            offset += component4.length();
 
             return component1 + '.' + component2 + '.' + component3 + '.' + component4;
         } catch (IndexOutOfBoundsException e) {
