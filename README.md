@@ -5,6 +5,7 @@
  * [Introduction](#introduction)
  * [Quick-start Guide](#quick-start-guide)
  * [FAQ](#faq)
+ * [Change Log](#change-log)
 
 ## Introduction
 The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled routers. Originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality:
@@ -33,21 +34,15 @@ Port Mapper requires Java7 or later. In your Maven POM, add "portmapper" as a de
 The following example attempts to forward some external port (55555 preferred) to internal port 12345 on the first port forwarding device it finds.
 
 ```java
-// Start up a network gateway
+// Start gateways
 Gateway network = NetworkGateway.create();
-Bus networkBus = network.getBus();
-
-// Start up a process gateway
 Gateway process = ProcessGateway.create();
+Bus networkBus = network.getBus();
 Bus processBus = process.getBus();
 
-// Discover port mappers
+// Discover port forwarding devices and take the first one found
 List<PortMapper> mappers = PortMapperFactory.discover(networkBus, processBus);
-
-// Take the first port mapper that was found
 PortMapper mapper = mappers.get(0);
-
-
 
 // Map internal port 12345 to some external port (55555 preferred)
 //
@@ -60,8 +55,7 @@ System.out.println("Port mapping added: " + mappedPort);
 // Refresh mapping half-way through the lifetime of the mapping (for example,
 // if the mapping is available for 40 seconds, refresh it every 20 seconds)
 while(!shutdown) {
-    mappedPort = mapper.refreshPort(mappedPort,
-            mappedPort.getLifetime() / 2L);
+    mappedPort = mapper.refreshPort(mappedPort, mappedPort.getLifetime() / 2L);
     System.out.println("Port mapping refreshed: " + mappedPort);
     Thread.sleep(mappedPort.getLifetime() * 1000L);
 }
@@ -69,14 +63,9 @@ while(!shutdown) {
 // Unmap port 12345
 mapper.unmapPort(mappedPort);
 
-
-
-// Kill the network gateway once your application completes
+// Stop gateways
 networkBus.send(new KillNetworkRequest());
-
-// Kill the network gateway once your application completes
-//   You can technically kill this once discovery finishes
-processBus.send(new KillProcessRequest());
+processBus.send(new KillProcessRequest()); // can kill this after discovery
 ```
 
 ## FAQ
