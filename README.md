@@ -7,7 +7,7 @@
  * [FAQ](#faq)
 
 ## Introduction
-Port mapper is a Java library, originally developed as part of the the [Peernetic](https://github.com/offbynull/peernetic) project, that allows you to forward ports on NAT-enabled routers. The Port Mapper project has several distinct advantages over existing Java libraries that provide port forwarding functionality:
+Port mapper is a Java library, originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, that allows you to forward ports on NAT-enabled routers. The Port Mapper project has several distinct advantages over existing Java libraries that provide port forwarding functionality:
 
 * Tested on all major platforms: Android, Windows, Linux, and Mac
 * Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0
@@ -30,7 +30,7 @@ If you're using Maven, include portmapper as a dependency.
 ```
 
 
-The following example attempts to map a port on the first port mapper it finds.
+The following example attempts to forward port 12345 on the first port mapper it finds.
 
 ```java
 // Start up a network gateway
@@ -76,13 +76,20 @@ processBus.send(new KillProcessRequest());
 
 #### What if I want to discover only one type of PortMapper
 
-You can use the discover method on the PortMapper implementations directly. For example ...
+You can use the identify method on the PortMapper implementations directly. For example ...
 
 ```java
-
+        List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
+        LOG.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
+        
+        List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus, additionalIps);
+        LOG.debug("Found NAT-PMP mappers: {}", natPmpMappers);
+        
+        List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, additionalIps);
+        LOG.debug("Found PCP mappers: {}", pcpMappers);
 ```
 
-#### How is the Port Mapper project considered light-weight/fault-tolerant?
+#### How is the Port Mapper project considered light-weight?
 
 The Port Mapper project...
 
@@ -100,7 +107,7 @@ The Port Mapper project aims to be resilent when it comes to faulty responses, e
 1. parses XML as text, based on patterns/hueristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitialization/etc..)
 1. attempts requests multiple times when it the router responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes)
 
-#### Does the Port Mapper project support PCP authentication or UPnP-IGD device protection
+#### Does the Port Mapper project support PCP authentication or UPnP-IGD device protection?
 
 Not at this time. Support may be added in the future.
 
@@ -114,3 +121,19 @@ Alternatives to the Port Mapper project include:
 * [jNAT-PMPlib](http://sourceforge.net/projects/jnat-pmplib/)
 
 If you know of any other projects please let me know and I'll update this section.
+
+## Change Log
+<sub>Template adapted from http://keepachangelog.com/</sub>
+
+All notable changes to this project will be documented in this file.
+This project adheres to [Semantic Versioning](http://semver.org/).
+
+### [Unreleased][unreleased]
+- CHANGED: Refactored entire API and backend
+- ADDED: UPnP-IGD IPv6 firewall service support
+- ADDED: New logo made in Inkscape
+- FIXED: Issue when scraping IPv4 address from output
+- FIXED: Issue with Macs getting SocketExceptions on PCP discovery
+
+### [1.0.0] - 2014-06-24
+- Initial release.
