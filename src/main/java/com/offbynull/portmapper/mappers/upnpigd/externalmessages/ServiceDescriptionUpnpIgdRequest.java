@@ -16,7 +16,7 @@
  */
 package com.offbynull.portmapper.mappers.upnpigd.externalmessages;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
 
@@ -40,7 +40,7 @@ public final class ServiceDescriptionUpnpIgdRequest extends UpnpIgdHttpRequest {
     private static Map<String, String> generateHeaders(String host) {
         Validate.notNull(host);
         
-        Map<String, String> ret = new HashMap<>();
+        Map<String, String> ret = new LinkedHashMap<>();
         
         // content-length is added by parent class
         ret.put("Host", host);
