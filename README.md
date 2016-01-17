@@ -104,8 +104,8 @@ Because of this, the code should be easily portable to other languages -- especi
 
 The Port Mapper project aims to be resilient when it comes to faulty responses, especially when using UPnP-IGD. The code
 
-1. parses XML as text, based on patterns/heuristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitalization/etc..)
-1. attempts requests multiple times when the device responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes)
+1. parses XML as text, based on patterns/heuristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitalization/etc..).
+1. attempts requests multiple times when the device responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes).
 
 #### How does this library discover NAT-PMP and PCP gateway devices?
 
@@ -137,8 +137,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
-- CHANGED: Refactored entire API and backend
-- CHANGED: Updated README.md
+- CHANGED: Refactored API and backend
+- CHANGED: Updated README
 - ADDED: UPnP-IGD IPv6 firewall service support
 - ADDED: New logo made in Inkscape
 - FIXED: Issue when scraping IPv4 address from output
