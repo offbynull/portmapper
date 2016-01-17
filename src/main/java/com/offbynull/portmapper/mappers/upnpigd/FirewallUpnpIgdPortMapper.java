@@ -29,6 +29,7 @@ import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePinholeUp
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.UpdatePinholeUpnpIgdResponse;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Collections;
 import org.apache.commons.lang3.RandomUtils;
@@ -48,6 +49,8 @@ import org.slf4j.LoggerFactory;
 public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
     private static final Logger LOG = LoggerFactory.getLogger(FirewallUpnpIgdPortMapper.class);
 
+    private final InetSocketAddress controlUrlAddress;
+    
     /**
      * Constructs a {@link FirewallUpnpIgdPortMapper} object.
      * @param networkBus bus to network component
@@ -59,11 +62,13 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
      * @param leaseDurationRange lease duration range
      * @throws NullPointerException if any argument other than {@code severName} is {@code null}
      * @throws IllegalArgumentException if {@code 0 > leaseDurationRange > 0xFFFFFFFFL || 0 > externalPortRange > 0xFFFFL} (note that
-     * a 0 lease duration means either default value or infinite, and a 0 external port means wildcard)
+     * a 0 lease duration means either default value or infinite, and a 0 external port means wildcard), or if {@code controlUrl}'s protocol
+     * was not {@code http}
      */
     public FirewallUpnpIgdPortMapper(Bus networkBus, InetAddress internalAddress, URL controlUrl, String serverName, String serviceType,
             Range<Long> externalPortRange, Range<Long> leaseDurationRange) {
         super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
+        controlUrlAddress = getAddressFromUrl(controlUrl);
     }
 
 
@@ -100,7 +105,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
             TcpRequest mapHttpRequest = new TcpRequest(
                     internalAddress,
-                    getAddressFromUrl(controlUrl),
+                    controlUrlAddress,
                     new AddPinholeUpnpIgdRequest(
                             controlUrl.getAuthority(),
                             controlUrl.getFile(),
@@ -161,7 +166,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         TcpRequest httpRequest = new TcpRequest(
                 internalAddress,
-                getAddressFromUrl(controlUrl),
+                controlUrlAddress,
                 new DeletePinholeUpnpIgdRequest(
                         controlUrl.getAuthority(),
                         controlUrl.getFile(),
@@ -211,7 +216,7 @@ public final class FirewallUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         TcpRequest httpRequest = new TcpRequest(
                 internalAddress,
-                getAddressFromUrl(controlUrl),
+                controlUrlAddress,
                 new UpdatePinholeUpnpIgdRequest(
                         controlUrl.getAuthority(),
                         controlUrl.getFile(),

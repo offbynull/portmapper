@@ -265,7 +265,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
 
                     rootRequests.add(req);
                 } catch (RuntimeException iae) {
-                    // failed to parse, so skip to next
+                    LOG.error("Encountered error", iae);
                 }
             }
         }
@@ -296,7 +296,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                     serviceDescRequests.add(req);
                 }
             } catch (RuntimeException iae) {
-                // failed to parse, so skip to next
+                LOG.error("Encountered error", iae);
             }
         }
         performBatchedTcpRequests(networkBus, serviceDescRequests, 3, 5000L, 5000L, 5000L);
@@ -351,7 +351,7 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
                     ret.add(upnpIgdPortMapper);
                 }
             } catch (RuntimeException iae) {
-                // failed to parse, so skip to next
+                LOG.error("Encountered error", iae);
             }
         }
 
@@ -369,10 +369,12 @@ public abstract class UpnpIgdPortMapper implements PortMapper {
      * @param url url to extract host and port from
      * @return socket address pointing to {@code url}'s address
      * @throws NullPointerException if any argument is {@code null}
-     * @throws IllegalArgumentException if port could not be determined (because protocol not recognized)
+     * @throws IllegalArgumentException if port could not be determined (because protocol not recognized), or if protocol was anything other
+     * than HTTP.
      */
     protected static final InetSocketAddress getAddressFromUrl(URL url) {
         Validate.notNull(url);
+        Validate.isTrue(url.getProtocol().equalsIgnoreCase("http"));
         
         String host = url.getHost();
         int port = url.getPort();

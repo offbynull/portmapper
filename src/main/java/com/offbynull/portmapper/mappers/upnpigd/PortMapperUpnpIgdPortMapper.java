@@ -31,6 +31,7 @@ import com.offbynull.portmapper.mappers.upnpigd.externalmessages.DeletePortMappi
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdRequest;
 import com.offbynull.portmapper.mappers.upnpigd.externalmessages.GetExternalIpAddressUpnpIgdResponse;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Objects;
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
     private static final Logger LOG = LoggerFactory.getLogger(PortMapperUpnpIgdPortMapper.class);
 
+    private final InetSocketAddress controlUrlAddress;
     private final boolean hasAddAnyPortMappingMethod;
     
     /**
@@ -72,6 +74,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
             Range<Long> externalPortRange, Range<Long> leaseDurationRange, boolean hasAddAnyPortMappingMethod) {
         super(networkBus, internalAddress, controlUrl, serverName, serviceType, externalPortRange, leaseDurationRange);
         
+        controlUrlAddress = getAddressFromUrl(controlUrl);
         this.hasAddAnyPortMappingMethod = hasAddAnyPortMappingMethod;
     }
 
@@ -96,7 +99,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         //
         TcpRequest externalIpHttpRequest = new TcpRequest(
                 internalAddress,
-                getAddressFromUrl(controlUrl),
+                controlUrlAddress,
                 new GetExternalIpAddressUpnpIgdRequest(
                         controlUrl.getAuthority(),
                         controlUrl.getFile(),
@@ -158,7 +161,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         TcpRequest mapHttpRequest = new TcpRequest(
                 internalAddress,
-                getAddressFromUrl(controlUrl),
+                controlUrlAddress,
                 new AddAnyPortMappingUpnpIgdRequest(
                         controlUrl.getAuthority(),
                         controlUrl.getFile(),
@@ -226,7 +229,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
 
             TcpRequest mapHttpRequest = new TcpRequest(
                     internalAddress,
-                    getAddressFromUrl(controlUrl),
+                    controlUrlAddress,
                     new AddPortMappingUpnpIgdRequest(
                             controlUrl.getAuthority(),
                             controlUrl.getFile(),
@@ -290,7 +293,7 @@ public final class PortMapperUpnpIgdPortMapper extends UpnpIgdPortMapper {
         
         TcpRequest httpRequest = new TcpRequest(
                 internalAddress,
-                getAddressFromUrl(controlUrl),
+                controlUrlAddress,
                 new DeletePortMappingUpnpIgdRequest(
                         controlUrl.getAuthority(),
                         controlUrl.getFile(),
