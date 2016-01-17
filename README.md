@@ -44,7 +44,7 @@ Bus processBus = process.getBus();
 // Discover port mappers
 List<PortMapper> mappers = PortMapperFactory.discover(networkBus, processBus);
 
-// Take the port mapper that was found
+// Take the first port mapper that was found
 PortMapper mapper = mappers.get(0);
 
 
