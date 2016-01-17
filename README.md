@@ -53,9 +53,9 @@ PortMapper mapper = mappers.get(0);
 
 // Map internal port 12345 to some external port (55555 preferred)
 //
-// IMPORTANT NOTE: Many devices prevent you from mapping ports that
-// are <= 1024 (both internal and external ports). Be mindful of this
-// when choosing which ports you want to map.
+// IMPORTANT NOTE: Many devices prevent you from mapping ports that are <= 1024
+// (both internal and external ports). Be mindful of this when choosing which
+// ports you want to map.
 MappedPort mappedPort = mapper.mapPort(PortType.TCP, 12345, 55555, 60);
 System.out.println("Port mapping added: " + mappedPort);
 
