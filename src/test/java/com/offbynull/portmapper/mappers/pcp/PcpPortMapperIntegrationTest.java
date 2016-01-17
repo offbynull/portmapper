@@ -41,8 +41,8 @@ public final class PcpPortMapperIntegrationTest {
         List<PcpPortMapper> mappers = PcpPortMapper.identify(networkBus, processBus);
         PcpPortMapper miniupnpdMapper = new PcpPortMapper(
                 networkBus,
-                InetAddress.getByName("192.168.75.1"),
-                InetAddress.getByName("192.168.75.128"));
+                InetAddress.getByName("192.168.91.1"),
+                InetAddress.getByName("192.168.91.128"));
         mappers.add(miniupnpdMapper);
 
         assertEquals(2, mappers.size()); // 1 discovered apple airport router and 1 miniupnpd router forcefully added in
