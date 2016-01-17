@@ -87,13 +87,10 @@ You can use the identify method on PortMapper implementations directly. For exam
 
 ```java
 List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
-LOG.debug("Found UPnP-IGD mappers: {}", upnpIgdMappers);
         
 List<NatPmpPortMapper> natPmpMappers = NatPmpPortMapper.identify(networkBus, processBus, additionalIps);
-LOG.debug("Found NAT-PMP mappers: {}", natPmpMappers);
         
 List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, additionalIps);
-LOG.debug("Found PCP mappers: {}", pcpMappers);
 ```
 
 #### How is this library considered light-weight?
