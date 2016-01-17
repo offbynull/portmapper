@@ -83,7 +83,7 @@ processBus.send(new KillProcessRequest());
 
 #### What if I want to discover only one type of port forwarding device?
 
-You can use the identify method on PortMapper implementations directly. For example ...
+You can use the identify method on PortMapper implementations directly.
 
 ```java
 List<UpnpIgdPortMapper> upnpIgdMappers = UpnpIgdPortMapper.identify(networkBus);
@@ -95,18 +95,18 @@ List<PcpPortMapper> pcpMappers = PcpPortMapper.identify(networkBus, processBus, 
 
 #### How is this library considered light-weight?
 
-The Port Mapper project...
+Several reasons. The Port Mapper project
 
-1. has very few dependencies on third-party Java libraries
-1. doesn't require any special parsing libraries (e.g. XML/SOAP/HTTP/etc..) -- all parsing is done as US-ASCII text
-1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard Java NIO
-1. doesn't make use of regular expressions
+1. has very few dependencies on third-party Java libraries.
+1. doesn't require any special parsing libraries (e.g. XML/SOAP/HTTP/etc..) -- all parsing is done as US-ASCII text.
+1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard Java NIO.
+1. doesn't make use of regular expressions.
 
 Because of this, the code should be easily portable to other languages -- especially languages that don't have the same robust ecosystem that Java does.
 
 #### How is this library considered fault-tolerant?
 
-The Port Mapper project aims to be resilient when it comes to faulty responses, especially when using UPnP-IGD. The code ...
+The Port Mapper project aims to be resilient when it comes to faulty responses, especially when using UPnP-IGD. The code
 
 1. parses XML as text, based on patterns/heuristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitalization/etc..)
 1. attempts requests multiple times when the device responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes)
