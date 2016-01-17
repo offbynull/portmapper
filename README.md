@@ -32,8 +32,6 @@ If you're using Maven, include portmapper as a dependency.
 
 The following example attempts to forward some external port (55555 preferred) to internal port 12345 on the first port mapper it finds.
 
-_IMPORTANT NOTE_: Many devices limit port forwarding to ports greater than 1024 (for both internal and external ports). Be mindful of this when choosing your port values.
-
 ```java
 // Start up a network gateway
 Gateway network = NetworkGateway.create();
@@ -49,6 +47,10 @@ List<PortMapper> mappers = PortMapperFactory.discover(networkBus, processBus);
 
 
 // Map internal port 12345 to some external port (55555 preferred)
+//
+// IMPORTANT NOTE: Many devices prevent you from mapping ports that
+// are <= 1024 (both internal and external ports). Be mindful of this
+// when choosing which ports you want to map.
 MappedPort mappedPort = portMapper.mapPort(PortType.TCP, 12345, 55555, 60);
 System.out.println("Port mapping added: " + mappedPort);
 
@@ -108,6 +110,10 @@ The Port Mapper project aims to be resilent when it comes to faulty responses, e
 
 1. parses XML as text, based on patterns/hueristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitialization/etc..)
 1. attempts requests multiple times when it the router responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes)
+
+#### How does the Port Mapper project discover NAT-PMP and PCP gateway devices?
+
+Unfortunately, Java doesn't provide any built-in mechanisms to grab the gateway address from the OS, nor does it allow you to do ICMP probing to find devices on path (e.g. set TTL to 1 and ping, the first device is very likely the gateway). As such, the Port Mapper project makes use of various OS-specific commands to find gateway addresses. You can find out which commands are used by looking through the source code.
 
 #### Does the Port Mapper project support PCP authentication or UPnP-IGD device protection?
 

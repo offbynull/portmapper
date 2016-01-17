@@ -94,7 +94,7 @@ public final class NatPmpPortMapper implements PortMapper {
 
         // Perform commands to try to grab gateway addresses
         List<MapperIoUtils.ProcessRequest> processReqs = new ArrayList<>();
-        processReqs.add(new MapperIoUtils.ProcessRequest("netstat", "-rn")); //linux mac and windows -- but seems wrong for windows
+        processReqs.add(new MapperIoUtils.ProcessRequest("netstat", "-rn")); //linux mac and windows
         processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n")); // linux
         processReqs.add(new MapperIoUtils.ProcessRequest("route", "-n", "get", "default")); // mac
         processReqs.add(new MapperIoUtils.ProcessRequest("ipconfig")); // windows
