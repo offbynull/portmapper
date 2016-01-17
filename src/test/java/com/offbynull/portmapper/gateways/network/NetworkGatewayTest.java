@@ -74,15 +74,15 @@ public class NetworkGatewayTest {
             CreateTcpNetworkResponse createdResp = (CreateTcpNetworkResponse) queue.take();
             ConnectedTcpNetworkNotification connectedResp = (ConnectedTcpNetworkNotification) queue.take();
             
+            WriteEmptyTcpNetworkNotification writeReady1 = (WriteEmptyTcpNetworkNotification) queue.take();
             fixtureBus.send(new WriteTcpNetworkRequest(id, "hello".getBytes("UTF-8")));
             int remainingWriteBytes = 5;
             while (remainingWriteBytes > 0) {
-                WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
                 WriteTcpNetworkResponse writeResp = (WriteTcpNetworkResponse) queue.take();
                 remainingWriteBytes -= writeResp.getAmountWritten();
             }
             
-            WriteEmptyTcpNetworkNotification writeReady = (WriteEmptyTcpNetworkNotification) queue.take();
+            WriteEmptyTcpNetworkNotification writeReady2 = (WriteEmptyTcpNetworkNotification) queue.take();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int remainingReadBytes = 7;
