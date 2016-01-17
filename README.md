@@ -7,7 +7,7 @@
  * [FAQ](#faq)
 
 ## Introduction
-The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled routers (originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project). Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality:
+The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled devices. Port Mapper was originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, and has several distinct advantages over existing Java libraries that provide port forwarding functionality:
 
 * Tested on all major platforms: Android, Windows, Linux, and Mac
 * Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0 services
