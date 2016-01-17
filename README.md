@@ -99,7 +99,7 @@ Several reasons. The Port Mapper project
 
 1. has very few dependencies on third-party Java libraries.
 1. doesn't require any special parsing libraries (e.g. XML/SOAP/HTTP/etc..) -- all parsing is done as US-ASCII text.
-1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard Java NIO.
+1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard NIO.
 1. doesn't make use of regular expressions.
 
 Because of this, the code should be easily portable to other languages -- especially languages that don't have the same robust ecosystem that Java does.
