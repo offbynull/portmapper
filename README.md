@@ -7,19 +7,19 @@
  * [FAQ](#faq)
 
 ## Introduction
-Port Mapper is a Java library, originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, that allows you to forward ports on NAT-enabled routers. Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality:
+The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled routers (originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project). Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality:
 
 * Tested on all major platforms: Android, Windows, Linux, and Mac
-* Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0
+* Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0 services
 * Supports NAT-PMP (Network Address Traversal Port Mapping Protocol)
 * Supports PCP (Port Control Protocol)
 * Supports both IPv4 and IPv6
-* Fault-tolerant -- works around malformed responses and faulty routers
-* Light-weight -- very few dependencies and easy to port to other languages
+* Fault-tolerant -- works around malformed responses and faulty devices
+* Light-weight -- very few third-party dependencies and easy to port to other languages
 
 ## Quick-start Guide
 
-Port Mapper requires JDK7 or later. If you're using Maven POM, add "portmapper" as a dependency.
+Port Mapper requires JDK7 or later. In your Maven POM, add "portmapper" as a dependency.
 
 ```xml
 <dependency>
@@ -102,21 +102,21 @@ The Port Mapper project...
 
 1. has very few dependencies on third-party Java libraries
 1. doesn't require any special parsing libraries (e.g. XML/SOAP/HTTP/etc..) -- all parsing is done as US-ASCII text
-1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking functionality uses standard Java NIO
-1. doesn't require any regex
+1. doesn't require any special networking libraries (e.g. Netty/MINA/etc..) -- all networking is done through standard Java NIO
+1. doesn't make use of regular expressions
 
 Because of this, the code should be easily portable to other languages -- especially languages that don't have the same robust ecosystem that Java does.
 
 #### How is this library considered fault-tolerant?
 
-The Port Mapper project aims to be resilient when it comes to faulty responses, especially when the protocol is UPnP-IGD. The code ...
+The Port Mapper project aims to be resilient when it comes to faulty responses, especially when using UPnP-IGD. The code ...
 
-1. parses XML as text, based on patterns/hueristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitialization/etc..)
+1. parses XML as text, based on patterns/heuristics (works around issues such as invalid XML syntax/invalid XML structure/incorrect capitalization/etc..)
 1. attempts requests multiple times when the device responds with a failure (works around temporary network failure and other temporary hiccups that cause bad response codes)
 
 #### How does this library discover NAT-PMP and PCP gateway devices?
 
-Unfortunately, Java doesn't provide any built-in mechanisms to grab the gateway address from the OS, nor does it allow you to do ICMP probing to find devices on path (e.g. set TTL to 1 and ping, the first device is very likely the gateway). As such, the Port Mapper project makes use of various OS-specific commands to find gateway addresses. You can find out which commands are used by looking through the source code.
+Unfortunately, Java doesn't provide a built-in mechanisms to grab the gateway address from the OS, nor does it allow you to do ICMP probing to find devices on path (e.g. set TTL to 1 and ping, the first device is very likely the gateway). As such, the Port Mapper project makes use of various OS-specific commands to find gateway addresses. You can find out which commands are used by looking through the source code.
 
 #### Does this library support PCP authentication and/or UPnP-IGD device protection?
 
@@ -124,7 +124,7 @@ Not at this time. Support may be added in the future.
 
 #### What alternatives are available?
 
-Alternatives to the Port Mapper project include:
+Alternatives to Port Mapper include:
 
 * [weupnp](https://github.com/bitletorg/weupnp)
 * [SBBI](https://sourceforge.net/projects/upnplibmobile/)
@@ -141,6 +141,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
 - CHANGED: Refactored entire API and backend
+- CHANGED: Updated README.md
 - ADDED: UPnP-IGD IPv6 firewall service support
 - ADDED: New logo made in Inkscape
 - FIXED: Issue when scraping IPv4 address from output
