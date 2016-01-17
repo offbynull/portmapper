@@ -13,8 +13,9 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import org.junit.Ignore;
 
-//@Ignore("REQUIRES (modified) MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH NO OTHER UPNP-ENABLED ROUTERS")
+@Ignore("REQUIRES (modified) MINIUPNPD TO BE PROPERLY SET UP IN A VM ALONG WITH NO OTHER UPNP-ENABLED ROUTERS")
 public class UpnpIgdPortMapperIntegrationTest {
     
     // FOR THIS CLASS TO WORK: miniupnpd needs to be modified to ignore errors on addpinhole/deletepinhole. The VM set has a modified
