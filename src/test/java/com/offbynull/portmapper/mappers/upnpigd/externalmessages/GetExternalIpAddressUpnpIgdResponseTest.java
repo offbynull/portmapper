@@ -85,8 +85,7 @@ public class GetExternalIpAddressUpnpIgdResponseTest {
         assertEquals(InetAddress.getByAddress(new byte[]{10, 0, 0, 1}), resp.getIpAddress());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void mustFailOnError() throws Exception {
+    public void mustIgnoreError() throws Exception {
         String bufferStr
                 = "HTTP/1.1 500 error\r\n"
                 + "Content-Type: text/xml\r\n"
@@ -101,6 +100,8 @@ public class GetExternalIpAddressUpnpIgdResponseTest {
                 + "</s:Envelope>";
         byte[] buffer = bufferStr.getBytes("US-ASCII");
         GetExternalIpAddressUpnpIgdResponse resp = new GetExternalIpAddressUpnpIgdResponse(buffer);
+        
+        assertEquals(InetAddress.getByAddress(new byte[]{10, 0, 0, 1}), resp.getIpAddress());
     }
 
 }

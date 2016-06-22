@@ -16,7 +16,6 @@
  */
 package com.offbynull.portmapper.mappers.upnpigd.externalmessages;
 
-import com.offbynull.portmapper.helpers.TextUtils;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,19 +33,16 @@ import org.apache.commons.lang3.Validate;
  */
 public abstract class UpnpIgdHttpResponse {
 
-    private static final String HTTP_VERSION = "HTTP/1.1";
     private static final String TERMINATOR = "\r\n";
     private static final String HEADER_SPLIT_POINT = TERMINATOR + TERMINATOR;
 
     private final Map<String, String> headers;
-    private final int responseCode;
     private final String content;
 
-    UpnpIgdHttpResponse(int responseCode, Map<String, String> headers, String content) {
+    UpnpIgdHttpResponse(Map<String, String> headers, String content) {
         Validate.notNull(headers);
         Validate.noNullElements(headers.keySet());
         Validate.noNullElements(headers.values());
-        Validate.isTrue(responseCode >= 0);
 //        Validate.notNull(content); // content may be null
 
         // content len calculated on dump
@@ -56,7 +52,6 @@ public abstract class UpnpIgdHttpResponse {
             }
         }
 
-        this.responseCode = responseCode;
         this.headers = new HashMap<>(headers);
         this.content = content;
     }
@@ -83,16 +78,22 @@ public abstract class UpnpIgdHttpResponse {
         // Parse resp and headers
         StringTokenizer tokenizer = new StringTokenizer(headersStr, TERMINATOR);
 
-        String respStr = tokenizer.nextToken();
-        respStr = TextUtils.collapseWhitespace(respStr).trim(); // get resp string, collapse whitespace for fault tolerance
-
-        String[] splitResp = StringUtils.split(respStr, ' ');
-        Validate.isTrue(splitResp.length >= 2); // ignore stuff afterwards if any (reason text)? -- trying to be fault tolerant
-        Validate.isTrue(HTTP_VERSION.equalsIgnoreCase(splitResp[0])); // case insensitive for fault tolerance
-        responseCode = Integer.parseInt(splitResp[1]); // throws nfe, but nfe extends illegalargexc so this is okay
-        
-        Validate.isTrue(responseCode >= 0);
-
+        // The following block has been commented out because of issue #24. This check serves no real purpose -- it is against the idea of
+        // being fault tolerant. Sometimes the router may give back a bad response code or a different HTTP version number or may respond to
+        // an SSDP probe with an SSDP notify response (NOTIFY * HTTP/1.1) rather than a standard response (HTTP/1.1 200 OK).
+        //
+        // Instead, we're going to assume that no response header came in and move directly to parsing headers. The header parsing will skip
+        // over the response string (assuming it doesn't contain a colon), or it'll incorrectly include it in the list of header (which
+        // should be more or less benign).
+//        String respStr = tokenizer.nextToken();
+//        respStr = TextUtils.collapseWhitespace(respStr).trim(); // get resp string, collapse whitespace for fault tolerance
+//
+//        String[] splitResp = StringUtils.split(respStr, ' ');
+//        Validate.isTrue(splitResp.length >= 2); // ignore stuff afterwards if any (reason text)? -- trying to be fault tolerant
+//        Validate.isTrue(HTTP_VERSION.equalsIgnoreCase(splitResp[0])); // case insensitive for fault tolerance
+//        responseCode = Integer.parseInt(splitResp[1]); // throws nfe, but nfe extends illegalargexc so this is okay
+//        
+//        Validate.isTrue(responseCode >= 0);
 
         Map<String, String> headers = new HashMap<>();
         while (tokenizer.hasMoreTokens()) {
@@ -116,14 +117,6 @@ public abstract class UpnpIgdHttpResponse {
         this.content = contentStr;
     }
     
-    final boolean isResponseSuccessful() {
-        return responseCode / 100 == 2; // is 2xx code?
-    }
-
-    final void validateResponseCode() {
-        Validate.isTrue(isResponseSuccessful(), "Bad response code: %d", responseCode);
-    }
-    
     final String getHeaderIgnoreCase(String key) {
         for (Entry<String, String> header : headers.entrySet()) {
             if (header.getKey().equalsIgnoreCase(key)) {
@@ -140,14 +133,13 @@ public abstract class UpnpIgdHttpResponse {
     // CHECKSTYLE:OFF:DesignForExtension
     @Override
     public String toString() {
-        return "UpnpIgdHttpResponse{" + "headers=" + headers + ", responseCode=" + responseCode + ", content=" + content + '}';
+        return "UpnpIgdHttpResponse{" + "headers=" + headers + ", content=" + content + '}';
     }
 
     @Override
     public int hashCode() {
         int hash = 5;
         hash = 29 * hash + Objects.hashCode(this.headers);
-        hash = 29 * hash + this.responseCode;
         hash = 29 * hash + Objects.hashCode(this.content);
         return hash;
     }
@@ -164,9 +156,6 @@ public abstract class UpnpIgdHttpResponse {
             return false;
         }
         final UpnpIgdHttpResponse other = (UpnpIgdHttpResponse) obj;
-        if (this.responseCode != other.responseCode) {
-            return false;
-        }
         if (!Objects.equals(this.content, other.content)) {
             return false;
         }

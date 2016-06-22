@@ -43,9 +43,9 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
 
         String content = getContent();
 
-        if (!isResponseSuccessful()) {
-            throw new IllegalArgumentException("Response contains fault: " + content);
-        }
+//        if (!isResponseSuccessful()) {
+//            throw new IllegalArgumentException("Response contains fault: " + content);
+//        }
         
         
         String responseBlock = TextUtils.findFirstBlock(content,

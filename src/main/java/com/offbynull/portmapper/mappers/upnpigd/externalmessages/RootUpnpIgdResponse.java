@@ -48,7 +48,7 @@ public final class RootUpnpIgdResponse extends UpnpIgdHttpResponse {
     public RootUpnpIgdResponse(URL baseUrl, byte[] buffer) {
         super(buffer);
 
-        Validate.isTrue(isResponseSuccessful());
+//        Validate.isTrue(isResponseSuccessful());
         Validate.notNull(baseUrl);
 
         String content = getContent();

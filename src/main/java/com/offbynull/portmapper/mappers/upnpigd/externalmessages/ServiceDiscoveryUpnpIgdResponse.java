@@ -74,7 +74,7 @@ public final class ServiceDiscoveryUpnpIgdResponse extends UpnpIgdHttpResponse {
     public ServiceDiscoveryUpnpIgdResponse(byte[] buffer) {
         super(buffer);
         
-        Validate.isTrue(isResponseSuccessful());
+//        Validate.isTrue(isResponseSuccessful());
     }
 
     /**

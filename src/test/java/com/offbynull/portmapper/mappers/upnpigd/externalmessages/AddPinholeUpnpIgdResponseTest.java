@@ -64,8 +64,7 @@ public class AddPinholeUpnpIgdResponseTest {
         assertEquals("12345", resp.getUniqueId());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void mustFailOnError() throws Exception {
+    public void mustIgnoreError() throws Exception {
         String bufferStr
                 = "HTTP/1.1 500 error\r\n"
                 + "Content-Type: text/xml\r\n"
@@ -80,6 +79,8 @@ public class AddPinholeUpnpIgdResponseTest {
                 + "</s:Envelope>";
         byte[] buffer = bufferStr.getBytes("US-ASCII");
         AddPinholeUpnpIgdResponse resp = new AddPinholeUpnpIgdResponse(buffer);
+        
+        assertEquals("12345", resp.getUniqueId());
     }
 
 }

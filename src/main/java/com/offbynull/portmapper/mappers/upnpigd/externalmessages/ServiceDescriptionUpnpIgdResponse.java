@@ -50,7 +50,7 @@ public final class ServiceDescriptionUpnpIgdResponse extends UpnpIgdHttpResponse
     public ServiceDescriptionUpnpIgdResponse(byte[] buffer) {
         super(buffer);
         
-        Validate.isTrue(isResponseSuccessful());
+//        Validate.isTrue(isResponseSuccessful());
 
         String content = getContent();
 

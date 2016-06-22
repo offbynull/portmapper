@@ -754,10 +754,24 @@ public class RootUpnpIgdResponseTest {
         assertEquals(new URL("http://fake:80/serviceControl"), services.get(2).getControlUrl());
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void mustFailOnHttpError() throws Exception {
+    public void mustIgnoreHttpError() throws Exception {
         byte[] buffer = GOOD_BUFFER_WITH_BAD_RESPONSE_CODE.getBytes("US-ASCII");
         RootUpnpIgdResponse resp = new RootUpnpIgdResponse(new URL("http://fake:80/IGD.xml"), buffer);
+        
+        List<ServiceReference> services = resp.getServices();
+        assertEquals(3, services.size());
+
+        assertEquals("urn:schemas-upnp-org:service:ContentDirectory:1", services.get(0).getServiceType());
+        assertEquals(new URL("http://fake:80/contentDirectory.xml"), services.get(0).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(0).getControlUrl());
+
+        assertEquals("urn:schemas-upnp-org:service:ConnectionManager:1", services.get(1).getServiceType());
+        assertEquals(new URL("http://fake:80/connectionManager.xml"), services.get(1).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(1).getControlUrl());
+
+        assertEquals("urn:schemas-upnp-org:service:X_MS_MediaReceiverRegistrar:1", services.get(2).getServiceType());
+        assertEquals(new URL("http://fake:80/MSMediaReceiverRegistrar.xml"), services.get(2).getScpdUrl());
+        assertEquals(new URL("http://fake:80/serviceControl"), services.get(2).getControlUrl());
     }
 
     @Test

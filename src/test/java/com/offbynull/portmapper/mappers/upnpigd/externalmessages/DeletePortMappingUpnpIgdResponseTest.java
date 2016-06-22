@@ -38,8 +38,7 @@ public class DeletePortMappingUpnpIgdResponseTest {
         DeletePortMappingUpnpIgdResponse resp = new DeletePortMappingUpnpIgdResponse(buffer);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void mustFailOnError() throws Exception {
+    public void mustIgnoreError() throws Exception {
         String bufferStr
                 = "HTTP/1.1 500 error\r\n"
                 + "Content-Type: text/xml\r\n"

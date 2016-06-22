@@ -83,8 +83,8 @@ public class GetSpecificPortMappingEntryUpnpIgdResponseTest {
         resp.getEnabled();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void mustFailOnError() throws Exception {
+    
+    public void mustIgnoreError() throws Exception {
         String bufferStr
                 = "HTTP/1.1 500 Bad\r\n"
                 + "Content-Type: text/xml\r\n"
@@ -104,7 +104,11 @@ public class GetSpecificPortMappingEntryUpnpIgdResponseTest {
         byte[] buffer = bufferStr.getBytes("US-ASCII");
         GetSpecificPortMappingEntryUpnpIgdResponse resp = new GetSpecificPortMappingEntryUpnpIgdResponse(buffer);
 
-        resp.getEnabled();
+        assertEquals(true, resp.getEnabled());
+        assertEquals("fffff", resp.getDescription());
+        assertEquals(InetAddress.getByAddress(new byte[]{10, 0, 0, 1}), resp.getInternalClient());
+        assertEquals(200, resp.getInternalPort());
+        assertEquals(2000L, (long) resp.getLeaseDuration());
     }
 
 }
