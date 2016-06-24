@@ -2,6 +2,18 @@
 
 <p align="center"><img src ="../gh-pages/logo.png" alt="Portmapper logo" /></p>
 
+The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled routers. Originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality.
+
+* Tested on all major platforms: Android, Windows, Linux, and Mac
+* Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0 services
+* Supports NAT-PMP (Network Address Traversal Port Mapping Protocol)
+* Supports PCP (Port Control Protocol)
+* Supports both IPv4 and IPv6
+* Fault-tolerant -- works around malformed responses and faulty devices
+* Light-weight -- very few third-party dependencies and easy to port to other languages
+
+## Table of Contents
+
  * [Introduction](#introduction)
  * [Quick-start Guide](#quick-start-guide)
  * [FAQ](#faq)
@@ -13,17 +25,6 @@
   * [Does this library support unsolicited PCP ANNOUNCEs or UPnP eventing?](#does-this-library-support-unsolicited-pcp-announces-or-upnp-eventing)
   * [What alternatives are available?](#what-alternatives-are-available)
  * [Change Log](#change-log)
-
-## Introduction
-The Port Mapper project is a Java library that allows you to forward ports on NAT-enabled routers. Originally developed as part of the [Peernetic](https://github.com/offbynull/peernetic) project, Port Mapper has several distinct advantages over existing Java libraries that provide port forwarding functionality:
-
-* Tested on all major platforms: Android, Windows, Linux, and Mac
-* Supports UPnP-IGD (Universal Plug-and-Play Internet Gateway Device) -- both IGD v1.0 and IGD v2.0 services
-* Supports NAT-PMP (Network Address Traversal Port Mapping Protocol)
-* Supports PCP (Port Control Protocol)
-* Supports both IPv4 and IPv6
-* Fault-tolerant -- works around malformed responses and faulty devices
-* Light-weight -- very few third-party dependencies and easy to port to other languages
 
 ## Quick-start Guide
 
