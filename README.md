@@ -14,7 +14,6 @@ The Port Mapper project is a Java library that allows you to forward ports on NA
 
 ## Table of Contents
 
- * [Introduction](#introduction)
  * [Quick-start Guide](#quick-start-guide)
  * [FAQ](#faq)
   * [What if I want to discover only one type of port forwarding device?](#what-if-i-want-to-discover-only-one-type-of-port-forwarding-device)
