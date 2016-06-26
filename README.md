@@ -33,7 +33,7 @@ Port Mapper requires Java7 or later. In your Maven POM, add "portmapper" as a de
 <dependency>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 </dependency>
 ```
 
@@ -137,6 +137,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
+
+### [2.0.1] - 2016-06-25
+- FIXED: Issue when getting bad unexpected HTTP version in response
 
 ### [2.0.0] - 2016-01-17
 - CHANGED: Refactored API and backend
