@@ -138,16 +138,19 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
 
+### [2.0.2] - 2016-07-06
+- OTHER: License updated from LGPL3 to Apache2
+
 ### [2.0.1] - 2016-06-25
 - FIXED: Issue when getting bad unexpected HTTP version in response
 
 ### [2.0.0] - 2016-01-17
 - CHANGED: Refactored API and backend
-- CHANGED: Updated README
 - ADDED: UPnP-IGD IPv6 firewall service support
-- ADDED: New logo made in Inkscape
 - FIXED: Issue when scraping IPv4 address from output
 - FIXED: Issue with Macs getting SocketExceptions on PCP discovery
+- OTHER: Updated README
+- OTHER: New logo made in Inkscape
 
 ### [1.0.0] - 2014-06-24
 - Initial release.

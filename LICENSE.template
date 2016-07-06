@@ -1,16 +1,15 @@
 \Q/*\E
-\Q * Copyright (c) \E\d{4}-\d{4}\Q, Kasra Faghihi, All rights reserved.\E
-\Q * \E
-\Q * This library is free software; you can redistribute it and/or\E
-\Q * modify it under the terms of the GNU Lesser General Public\E
-\Q * License as published by the Free Software Foundation; either\E
-\Q * version 3.0 of the License, or (at your option) any later version.\E
-\Q * \E
-\Q * This library is distributed in the hope that it will be useful,\E
-\Q * but WITHOUT ANY WARRANTY; without even the implied warranty of\E
-\Q * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU\E
-\Q * Lesser General Public License for more details.\E
-\Q * \E
-\Q * You should have received a copy of the GNU Lesser General Public\E
-\Q * License along with this library.\E
+\Q * Copyright \E\d{4}-\d{4}\Q, Kasra Faghihi\E
+\Q *\E
+\Q * Licensed under the Apache License, Version 2.0 (the "License"); you may\E
+\Q * not use this file except in compliance with the License. You may obtain\E
+\Q * a copy of the License at\E
+\Q *\E
+\Q *     http://www.apache.org/licenses/LICENSE-2.0\E
+\Q *\E
+\Q * Unless required by applicable law or agreed to in writing, software\E
+\Q * distributed under the License is distributed on an "AS IS" BASIS,\E
+\Q * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\E
+\Q * See the License for the specific language governing permissions and\E
+\Q * limitations under the License.\E
 \Q */\E
