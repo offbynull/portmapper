@@ -33,7 +33,7 @@ Port Mapper requires Java7 or later. In your Maven POM, add "portmapper" as a de
 <dependency>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.3</version>
 </dependency>
 ```
 
@@ -137,6 +137,10 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
+
+### [2.0.3] - 2016-07-15
+- FIXED: \r\n newlines removed from UPnP-IGD request XMLs
+- FIXED: namespace and encoding style URLs fixed for UPnP-IGD request XMLs
 
 ### [2.0.2] - 2016-07-06
 - OTHER: License updated from LGPL3 to Apache2
