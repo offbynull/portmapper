@@ -17,15 +17,15 @@ public class GetExternalIpAddressUpnpIgdRequestTest {
                 + "Connection: Close\r\n"
                 + "Cache-Control: no-cache\r\n"
                 + "Pragma: no-cache\r\n"
-                + "Content-Length: 276\r\n"
+                + "Content-Length: 262\r\n"
                 + "\r\n"
-                + "<?xml version=\"1.0\"?>\r\n"
-                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
-                + "<soap:Body>\r\n"
-                + "<u:GetExternalIPAddress xmlns:u=\"service:type\">\r\n"
-                + "</u:GetExternalIPAddress>\r\n"
-                + "</soap:Body>\r\n"
-                + "</soap:Envelope>\r\n",
+                + "<?xml version=\"1.0\"?>"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">"
+                + "<soap:Body>"
+                + "<u:GetExternalIPAddress xmlns:u=\"service:type\">"
+                + "</u:GetExternalIPAddress>"
+                + "</soap:Body>"
+                + "</soap:Envelope>",
                 bufferText);
     }
 

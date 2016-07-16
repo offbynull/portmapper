@@ -77,22 +77,22 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         actionName = StringEscapeUtils.escapeXml10(actionName);
         
         StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\"?>\r\n");
+        sb.append("<?xml version=\"1.0\"?>");
         sb.append("<soap:Envelope ")
                 .append("xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" ")
-                .append("soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n");
-        sb.append("<soap:Body>\r\n");
-        sb.append("<u:").append(actionName).append(" xmlns:u=\"").append(serviceType).append("\">\r\n");
+                .append("soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">");
+        sb.append("<soap:Body>");
+        sb.append("<u:").append(actionName).append(" xmlns:u=\"").append(serviceType).append("\">");
 
         for (Entry<String, String> argument : arguments.entrySet()) {
             String key = StringEscapeUtils.escapeXml10(argument.getKey());
             String val = StringEscapeUtils.escapeXml10(argument.getValue());
-            sb.append("<").append(key).append(">").append(val).append("</").append(key).append(">\r\n");
+            sb.append("<").append(key).append(">").append(val).append("</").append(key).append(">");
         }
 
-        sb.append("</u:").append(actionName).append(">\r\n");
-        sb.append("</soap:Body>\r\n");
-        sb.append("</soap:Envelope>\r\n");
+        sb.append("</u:").append(actionName).append(">");
+        sb.append("</soap:Body>");
+        sb.append("</soap:Envelope>");
 
         return sb.toString();
     }

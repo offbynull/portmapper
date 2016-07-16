@@ -20,18 +20,18 @@ public class DeletePortMappingUpnpIgdRequestTest {
                 + "Connection: Close\r\n"
                 + "Cache-Control: no-cache\r\n"
                 + "Pragma: no-cache\r\n"
-                + "Content-Length: 381\r\n"
+                + "Content-Length: 361\r\n"
                 + "\r\n"
-                + "<?xml version=\"1.0\"?>\r\n"
-                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
-                + "<soap:Body>\r\n"
-                + "<u:DeletePortMapping xmlns:u=\"service:type\">\r\n"
-                + "<NewRemoteHost>1.2.3.4</NewRemoteHost>\r\n"
-                + "<NewExternalPort>15</NewExternalPort>\r\n"
-                + "<NewProtocol>TCP</NewProtocol>\r\n"
-                + "</u:DeletePortMapping>\r\n"
-                + "</soap:Body>\r\n"
-                + "</soap:Envelope>\r\n",
+                + "<?xml version=\"1.0\"?>"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">"
+                + "<soap:Body>"
+                + "<u:DeletePortMapping xmlns:u=\"service:type\">"
+                + "<NewRemoteHost>1.2.3.4</NewRemoteHost>"
+                + "<NewExternalPort>15</NewExternalPort>"
+                + "<NewProtocol>TCP</NewProtocol>"
+                + "</u:DeletePortMapping>"
+                + "</soap:Body>"
+                + "</soap:Envelope>",
                 bufferText);
     }
 
@@ -51,18 +51,18 @@ public class DeletePortMappingUpnpIgdRequestTest {
                 + "Connection: Close\r\n"
                 + "Cache-Control: no-cache\r\n"
                 + "Pragma: no-cache\r\n"
-                + "Content-Length: 408\r\n"
+                + "Content-Length: 388\r\n"
                 + "\r\n"
-                + "<?xml version=\"1.0\"?>\r\n"
-                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
-                + "<soap:Body>\r\n"
-                + "<u:DeletePortMapping xmlns:u=\"service:type\">\r\n"
-                + "<NewRemoteHost>102:304:506:708:90a:b0c:d0e:f10</NewRemoteHost>\r\n"
-                + "<NewExternalPort>20000</NewExternalPort>\r\n"
-                + "<NewProtocol>UDP</NewProtocol>\r\n"
-                + "</u:DeletePortMapping>\r\n"
-                + "</soap:Body>\r\n"
-                + "</soap:Envelope>\r\n",
+                + "<?xml version=\"1.0\"?>"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">"
+                + "<soap:Body>"
+                + "<u:DeletePortMapping xmlns:u=\"service:type\">"
+                + "<NewRemoteHost>102:304:506:708:90a:b0c:d0e:f10</NewRemoteHost>"
+                + "<NewExternalPort>20000</NewExternalPort>"
+                + "<NewProtocol>UDP</NewProtocol>"
+                + "</u:DeletePortMapping>"
+                + "</soap:Body>"
+                + "</soap:Envelope>",
                 bufferText);
     }
 
@@ -79,18 +79,18 @@ public class DeletePortMappingUpnpIgdRequestTest {
                 + "Connection: Close\r\n"
                 + "Cache-Control: no-cache\r\n"
                 + "Pragma: no-cache\r\n"
-                + "Content-Length: 374\r\n"
+                + "Content-Length: 354\r\n"
                 + "\r\n"
-                + "<?xml version=\"1.0\"?>\r\n"
-                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
-                + "<soap:Body>\r\n"
-                + "<u:DeletePortMapping xmlns:u=\"service:type\">\r\n"
-                + "<NewRemoteHost></NewRemoteHost>\r\n"
-                + "<NewExternalPort>15</NewExternalPort>\r\n"
-                + "<NewProtocol>TCP</NewProtocol>\r\n"
-                + "</u:DeletePortMapping>\r\n"
-                + "</soap:Body>\r\n"
-                + "</soap:Envelope>\r\n",
+                + "<?xml version=\"1.0\"?>"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">"
+                + "<soap:Body>"
+                + "<u:DeletePortMapping xmlns:u=\"service:type\">"
+                + "<NewRemoteHost></NewRemoteHost>"
+                + "<NewExternalPort>15</NewExternalPort>"
+                + "<NewProtocol>TCP</NewProtocol>"
+                + "</u:DeletePortMapping>"
+                + "</soap:Body>"
+                + "</soap:Envelope>",
                 bufferText);
     }
 

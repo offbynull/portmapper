@@ -17,17 +17,17 @@ public class UpdatePinholeUpnpIgdRequestTest {
                 + "Connection: Close\r\n"
                 + "Cache-Control: no-cache\r\n"
                 + "Pragma: no-cache\r\n"
-                + "Content-Length: 325\r\n"
+                + "Content-Length: 307\r\n"
                 + "\r\n"
-                + "<?xml version=\"1.0\"?>\r\n"
-                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\r\n"
-                + "<soap:Body>\r\n"
-                + "<u:UpdatePinhole xmlns:u=\"service:type\">\r\n"
-                + "<UniqueID>12345</UniqueID>\r\n"
-                + "<NewLeaseTime>1000</NewLeaseTime>\r\n"
-                + "</u:UpdatePinhole>\r\n"
-                + "</soap:Body>\r\n"
-                + "</soap:Envelope>\r\n",
+                + "<?xml version=\"1.0\"?>"
+                + "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">"
+                + "<soap:Body>"
+                + "<u:UpdatePinhole xmlns:u=\"service:type\">"
+                + "<UniqueID>12345</UniqueID>"
+                + "<NewLeaseTime>1000</NewLeaseTime>"
+                + "</u:UpdatePinhole>"
+                + "</soap:Body>"
+                + "</soap:Envelope>",
                 bufferText);
     }
 
