@@ -27,7 +27,7 @@ import org.apache.commons.lang3.Validate;
  * @author Kasra Faghihi
  */
 public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
-
+    
     UpnpIgdSoapRequest(String host, String location, String serviceType, String actionName, Map<String, String> arguments) {
         super("POST", location,
                 generateHeaders(host, serviceType, actionName),
@@ -35,8 +35,8 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
 
         //<?xml version="1.0"?>
         //<soap:Envelope
-        //xmlns:soap="http://www.w3.org/2003/05/soap-envelope/"
-        //soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+        //xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+        //soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
         //<soap:Body>
         // <u:actionname xmlns:u="servicetype">
         //   <key>value</key>
@@ -79,8 +79,8 @@ public abstract class UpnpIgdSoapRequest extends UpnpIgdHttpRequest {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\"?>");
         sb.append("<soap:Envelope ")
-                .append("xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\" ")
-                .append("soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">");
+                .append("xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" ")
+                .append("soap:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">");
         sb.append("<soap:Body>");
         sb.append("<u:").append(actionName).append(" xmlns:u=\"").append(serviceType).append("\">");
 

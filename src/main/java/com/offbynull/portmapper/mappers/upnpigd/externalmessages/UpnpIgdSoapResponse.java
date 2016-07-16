@@ -69,8 +69,8 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         //<?xml version="1.0"?>
         //
         //<soap:Envelope
-        //xmlns:soap="http://www.w3.org/2003/05/soap-envelope/"
-        //soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+        //xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+        //soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
         //<soap:Body>
         //  <soap:Fault>
         //  ...
@@ -81,8 +81,8 @@ public abstract class UpnpIgdSoapResponse extends UpnpIgdHttpResponse {
         //<?xml version="1.0"?>
         //
         //<soap:Envelope
-        //xmlns:soap="http://www.w3.org/2003/05/soap-envelope/"
-        //soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+        //xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+        //soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
         //<soap:Body>
         //  <soap:Fault>
         //  ...
