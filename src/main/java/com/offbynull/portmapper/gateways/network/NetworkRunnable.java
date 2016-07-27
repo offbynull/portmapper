@@ -155,7 +155,7 @@ final class NetworkRunnable implements Runnable {
                     responseBus.send(new ConnectedTcpNetworkNotification(id));
                 }
             } catch (IOException ioe) {
-                LOG.error(id + " Exception encountered", ioe);
+                LOG.debug(id + " Exception encountered", ioe);
                 responseBus.send(new IdentifiableErrorNetworkNotification(id));
             }
         }
@@ -176,7 +176,7 @@ final class NetworkRunnable implements Runnable {
                     responseBus.send(new ReadTcpNetworkNotification(id, bufferAsArray));
                 }
             } catch (IOException ioe) {
-                LOG.error(id + " Exception encountered", ioe);
+                LOG.debug(id + " Exception encountered", ioe);
                 responseBus.send(new IdentifiableErrorNetworkNotification(id));
             }
         }
@@ -207,7 +207,7 @@ final class NetworkRunnable implements Runnable {
                     }
                 }
             } catch (IOException ioe) {
-                LOG.error(id + " Exception encountered", ioe);
+                LOG.debug(id + " Exception encountered", ioe);
                 responseBus.send(new IdentifiableErrorNetworkNotification(id));
             }
         }
@@ -234,7 +234,7 @@ final class NetworkRunnable implements Runnable {
                     responseBus.send(new ReadUdpNetworkNotification(id, localAddress, remoteAddress, bufferAsArray));
                 }
             } catch (IOException ioe) {
-                LOG.error(id + " Exception encountered", ioe);
+                LOG.debug(id + " Exception encountered", ioe);
                 responseBus.send(new IdentifiableErrorNetworkNotification(id));
             }
         }
@@ -266,7 +266,7 @@ final class NetworkRunnable implements Runnable {
                     entry.getResponseBus().send(new WriteEmptyUdpNetworkNotification(id));
                 }
             } catch (IOException ioe) {
-                LOG.error(id + " Exception encountered", ioe);
+                LOG.debug(id + " Exception encountered", ioe);
                 responseBus.send(new IdentifiableErrorNetworkNotification(id));
             }
         }
@@ -345,7 +345,7 @@ final class NetworkRunnable implements Runnable {
                     channelMap.remove(entry.getChannel());
                 }
                 
-                LOG.error("Unable to create socket", re);
+                LOG.debug("Unable to create socket", re);
 
                 responseBus.send(new IdentifiableErrorNetworkResponse(id));
             }
@@ -383,7 +383,7 @@ final class NetworkRunnable implements Runnable {
                     channelMap.remove(entry.getChannel());
                 }
                 
-                LOG.error("Unable to create socket", re);
+                LOG.debug("Unable to create socket", re);
 
                 responseBus.send(new IdentifiableErrorNetworkResponse(id));
             }
@@ -420,7 +420,7 @@ final class NetworkRunnable implements Runnable {
                     updateSelectionKey(entry, channel);
                 }
             } catch (RuntimeException re) {
-                LOG.error("Unable to process message", re);
+                LOG.debug("Unable to process message", re);
                 if (responseBus != null) {
                     responseBus.send(new IdentifiableErrorNetworkResponse(id));
                 }
@@ -441,7 +441,7 @@ final class NetworkRunnable implements Runnable {
                     updateSelectionKey(entry, channel);
                 }
             } catch (RuntimeException re) {
-                LOG.error("Unable to process message", re);
+                LOG.debug("Unable to process message", re);
                 if (responseBus != null) {
                     responseBus.send(new IdentifiableErrorNetworkResponse(id));
                 }
@@ -464,7 +464,7 @@ final class NetworkRunnable implements Runnable {
                 }
                 responseBus.send(new GetLocalIpAddressesNetworkResponse(ret));
             } catch (RuntimeException re) {
-                LOG.error("Unable to process message", re);
+                LOG.debug("Unable to process message", re);
                 if (responseBus != null) {
                     responseBus.send(new ErrorNetworkResponse());
                 }
