@@ -156,10 +156,10 @@ public final class MapPcpRequest extends PcpRequest {
         
         offset += 3; // 3 reserved bytes
         
-        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        internalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
-        suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        suggestedExternalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
 
         suggestedExternalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);

@@ -169,16 +169,16 @@ public final class PeerPcpResponse extends PcpResponse {
         
         offset += 3; // 3 reserved bytes
         
-        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        internalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
-        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
 
         assignedExternalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
         offset += 16;
 
-        remotePeerPort = InternalUtils.bytesToShort(buffer, offset);
+        remotePeerPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
         offset += 2; // reserved

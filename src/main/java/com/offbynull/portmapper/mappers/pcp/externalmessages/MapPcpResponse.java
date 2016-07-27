@@ -148,10 +148,10 @@ public final class MapPcpResponse extends PcpResponse {
         
         offset += 3; // 3 reserved bytes
         
-        internalPort = InternalUtils.bytesToShort(buffer, offset);
+        internalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
-        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset);
+        assignedExternalPort = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
         assignedExternalIpAddress = NetworkUtils.convertBytesToAddress(buffer, offset, 16);
