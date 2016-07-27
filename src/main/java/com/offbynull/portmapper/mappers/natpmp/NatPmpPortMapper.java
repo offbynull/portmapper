@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -118,6 +119,21 @@ public final class NatPmpPortMapper implements PortMapper {
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv4Addresses));
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv6Addresses));
         }
+        
+        
+        
+        // Filter out non-valid addresses
+        //   Remove any local address (e.g. 0.0.0.0)
+        //   Remove loopback address (e.g. 127.0.0.1)
+        //   Remove multicast address (e.g. 224.0.0.1)
+        Iterator<InetAddress> pgaIt = potentialGatewayAddresses.iterator();
+        while (pgaIt.hasNext()) {
+            InetAddress address = pgaIt.next();
+            if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isMulticastAddress()) {
+                pgaIt.remove();
+            }
+        }
+        
         
         
         // Query -- send each query to every interface

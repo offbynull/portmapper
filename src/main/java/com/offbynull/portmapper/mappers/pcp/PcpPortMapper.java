@@ -46,6 +46,7 @@ import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,6 +113,21 @@ public final class PcpPortMapper implements PortMapper {
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv4Addresses));
             potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv6Addresses));
         }
+        
+        
+        
+        // Filter out non-valid addresses
+        //   Remove any local address (e.g. 0.0.0.0)
+        //   Remove loopback address (e.g. 127.0.0.1)
+        //   Remove multicast address (e.g. 224.0.0.1)
+        Iterator<InetAddress> pgaIt = potentialGatewayAddresses.iterator();
+        while (pgaIt.hasNext()) {
+            InetAddress address = pgaIt.next();
+            if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isMulticastAddress()) {
+                pgaIt.remove();
+            }
+        }
+        
         
         
         // Query -- send each query to every interface
