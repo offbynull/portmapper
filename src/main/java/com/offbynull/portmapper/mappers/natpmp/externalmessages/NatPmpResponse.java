@@ -50,7 +50,7 @@ public abstract class NatPmpResponse implements NatPmpMessage {
         op = buffer[offset] & 0xFF;
         offset++;
 
-        resultCode = InternalUtils.bytesToShort(buffer, offset);
+        resultCode = InternalUtils.bytesToShort(buffer, offset) & 0xFFFF;
         offset += 2;
         
         secondsSinceStartOfEpoch = InternalUtils.bytesToInt(buffer, offset) & 0xFFFFFFFFL;
