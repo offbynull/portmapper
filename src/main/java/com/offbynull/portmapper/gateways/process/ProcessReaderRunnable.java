@@ -20,6 +20,7 @@ import com.offbynull.portmapper.gateways.process.internalmessages.ReadType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,7 @@ final class ProcessReaderRunnable implements Runnable {
         } catch (RuntimeException | IOException ioe) {
             LOG.error(id + " " + readType + " encountered exception", ioe);
         } finally {
+            IOUtils.closeQuietly(inputStream);
             LOG.debug("{} Shutting down reader {}", id, readType);
         }
     }

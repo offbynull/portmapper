@@ -58,17 +58,26 @@ final class ProcessMonitorRunnable implements Runnable {
             
             stdoutThread.join();
             stderrThread.join();
-            
-            processBus.send(new TerminatedMessage(id, exitCode));
         } catch (RuntimeException e) {
             LOG.error(id + " Encountered exception", e);
         } catch (InterruptedException ie) {
             Thread.interrupted();
-            LOG.error(id + " Interrupted", ie);
-            
-            process.destroy();
-            processBus.send(new TerminatedMessage(id, null));
+            LOG.debug(id + " Interrupted", ie);
         } finally {
+            // make sure it's destroyed
+            try {
+                process.destroy();
+            } catch (RuntimeException re) {
+                // do nothing
+            }
+            
+            // make sure a message goes out saying that it's destroyed
+            try {
+                processBus.send(new TerminatedMessage(id, null));
+            } catch (RuntimeException re) {
+                // do nothing
+            }
+
             LOG.debug("{} Shutting down monitor", id);
         }
     }

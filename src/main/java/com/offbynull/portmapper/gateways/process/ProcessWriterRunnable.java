@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +72,9 @@ final class ProcessWriterRunnable implements Runnable {
             LOG.error(id + " Encountered exception", ioe);
         } catch (InterruptedException ie) {
             Thread.interrupted();
-            LOG.error(id + " Interrupted", ie);
+            LOG.debug(id + " Interrupted");
         } finally {
+            IOUtils.closeQuietly(outputStream);
             LOG.debug("{} Shutting down writer", id);
         }
     }
