@@ -105,24 +105,27 @@ final class ProcessRunnable implements Runnable {
                 ProcessBuilder pb = new ProcessBuilder(command);
                 process = pb.start();
                 
-                ProcessMonitorRunnable monitorRunnable = new ProcessMonitorRunnable(id, process, bus);
-                monitorThread = new Thread(monitorRunnable);
-                monitorThread.setDaemon(true);
-                monitorThread.setName("Process Monitor");
                 ProcessReaderRunnable stdoutRunnable = new ProcessReaderRunnable(id, process.getInputStream(), bus,
                         ReadType.STDOUT);
                 stdoutThread = new Thread(stdoutRunnable);
                 stdoutThread.setDaemon(true);
                 stdoutThread.setName("Stdout Monitor");
+                
                 ProcessReaderRunnable stderrRunnable = new ProcessReaderRunnable(id, process.getErrorStream(), bus,
                         ReadType.STDERR);
                 stderrThread = new Thread(stderrRunnable);
                 stderrThread.setDaemon(true);
                 stderrThread.setName("Stderr Monitor");
+                
                 ProcessWriterRunnable stdinRunnable = new ProcessWriterRunnable(id, process.getOutputStream(), bus);
                 stdinThread = new Thread(stdinRunnable);
                 stdinThread.setDaemon(true);
                 stdinThread.setName("Stdin Monitor");
+                
+                ProcessMonitorRunnable monitorRunnable = new ProcessMonitorRunnable(id, process, bus, stdoutThread, stderrThread);
+                monitorThread = new Thread(monitorRunnable);
+                monitorThread.setDaemon(true);
+                monitorThread.setName("Process Monitor");
                 
                 ProcessEntry entry = new ProcessEntry(process, monitorThread, stdinThread, stdoutThread, stderrThread,
                         stdinRunnable.getLocalInputBus(), id, responseBus);

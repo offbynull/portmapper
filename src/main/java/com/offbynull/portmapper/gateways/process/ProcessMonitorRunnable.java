@@ -27,14 +27,20 @@ final class ProcessMonitorRunnable implements Runnable {
     private final int id;
     private final Process process;
     private final Bus processBus;
+    private final Thread stdoutThread;
+    private final Thread stderrThread;
 
-    ProcessMonitorRunnable(int id, Process process, Bus processBus) {
+    ProcessMonitorRunnable(int id, Process process, Bus processBus, Thread stdoutThread, Thread stderrThread) {
         Validate.notNull(process);
         Validate.notNull(processBus);
+        Validate.notNull(stdoutThread);
+        Validate.notNull(stderrThread);
         
         this.id = id;
         this.process = process;
         this.processBus = processBus;
+        this.stdoutThread = stdoutThread;
+        this.stderrThread = stderrThread;
     }
     
     @Override
@@ -45,6 +51,13 @@ final class ProcessMonitorRunnable implements Runnable {
             int exitCode = process.waitFor();
             
             LOG.debug("{} Process closed with exit code {}", id, exitCode);
+            
+            // before sending terminated message, make sure that the stdout/stderr processing threads are done...
+            // we do this because we don't want to deal with a race condition where the term message is before
+            // stdout/stderr content messages
+            
+            stdoutThread.join();
+            stderrThread.join();
             
             processBus.send(new TerminatedMessage(id, exitCode));
         } catch (RuntimeException e) {

@@ -40,7 +40,6 @@ import com.offbynull.portmapper.gateways.process.internalmessages.GetNextIdProce
 import com.offbynull.portmapper.gateways.process.internalmessages.GetNextIdProcessResponse;
 import com.offbynull.portmapper.gateways.process.internalmessages.IdentifiableErrorProcessResponse;
 import com.offbynull.portmapper.gateways.process.internalmessages.ReadProcessNotification;
-import com.offbynull.portmapper.gateways.process.internalmessages.ReadType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -330,7 +329,8 @@ public final class MapperIoUtils {
         long endTime = System.currentTimeMillis() + timeout;
 
         Map<Integer, ProcessRequest> processes = new HashMap<>();
-        Map<Integer, ByteArrayOutputStream> readBuffers = new HashMap<>();
+        Map<Integer, ByteArrayOutputStream> stdoutBuffers = new HashMap<>();
+        Map<Integer, ByteArrayOutputStream> stderrBuffers = new HashMap<>();
         
         try {
             // Get ids
@@ -342,7 +342,7 @@ public final class MapperIoUtils {
                 GetNextIdProcessResponse resp = (GetNextIdProcessResponse) queue.poll(sleepTime, TimeUnit.MILLISECONDS);
                 int id = resp.getId();
 
-                readBuffers.put(id, new ByteArrayOutputStream());
+                stdoutBuffers.put(id, new ByteArrayOutputStream());
                 processes.put(id, req);
             }
 
@@ -370,20 +370,31 @@ public final class MapperIoUtils {
                 if (resp instanceof ReadProcessNotification) {
                     // On read, put in to readBuffer
                     ReadProcessNotification readResp = (ReadProcessNotification) resp;
-                    if (readResp.getReadType() == ReadType.STDOUT) {
-                        Integer id = readResp.getId();
-
-                        ByteArrayOutputStream baos = readBuffers.get(id);
-                        if (baos == null) {
-                            baos = new ByteArrayOutputStream();
-                            readBuffers.put(id, baos);
-                        }
-
-                        try {
-                            baos.write(readResp.getData());
-                        } catch (IOException ioe) {
+                    Integer id = readResp.getId();
+                    ByteArrayOutputStream baos;
+                    switch (readResp.getReadType()) {
+                        case STDOUT:
+                            baos = stdoutBuffers.get(id);
+                            if (baos == null) {
+                                baos = new ByteArrayOutputStream();
+                                stdoutBuffers.put(id, baos);
+                            }
+                            break;
+                        case STDERR:
+                            baos = stderrBuffers.get(id);
+                            if (baos == null) {
+                                baos = new ByteArrayOutputStream();
+                                stderrBuffers.put(id, baos);
+                            }
+                            break;
+                        default:
                             throw new IllegalStateException(); // should never happen
-                        }
+                    }
+
+                    try {
+                        baos.write(readResp.getData());
+                    } catch (IOException ioe) {
+                        throw new IllegalStateException(); // should never happen
                     }
                 } else if (resp instanceof ExitProcessNotification) {
                     runningProcs--;
@@ -395,21 +406,27 @@ public final class MapperIoUtils {
             }
         } finally {
             // Issue closes
-            for (int id : readBuffers.keySet()) {
+            for (int id : stdoutBuffers.keySet()) {
                 processBus.send(new CloseProcessRequest(id));
             }
         }
 
         // Process responses
-        for (Entry<Integer, ByteArrayOutputStream> entry : readBuffers.entrySet()) {
-            int id = entry.getKey();
-            byte[] respData = entry.getValue().toByteArray();
+        for (int id : stdoutBuffers.keySet()) {
+            ByteArrayOutputStream outOs = stdoutBuffers.get(id);
+            ByteArrayOutputStream errOs = stderrBuffers.get(id);
+
+            byte[] outData = outOs == null ? new byte[0] : outOs.toByteArray();
+            byte[] errData = errOs == null ? new byte[0] : errOs.toByteArray();
             
-            String resp = new String(respData, Charset.forName("US-ASCII"));
-            LOG.debug("Process response {}", resp);
+            String out = new String(outData, Charset.forName("US-ASCII"));
+            String err = new String(errData, Charset.forName("US-ASCII"));
+
+            LOG.debug("Process response\nSTDOUT\n{}\nSTDERR\n{}", out, err);
             
             ProcessRequest req = processes.get(id);
-            req.setOutput(resp);
+            req.setOutput(out);
+            req.setError(err);
         }
     }
 
@@ -420,6 +437,7 @@ public final class MapperIoUtils {
         private final String executable;
         private final String[] parameters;
         private String output;
+        private String error;
         
         /**
          * Constructs a {@link ProcessRequest} object.
@@ -464,10 +482,22 @@ public final class MapperIoUtils {
             this.output = output;
         }
 
+        /**
+         * Get process STDERR.
+         * @return process STDERR
+         */
+        public String getError() {
+            return error;
+        }
+
+        void setError(String error) {
+            this.error = error;
+        }
+
         @Override
         public String toString() {
             return "RunProcessRequest{" + "executable=" + executable + ", parameters=" + Arrays.toString(parameters) + ", output=" + output
-                    + '}';
+                    + ", error=" + error + '}';
         }
     }
     

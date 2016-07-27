@@ -108,11 +108,15 @@ public final class NatPmpPortMapper implements PortMapper {
         potentialGatewayAddresses.addAll(Arrays.asList(additionalIps));
         
         for (MapperIoUtils.ProcessRequest req : processReqs) {
-            List<String> netstatIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());
-            List<String> netstatIpv6Addresses = TextUtils.findAllIpv6Addresses(req.getOutput());
+            List<String> netstatOutputIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getOutput());
+            List<String> netstatOutputIpv6Addresses = TextUtils.findAllIpv6Addresses(req.getOutput());
+            List<String> netstatErrorIpv4Addresses = TextUtils.findAllIpv4Addresses(req.getError());
+            List<String> netstatErrorIpv6Addresses = TextUtils.findAllIpv6Addresses(req.getError());
 
-            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv4Addresses));
-            potentialGatewayAddresses.addAll(convertToAddressSet(netstatIpv6Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatOutputIpv4Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatOutputIpv6Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv4Addresses));
+            potentialGatewayAddresses.addAll(convertToAddressSet(netstatErrorIpv6Addresses));
         }
         
         
