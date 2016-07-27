@@ -33,7 +33,7 @@ Port Mapper requires Java7 or later. In your Maven POM, add "portmapper" as a de
 <dependency>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
-    <version>2.0.3</version>
+    <version>2.0.4</version>
 </dependency>
 ```
 
@@ -137,6 +137,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
+
+### [2.0.4] - 2016-07-26
+- FIXED: Race condition where some stdout output wouldn't be received from a process because it was sent just before termination
+- FIXED: Process output now include stderr output
+- FIXED: Attempt to filter out bad NAT-PMP/PCP gateway IP addresses -- loopback (e.g. 127.0.0.1), any address (e.g. 0.0.0.0), and multicast addresses are now filtered out
+- FIXED: PCP port signed/unsigned integer bug fixed
+- FIXED: NAT-PMP result code signed/unsigned integer bug fixed
+- OTHER: Logging tweaked for NetworkGateway and ProcessGateway
 
 ### [2.0.3] - 2016-07-15
 - FIXED: \r\n newlines removed from UPnP-IGD request XMLs
