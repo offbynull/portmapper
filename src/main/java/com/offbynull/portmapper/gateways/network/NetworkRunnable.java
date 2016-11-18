@@ -454,12 +454,21 @@ final class NetworkRunnable implements Runnable {
                 Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
                 while (interfaces.hasMoreElements()) {
                     NetworkInterface networkInterface = interfaces.nextElement();
-                    Enumeration<InetAddress> addrs = networkInterface.getInetAddresses();
-                    while (addrs.hasMoreElements()) {
-                        InetAddress addr = addrs.nextElement();
-                        if (!addr.isLoopbackAddress()) {
-                            ret.add(addr);
+                    if (!networkInterface.isUp()) {
+                        LOG.debug("Interface {} not up -- skipping", networkInterface);
+                        continue;
+                    }
+                    
+                    try {
+                        Enumeration<InetAddress> addrs = networkInterface.getInetAddresses();
+                        while (addrs.hasMoreElements()) {
+                            InetAddress addr = addrs.nextElement();
+                            if (!addr.isLoopbackAddress()) {
+                                ret.add(addr);
+                            }
                         }
+                    } catch (RuntimeException niException) {
+                        LOG.warn("Unable to access interface {}", networkInterface, niException);
                     }
                 }
                 responseBus.send(new GetLocalIpAddressesNetworkResponse(ret));

@@ -540,7 +540,7 @@ public final class MapperIoUtils {
         LOG.debug("Getting local IP addresses");
         
         networkBus.send(new GetLocalIpAddressesNetworkRequest(selfBus));
-        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(3000L, TimeUnit.MILLISECONDS);
+        GetLocalIpAddressesNetworkResponse localIpsResp = (GetLocalIpAddressesNetworkResponse) queue.poll(10000L, TimeUnit.MILLISECONDS);
         
         Validate.validState(localIpsResp != null);
         
