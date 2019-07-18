@@ -62,9 +62,9 @@ System.out.println("Port mapping added: " + mappedPort);
 // Refresh mapping half-way through the lifetime of the mapping (for example,
 // if the mapping is available for 40 seconds, refresh it every 20 seconds)
 while(!shutdown) {
-    mappedPort = mapper.refreshPort(mappedPort, mappedPort.getLifetime() / 2L);
+    mappedPort = mapper.refreshPort(mappedPort, mappedPort.getLifetime());
     System.out.println("Port mapping refreshed: " + mappedPort);
-    Thread.sleep(mappedPort.getLifetime() * 1000L);
+    Thread.sleep(mappedPort.getLifetime() / 2L * 1000L);
 }
 
 // Unmap port 12345
