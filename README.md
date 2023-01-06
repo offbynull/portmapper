@@ -33,7 +33,7 @@ Port Mapper requires Java7 or later. In your Maven POM, add "portmapper" as a de
 <dependency>
     <groupId>com.offbynull.portmapper</groupId>
     <artifactId>portmapper</artifactId>
-    <version>2.0.5</version>
+    <version>2.0.6</version>
 </dependency>
 ```
 
@@ -137,6 +137,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### [Unreleased][unreleased]
+
+### [2.0.6] - 2023-01-05
+- OTHER: Automatic module name added (thank you to @hendrikebbers)
 
 ### [2.0.5] - 2016-11-18
 - FIXED: NetworkRunnable crash when getting IP addresses for inactive interface
